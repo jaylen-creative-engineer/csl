@@ -1,0 +1,41 @@
+{
+  "name": "csl",
+  "private": true,
+  "type": "module",
+  "description": "Creative Sports League — structured challenge sprints for emerging creatives",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lat:check": "lat --dir docs check",
+    "graph:view": "tsx src/knowledge-graph/write-graph-view.cli.ts",
+    "graph:check": "tsx src/knowledge-graph/check-graph-view.cli.ts",
+    "integration:check": "npm run typecheck && npm test && npm run bdd",
+    "verify": "npm run integration:check",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bdd": "NODE_OPTIONS='--import tsx' cucumber-js --config cucumber.mjs",
+    "bdd:challenge": "npm run bdd -- --tags '@challenge'",
+    "bdd:league": "npm run bdd -- --tags '@league'",
+    "bdd:showcase": "npm run bdd -- --tags '@showcase'"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.7.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "lat.md": "^0.11.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "next": "^16.2.3",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.60.1"
+  }
+}
