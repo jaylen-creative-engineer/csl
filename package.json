@@ -18,7 +18,8 @@
     "bdd": "NODE_OPTIONS='--import tsx' cucumber-js --config cucumber.mjs",
     "bdd:challenge": "npm run bdd -- --tags '@challenge'",
     "bdd:league": "npm run bdd -- --tags '@league'",
-    "bdd:showcase": "npm run bdd -- --tags '@showcase'"
+    "bdd:showcase": "npm run bdd -- --tags '@showcase'",
+    "cli": "tsx cli/index.ts"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^12.7.0",
