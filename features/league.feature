@@ -19,3 +19,13 @@ Feature: League model and participant enrollment
     Given "alex" is already enrolled in "Pixel League Season 1"
     When "alex" attempts to enroll again
     Then enrollment fails with reason "already enrolled"
+
+  @league
+  Scenario: A league host advances a league through its full lifecycle
+    Given a league host "Jordan" with organization "Design Chicago"
+    When Jordan creates league "Pixel League Season 2"
+    Then the league exists with status "draft"
+    When the host activates the league
+    Then the league exists with status "active"
+    When the host closes the league
+    Then the league exists with status "closed"

@@ -140,6 +140,54 @@ describe("LeagueModelService", () => {
     });
   });
 
+  describe("activateLeague", () => {
+    it("transitions a draft league to active", () => {
+      const host = service.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+      const league = service.createLeague({ name: "Pixel League", hostId: host.id });
+
+      const activated = service.activateLeague(league.id);
+
+      expect(activated.status).toBe(LeagueStatus.Active);
+      expect(service.getLeague(league.id)?.status).toBe(LeagueStatus.Active);
+    });
+
+    it("throws when league does not exist", () => {
+      expect(() => service.activateLeague("league:nonexistent")).toThrow("League not found");
+    });
+
+    it("throws when league is not in draft status", () => {
+      const host = service.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+      const league = service.createLeague({ name: "Pixel League", hostId: host.id });
+      service.activateLeague(league.id);
+
+      expect(() => service.activateLeague(league.id)).toThrow('Cannot activate league in status "active"');
+    });
+  });
+
+  describe("closeLeague", () => {
+    it("transitions an active league to closed", () => {
+      const host = service.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+      const league = service.createLeague({ name: "Pixel League", hostId: host.id });
+      service.activateLeague(league.id);
+
+      const closed = service.closeLeague(league.id);
+
+      expect(closed.status).toBe(LeagueStatus.Closed);
+      expect(service.getLeague(league.id)?.status).toBe(LeagueStatus.Closed);
+    });
+
+    it("throws when league does not exist", () => {
+      expect(() => service.closeLeague("league:nonexistent")).toThrow("League not found");
+    });
+
+    it("throws when league is not in active status", () => {
+      const host = service.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+      const league = service.createLeague({ name: "Pixel League", hostId: host.id });
+
+      expect(() => service.closeLeague(league.id)).toThrow('Cannot close league in status "draft"');
+    });
+  });
+
   describe("createSeason", () => {
     it("creates and retrieves a season", () => {
       const season = service.createSeason({
