@@ -15,22 +15,22 @@ function deadlineHours(h: number): string {
 
 Given(
   "{string} has {int} scored public submissions across {int} challenges",
-  function (this: CslWorld, handle: string, submissionCount: number, challengeCount: number) {
-    const host = this.leagueModel.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
-    const league = this.leagueModel.createLeague({ name: "Pixel League", hostId: host.id });
+  async function (this: CslWorld, handle: string, submissionCount: number, challengeCount: number) {
+    const host = await this.leagueModel.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+    const league = await this.leagueModel.createLeague({ name: "Pixel League", hostId: host.id });
     this.currentLeagueId = league.id;
 
-    const participant = this.leagueModel.createParticipant({
+    const participant = await this.leagueModel.createParticipant({
       handle,
       discipline: Discipline.Design,
     });
     this.currentParticipantId = participant.id;
-    this.leagueModel.enrollParticipant(league.id, participant.id);
+    await this.leagueModel.enrollParticipant(league.id, participant.id);
 
     let submissionsRemaining = submissionCount;
 
     for (let ci = 0; ci < challengeCount && submissionsRemaining > 0; ci++) {
-      const challenge = this.challengeService.createChallenge({
+      const challenge = await this.challengeService.createChallenge({
         leagueId: league.id,
         title: `Challenge ${ci + 1}`,
         prompt: `Prompt for challenge ${ci + 1}`,
@@ -41,7 +41,7 @@ Given(
         ],
       });
 
-      this.challengeService.openChallenge(challenge.id);
+      await this.challengeService.openChallenge(challenge.id);
 
       const submissionsThisChallenge =
         ci === challengeCount - 1
@@ -50,7 +50,7 @@ Given(
 
       const batchSubmissions = [];
       for (let si = 0; si < submissionsThisChallenge && submissionsRemaining > 0; si++) {
-        const submission = this.challengeService.submitEntry(challenge.id, participant.id, {
+        const submission = await this.challengeService.submitEntry(challenge.id, participant.id, {
           artifact: { url: `https://${handle}.design/entry-${ci}-${si}` },
           isPublic: true,
         });
@@ -58,10 +58,10 @@ Given(
         submissionsRemaining--;
       }
 
-      this.challengeService.closeForJudging(challenge.id);
+      await this.challengeService.closeForJudging(challenge.id);
 
       for (const submission of batchSubmissions) {
-        this.challengeService.scoreSubmission(submission.id, {
+        await this.challengeService.scoreSubmission(submission.id, {
           judgeId: "judge:1",
           criteriaScores: [
             { criteriaName: "Creativity", score: 80 },
@@ -76,57 +76,59 @@ Given(
 
 Given(
   "{string} with {int} participants and scored submissions",
-  function (this: CslWorld, leagueName: string, participantCount: number) {
-    const host = this.leagueModel.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
-    const league = this.leagueModel.createLeague({ name: leagueName, hostId: host.id });
+  async function (this: CslWorld, leagueName: string, participantCount: number) {
+    const host = await this.leagueModel.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+    const league = await this.leagueModel.createLeague({ name: leagueName, hostId: host.id });
     this.currentLeagueId = league.id;
 
-    const challenge = this.challengeService.createChallenge({
+    const challenge = await this.challengeService.createChallenge({
       leagueId: league.id,
       title: "Open Sprint",
       prompt: "Prompt",
       deadline: deadlineHours(48),
     });
 
-    this.challengeService.openChallenge(challenge.id);
+    await this.challengeService.openChallenge(challenge.id);
 
     const enrolledParticipants: Array<{ id: string }> = [];
     for (let i = 0; i < participantCount; i++) {
-      const participant = this.leagueModel.createParticipant({
+      const participant = await this.leagueModel.createParticipant({
         handle: `creative-${i}`,
         discipline: Discipline.Design,
       });
-      this.leagueModel.enrollParticipant(league.id, participant.id);
+      await this.leagueModel.enrollParticipant(league.id, participant.id);
       enrolledParticipants.push(participant);
     }
 
-    const submissionsToScore = enrolledParticipants.map((participant, i) =>
-      this.challengeService.submitEntry(challenge.id, participant.id, {
-        artifact: { url: `https://creative${i}.design/entry` },
-        isPublic: true,
-      })
+    const submissionsToScore = await Promise.all(
+      enrolledParticipants.map((participant, i) =>
+        this.challengeService.submitEntry(challenge.id, participant.id, {
+          artifact: { url: `https://creative${i}.design/entry` },
+          isPublic: true,
+        })
+      )
     );
 
-    this.challengeService.closeForJudging(challenge.id);
+    await this.challengeService.closeForJudging(challenge.id);
 
-    submissionsToScore.forEach((submission, i) => {
-      this.challengeService.scoreSubmission(submission.id, {
+    for (let i = 0; i < submissionsToScore.length; i++) {
+      await this.challengeService.scoreSubmission(submissionsToScore[i]!.id, {
         judgeId: "judge:1",
         criteriaScores: [{ criteriaName: "Overall", score: 50 + i * 10 }],
         rationale: "Scored",
       });
-    });
+    }
   }
 );
 
 // ---- When ----
 
-When("the showcase builds alex's portfolio", function (this: CslWorld) {
-  lastPortfolio = this.showcaseService.buildPortfolio(this.currentParticipantId);
+When("the showcase builds alex's portfolio", async function (this: CslWorld) {
+  lastPortfolio = await this.showcaseService.buildPortfolio(this.currentParticipantId);
 });
 
-When("top performers are requested with limit {int}", function (this: CslWorld, limit: number) {
-  lastTopPerformers = this.showcaseService.getTopPerformers(this.currentLeagueId, limit);
+When("top performers are requested with limit {int}", async function (this: CslWorld, limit: number) {
+  lastTopPerformers = await this.showcaseService.getTopPerformers(this.currentLeagueId, limit);
 });
 
 // ---- Then ----

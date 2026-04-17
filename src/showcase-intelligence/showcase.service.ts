@@ -9,28 +9,29 @@ export class ShowcaseService {
     private readonly challengeService: ChallengeService
   ) {}
 
-  buildPortfolio(participantId: ParticipantId): Portfolio {
-    const participant = this.leagueModel.getParticipant(participantId);
+  async buildPortfolio(participantId: ParticipantId): Promise<Portfolio> {
+    const participant = await this.leagueModel.getParticipant(participantId);
     if (!participant) {
       throw new Error(`Participant not found: ${participantId}`);
     }
 
-    const submissions = this.challengeService
-      .getSubmissionsForParticipant(participantId)
+    const submissions = (await this.challengeService.getSubmissionsForParticipant(participantId))
       .filter((s) => s.isPublic);
 
-    const entries: ShowcaseEntry[] = submissions.map((submission) => {
-      const challenge = this.challengeService.getChallenge(submission.challengeId);
-      return {
-        submission,
-        participantHandle: participant.handle,
-        discipline: participant.discipline,
-        challengeTitle: challenge?.title ?? "Unknown Challenge",
-        score: submission.score?.totalScore,
-      };
-    });
+    const entries: ShowcaseEntry[] = await Promise.all(
+      submissions.map(async (submission) => {
+        const challenge = await this.challengeService.getChallenge(submission.challengeId);
+        return {
+          submission,
+          participantHandle: participant.handle,
+          discipline: participant.discipline,
+          challengeTitle: challenge?.title ?? "Unknown Challenge",
+          score: submission.score?.totalScore,
+        };
+      })
+    );
 
-    const skillSignals = this.getSkillSignals(participantId);
+    const skillSignals = await this.getSkillSignals(participantId);
 
     const scoredEntries = entries.filter((e) => e.score !== undefined);
     const aggregateScore =
@@ -49,15 +50,13 @@ export class ShowcaseService {
     };
   }
 
-  getSkillSignals(participantId: ParticipantId): SkillSignal[] {
-    const participant = this.leagueModel.getParticipant(participantId);
+  async getSkillSignals(participantId: ParticipantId): Promise<SkillSignal[]> {
+    const participant = await this.leagueModel.getParticipant(participantId);
     if (!participant) return [];
 
-    const submissions = this.challengeService
-      .getSubmissionsForParticipant(participantId)
+    const submissions = (await this.challengeService.getSubmissionsForParticipant(participantId))
       .filter((s) => s.isPublic && s.score !== undefined);
 
-    // Aggregate per criteria domain
     const domainMap = new Map<string, { scores: number[] }>();
 
     for (const submission of submissions) {
@@ -81,53 +80,52 @@ export class ShowcaseService {
     }));
   }
 
-  getTopPerformers(leagueId: LeagueId, limit: number): PublicProfile[] {
-    const participants = this.leagueModel.listParticipants(leagueId);
+  async getTopPerformers(leagueId: LeagueId, limit: number): Promise<PublicProfile[]> {
+    const participants = await this.leagueModel.listParticipants(leagueId);
 
-    const profiles: PublicProfile[] = participants.map((participant) => {
-      const submissions = this.challengeService
-        .getSubmissionsForParticipant(participant.id)
-        .filter((s) => s.isPublic);
+    const profiles: PublicProfile[] = await Promise.all(
+      participants.map(async (participant) => {
+        const submissions = (
+          await this.challengeService.getSubmissionsForParticipant(participant.id)
+        ).filter((s) => s.isPublic);
 
-      const scoredSubmissions = submissions.filter((s) => s.score !== undefined);
-      const aggregateScore =
-        scoredSubmissions.length > 0
-          ? scoredSubmissions.reduce((sum, s) => sum + (s.score?.totalScore ?? 0), 0) /
-            scoredSubmissions.length
-          : 0;
+        const scoredSubmissions = submissions.filter((s) => s.score !== undefined);
+        const aggregateScore =
+          scoredSubmissions.length > 0
+            ? scoredSubmissions.reduce((sum, s) => sum + (s.score?.totalScore ?? 0), 0) /
+              scoredSubmissions.length
+            : 0;
 
-      const leagueIds = participant.leagueMemberships.map((m) => m.leagueId);
-
-      return {
-        participantId: participant.id,
-        handle: participant.handle,
-        discipline: participant.discipline,
-        aggregateScore,
-        submissionCount: submissions.length,
-        leagueIds,
-      };
-    });
+        return {
+          participantId: participant.id,
+          handle: participant.handle,
+          discipline: participant.discipline,
+          aggregateScore,
+          submissionCount: submissions.length,
+          leagueIds: participant.leagueMemberships.map((m) => m.leagueId),
+        };
+      })
+    );
 
     return profiles
       .sort((a, b) => {
         if (b.aggregateScore !== a.aggregateScore) return b.aggregateScore - a.aggregateScore;
-        // Deterministic tiebreak by handle
         return a.handle.localeCompare(b.handle);
       })
       .slice(0, limit);
   }
 
-  getShowcaseFeed(leagueId: LeagueId): ShowcaseEntry[] {
-    const participants = this.leagueModel.listParticipants(leagueId);
+  async getShowcaseFeed(leagueId: LeagueId): Promise<ShowcaseEntry[]> {
+    const participants = await this.leagueModel.listParticipants(leagueId);
     const entries: ShowcaseEntry[] = [];
 
     for (const participant of participants) {
-      const submissions = this.challengeService
-        .getSubmissionsForParticipant(participant.id)
-        .filter((s) => s.isPublic);
+      const submissions = (
+        await this.challengeService.getSubmissionsForParticipant(participant.id)
+      ).filter((s) => s.isPublic);
 
       for (const submission of submissions) {
-        const challenge = this.challengeService.getChallenge(submission.challengeId);
+        const challenge = await this.challengeService.getChallenge(submission.challengeId);
         entries.push({
           submission,
           participantHandle: participant.handle,
@@ -138,7 +136,6 @@ export class ShowcaseService {
       }
     }
 
-    // Most recent first
     return entries.sort(
       (a, b) =>
         new Date(b.submission.submittedAt).getTime() -

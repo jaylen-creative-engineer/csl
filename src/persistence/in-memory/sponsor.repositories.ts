@@ -24,7 +24,7 @@ export class InMemorySponsorAttachmentRepository
     super("attachment");
   }
 
-  findBySponsorId(sponsorId: SponsorId): SponsorAttachment[] {
-    return this.findAll().filter((a) => a.sponsorId === sponsorId);
+  async findBySponsorId(sponsorId: SponsorId): Promise<SponsorAttachment[]> {
+    return (await this.findAll()).filter((a) => a.sponsorId === sponsorId);
   }
 }

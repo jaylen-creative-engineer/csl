@@ -89,12 +89,16 @@ Sponsor ──────── attaches to ────────► Challen
 | Persistence | Repository interfaces (`IRepository<T>`) for all aggregates |
 | Persistence | In-memory repository implementations (swap-ready for DB) |
 | Persistence | Services refactored to repository injection (backward-compatible) |
+| Persistence | Drizzle ORM schema (`src/db/schema.ts`) for all 8 domain tables |
+| Persistence | Drizzle-backed repository implementations (`src/db/repositories/`) |
+| Persistence | DB service factory (`createDbServices()`) wires Drizzle repos into services |
+| Persistence | Drizzle Kit config (`drizzle.config.ts`), `db:generate` / `db:push` scripts |
 
 ### Known Gaps
 
 | Severity | Domain | Gap |
 |---|---|---|
-| critical | System | No database-backed repository — state still resets on restart; repository layer now ready for DB implementation |
+| critical | System | No Supabase project connected yet — run `db:push` once `DATABASE_URL` is set in `.env.local` |
 | high | League | `League.challengeIds` never populated by ChallengeService |
 | high | League | No `listLeagues()` / `listHosts()` |
 | high | Challenge | No `getChallengesForLeague()` |
@@ -114,9 +118,12 @@ Sponsor ──────── attaches to ────────► Challen
 
 - **Repository pattern** — services accept `IRepository<T>` instances via constructor injection with in-memory defaults, so existing call sites require no change while DB implementations can be injected.
 - **Explicit `save()` after mutation** — services call `repo.save(entity)` after every in-place mutation so database-backed implementations don't require a separate "dirty tracking" layer.
+- **JSONB for embedded value objects** — `scoring_criteria`, `artifact`, `score`, `brief`, `outcome` are stored as JSONB rather than normalized join tables; normalized if access patterns require it later.
+- **Text IDs generated in application code** — all IDs use prefixed format (`host:uuid`, `league:uuid`, etc.) generated via `crypto.randomUUID()`, never by the DB sequence. `nextId()` remains synchronous.
 - **Scoring is deterministic** — same inputs always produce the same leaderboard order.
 - **BDD step definitions use real implementations** — no mocks of domain logic in acceptance tests.
 - **Status transitions throw on invalid moves** — `activateLeague()` requires `draft`, `closeLeague()` requires `active`.
+- **Supabase + Drizzle** — hosted Postgres via Supabase; Drizzle ORM for schema definition and type-safe queries; Drizzle Kit for migration generation. Use pooled URL (port 6543) at runtime, direct URL (port 5432) for migrations.
 
 ---
 
@@ -126,7 +133,8 @@ Sponsor ──────── attaches to ────────► Challen
 |---|---|---|
 | 0 | Domain services + in-memory core | Done |
 | 1a | Repository interfaces + in-memory implementations | Done |
-| 1b | Database-backed repository implementations + migrations | Next |
+| 1b | Drizzle schema + Drizzle-backed repositories + service factory | Done |
+| 1c | Connect Supabase project — set `DATABASE_URL`, run `db:push` | Next |
 | 2 | API routes (REST, validation, idempotency) | Planned |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |
 | 4 | Auth, RBAC, audit log, observability | Planned |

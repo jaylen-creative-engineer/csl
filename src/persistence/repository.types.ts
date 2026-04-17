@@ -24,13 +24,18 @@ import type {
 
 /**
  * Base contract shared by all repositories.
+ * All read/write operations are async so both in-memory and database-backed
+ * implementations satisfy the same interface. nextId() stays synchronous
+ * because IDs are always generated locally (never by the database).
+ *
  * save() must be called explicitly after mutating an entity so that
- * database-backed implementations can persist the change.
+ * database-backed implementations can persist the change without
+ * needing dirty-tracking.
  */
 export interface IRepository<TEntity, TId extends string> {
-  save(entity: TEntity): void;
-  findById(id: TId): TEntity | undefined;
-  findAll(): TEntity[];
+  save(entity: TEntity): Promise<void>;
+  findById(id: TId): Promise<TEntity | undefined>;
+  findAll(): Promise<TEntity[]>;
   nextId(): TId;
 }
 
@@ -47,12 +52,12 @@ export interface IParticipantRepository extends IRepository<Participant, Partici
 // ── Challenge domain ──────────────────────────────────────────────────────────
 
 export interface IChallengeRepository extends IRepository<Challenge, ChallengeId> {
-  findByLeagueId(leagueId: LeagueId): Challenge[];
+  findByLeagueId(leagueId: LeagueId): Promise<Challenge[]>;
 }
 
 export interface ISubmissionRepository extends IRepository<Submission, SubmissionId> {
-  findByChallengeId(challengeId: ChallengeId): Submission[];
-  findByParticipantId(participantId: ParticipantId): Submission[];
+  findByChallengeId(challengeId: ChallengeId): Promise<Submission[]>;
+  findByParticipantId(participantId: ParticipantId): Promise<Submission[]>;
   nextScoreId(): ScoreId;
 }
 
@@ -62,5 +67,5 @@ export interface ISponsorRepository extends IRepository<Sponsor, SponsorId> {}
 
 export interface ISponsorAttachmentRepository
   extends IRepository<SponsorAttachment, SponsorAttachmentId> {
-  findBySponsorId(sponsorId: SponsorId): SponsorAttachment[];
+  findBySponsorId(sponsorId: SponsorId): Promise<SponsorAttachment[]>;
 }

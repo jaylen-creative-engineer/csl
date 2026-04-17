@@ -36,7 +36,7 @@ export class LeagueModelService {
     private readonly participants: IParticipantRepository = new InMemoryParticipantRepository(),
   ) {}
 
-  createLeagueHost(input: CreateLeagueHostInput): LeagueHost {
+  async createLeagueHost(input: CreateLeagueHostInput): Promise<LeagueHost> {
     const host: LeagueHost = {
       id: this.hosts.nextId(),
       name: input.name,
@@ -44,15 +44,15 @@ export class LeagueModelService {
       leagueIds: [],
       createdAt: new Date().toISOString(),
     };
-    this.hosts.save(host);
+    await this.hosts.save(host);
     return host;
   }
 
-  getLeagueHost(id: LeagueHostId): LeagueHost | undefined {
+  async getLeagueHost(id: LeagueHostId): Promise<LeagueHost | undefined> {
     return this.hosts.findById(id);
   }
 
-  createSeason(input: CreateSeasonInput): Season {
+  async createSeason(input: CreateSeasonInput): Promise<Season> {
     const season: Season = {
       id: this.seasons.nextId(),
       name: input.name,
@@ -60,16 +60,16 @@ export class LeagueModelService {
       endDate: input.endDate,
       createdAt: new Date().toISOString(),
     };
-    this.seasons.save(season);
+    await this.seasons.save(season);
     return season;
   }
 
-  getSeason(id: SeasonId): Season | undefined {
+  async getSeason(id: SeasonId): Promise<Season | undefined> {
     return this.seasons.findById(id);
   }
 
-  createLeague(input: CreateLeagueInput): League {
-    const host = this.hosts.findById(input.hostId);
+  async createLeague(input: CreateLeagueInput): Promise<League> {
+    const host = await this.hosts.findById(input.hostId);
     if (!host) {
       throw new Error(`LeagueHost not found: ${input.hostId}`);
     }
@@ -82,39 +82,39 @@ export class LeagueModelService {
       challengeIds: [],
       createdAt: new Date().toISOString(),
     };
-    this.leagues.save(league);
+    await this.leagues.save(league);
     host.leagueIds.push(league.id);
-    this.hosts.save(host);
+    await this.hosts.save(host);
     return league;
   }
 
-  getLeague(id: LeagueId): League | undefined {
+  async getLeague(id: LeagueId): Promise<League | undefined> {
     return this.leagues.findById(id);
   }
 
-  activateLeague(id: LeagueId): League {
-    const league = this.leagues.findById(id);
+  async activateLeague(id: LeagueId): Promise<League> {
+    const league = await this.leagues.findById(id);
     if (!league) throw new Error(`League not found: ${id}`);
     if (league.status !== LeagueStatus.Draft) {
       throw new Error(`Cannot activate league in status "${league.status}": expected "draft"`);
     }
     league.status = LeagueStatus.Active;
-    this.leagues.save(league);
+    await this.leagues.save(league);
     return league;
   }
 
-  closeLeague(id: LeagueId): League {
-    const league = this.leagues.findById(id);
+  async closeLeague(id: LeagueId): Promise<League> {
+    const league = await this.leagues.findById(id);
     if (!league) throw new Error(`League not found: ${id}`);
     if (league.status !== LeagueStatus.Active) {
       throw new Error(`Cannot close league in status "${league.status}": expected "active"`);
     }
     league.status = LeagueStatus.Closed;
-    this.leagues.save(league);
+    await this.leagues.save(league);
     return league;
   }
 
-  createParticipant(input: CreateParticipantInput): Participant {
+  async createParticipant(input: CreateParticipantInput): Promise<Participant> {
     const participant: Participant = {
       id: this.participants.nextId(),
       handle: input.handle,
@@ -122,16 +122,16 @@ export class LeagueModelService {
       leagueMemberships: [],
       createdAt: new Date().toISOString(),
     };
-    this.participants.save(participant);
+    await this.participants.save(participant);
     return participant;
   }
 
-  getParticipant(id: ParticipantId): Participant | undefined {
+  async getParticipant(id: ParticipantId): Promise<Participant | undefined> {
     return this.participants.findById(id);
   }
 
-  enrollParticipant(leagueId: LeagueId, participantId: ParticipantId): EnrollmentResult {
-    const league = this.leagues.findById(leagueId);
+  async enrollParticipant(leagueId: LeagueId, participantId: ParticipantId): Promise<EnrollmentResult> {
+    const league = await this.leagues.findById(leagueId);
     if (!league) {
       return {
         success: false,
@@ -142,7 +142,7 @@ export class LeagueModelService {
       };
     }
 
-    const participant = this.participants.findById(participantId);
+    const participant = await this.participants.findById(participantId);
     if (!participant) {
       return {
         success: false,
@@ -171,7 +171,7 @@ export class LeagueModelService {
       status: EnrollmentStatus.Enrolled,
       enrolledAt: new Date().toISOString(),
     });
-    this.participants.save(participant);
+    await this.participants.save(participant);
 
     return {
       success: true,
@@ -181,11 +181,11 @@ export class LeagueModelService {
     };
   }
 
-  listParticipants(leagueId: LeagueId): Participant[] {
-    const league = this.leagues.findById(leagueId);
+  async listParticipants(leagueId: LeagueId): Promise<Participant[]> {
+    const league = await this.leagues.findById(leagueId);
     if (!league) return [];
 
-    return this.participants.findAll().filter((p) =>
+    return (await this.participants.findAll()).filter((p) =>
       p.leagueMemberships.some(
         (m) => m.leagueId === leagueId && m.status === EnrollmentStatus.Enrolled
       )

@@ -25,7 +25,7 @@ export class SponsorService {
     private readonly attachments: ISponsorAttachmentRepository = new InMemorySponsorAttachmentRepository(),
   ) {}
 
-  createSponsor(input: CreateSponsorInput): Sponsor {
+  async createSponsor(input: CreateSponsorInput): Promise<Sponsor> {
     const sponsor: Sponsor = {
       id: this.sponsors.nextId(),
       name: input.name,
@@ -33,23 +33,23 @@ export class SponsorService {
       contactEmail: input.contactEmail,
       createdAt: new Date().toISOString(),
     };
-    this.sponsors.save(sponsor);
+    await this.sponsors.save(sponsor);
     return sponsor;
   }
 
-  getSponsor(id: SponsorId): Sponsor | undefined {
+  async getSponsor(id: SponsorId): Promise<Sponsor | undefined> {
     return this.sponsors.findById(id);
   }
 
-  attachToChallenge(
+  async attachToChallenge(
     sponsorId: SponsorId,
     challengeId: ChallengeId,
     brief: ChallengeBrief
-  ): SponsorAttachment {
-    const sponsor = this.sponsors.findById(sponsorId);
+  ): Promise<SponsorAttachment> {
+    const sponsor = await this.sponsors.findById(sponsorId);
     if (!sponsor) throw new Error(`Sponsor not found: ${sponsorId}`);
 
-    const challenge = this.challengeService.getChallenge(challengeId);
+    const challenge = await this.challengeService.getChallenge(challengeId);
     if (!challenge) throw new Error(`Challenge not found: ${challengeId}`);
 
     const attachment: SponsorAttachment = {
@@ -59,34 +59,34 @@ export class SponsorService {
       brief,
       attachedAt: new Date().toISOString(),
     };
-    this.attachments.save(attachment);
+    await this.attachments.save(attachment);
     return attachment;
   }
 
-  getAttachment(id: SponsorAttachmentId): SponsorAttachment | undefined {
+  async getAttachment(id: SponsorAttachmentId): Promise<SponsorAttachment | undefined> {
     return this.attachments.findById(id);
   }
 
-  recordOutcome(attachmentId: SponsorAttachmentId, outcome: SponsorOutcome): SponsorAttachment {
-    const attachment = this.attachments.findById(attachmentId);
+  async recordOutcome(attachmentId: SponsorAttachmentId, outcome: SponsorOutcome): Promise<SponsorAttachment> {
+    const attachment = await this.attachments.findById(attachmentId);
     if (!attachment) throw new Error(`SponsorAttachment not found: ${attachmentId}`);
 
     attachment.outcome = outcome;
-    this.attachments.save(attachment);
+    await this.attachments.save(attachment);
     return attachment;
   }
 
-  getSponsorSummary(
+  async getSponsorSummary(
     sponsorId: SponsorId
-  ): { challenges: number; topSubmissions: Submission[] } {
-    const sponsor = this.sponsors.findById(sponsorId);
+  ): Promise<{ challenges: number; topSubmissions: Submission[] }> {
+    const sponsor = await this.sponsors.findById(sponsorId);
     if (!sponsor) throw new Error(`Sponsor not found: ${sponsorId}`);
 
-    const sponsorAttachments = this.attachments.findBySponsorId(sponsorId);
+    const sponsorAttachments = await this.attachments.findBySponsorId(sponsorId);
 
     const topSubmissions: Submission[] = [];
     for (const attachment of sponsorAttachments) {
-      const leaderboard = this.challengeService.getLeaderboard(attachment.challengeId);
+      const leaderboard = await this.challengeService.getLeaderboard(attachment.challengeId);
       if (leaderboard.length > 0 && leaderboard[0]) {
         topSubmissions.push(leaderboard[0]);
       }

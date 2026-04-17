@@ -8,15 +8,15 @@ export abstract class InMemoryRepository<TEntity extends { id: string }, TId ext
 
   constructor(private readonly prefix: string) {}
 
-  save(entity: TEntity): void {
+  async save(entity: TEntity): Promise<void> {
     this.store.set(entity.id as TId, entity);
   }
 
-  findById(id: TId): TEntity | undefined {
+  async findById(id: TId): Promise<TEntity | undefined> {
     return this.store.get(id);
   }
 
-  findAll(): TEntity[] {
+  async findAll(): Promise<TEntity[]> {
     return Array.from(this.store.values());
   }
 

@@ -17,8 +17,8 @@ export class InMemoryChallengeRepository
     super("challenge");
   }
 
-  findByLeagueId(leagueId: LeagueId): Challenge[] {
-    return this.findAll().filter((c) => c.leagueId === leagueId);
+  async findByLeagueId(leagueId: LeagueId): Promise<Challenge[]> {
+    return (await this.findAll()).filter((c) => c.leagueId === leagueId);
   }
 }
 
@@ -32,12 +32,12 @@ export class InMemorySubmissionRepository
     super("submission");
   }
 
-  findByChallengeId(challengeId: ChallengeId): Submission[] {
-    return this.findAll().filter((s) => s.challengeId === challengeId);
+  async findByChallengeId(challengeId: ChallengeId): Promise<Submission[]> {
+    return (await this.findAll()).filter((s) => s.challengeId === challengeId);
   }
 
-  findByParticipantId(participantId: ParticipantId): Submission[] {
-    return this.findAll().filter((s) => s.participantId === participantId);
+  async findByParticipantId(participantId: ParticipantId): Promise<Submission[]> {
+    return (await this.findAll()).filter((s) => s.participantId === participantId);
   }
 
   nextScoreId(): ScoreId {

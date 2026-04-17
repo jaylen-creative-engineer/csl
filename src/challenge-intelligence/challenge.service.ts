@@ -26,7 +26,7 @@ export class ChallengeService {
     private readonly submissions: ISubmissionRepository = new InMemorySubmissionRepository(),
   ) {}
 
-  createChallenge(input: CreateChallengeInput): Challenge {
+  async createChallenge(input: CreateChallengeInput): Promise<Challenge> {
     const challenge: Challenge = {
       id: this.challenges.nextId(),
       leagueId: input.leagueId,
@@ -38,50 +38,50 @@ export class ChallengeService {
       sponsorId: input.sponsorId,
       createdAt: new Date().toISOString(),
     };
-    this.challenges.save(challenge);
+    await this.challenges.save(challenge);
     return challenge;
   }
 
-  getChallenge(id: ChallengeId): Challenge | undefined {
+  async getChallenge(id: ChallengeId): Promise<Challenge | undefined> {
     return this.challenges.findById(id);
   }
 
-  openChallenge(challengeId: ChallengeId): Challenge {
-    const challenge = this.requireChallenge(challengeId);
+  async openChallenge(challengeId: ChallengeId): Promise<Challenge> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Draft) {
       throw new Error(`Cannot open challenge in status "${challenge.status}"`);
     }
     challenge.status = ChallengeStatus.Open;
-    this.challenges.save(challenge);
+    await this.challenges.save(challenge);
     return challenge;
   }
 
-  closeForJudging(challengeId: ChallengeId): Challenge {
-    const challenge = this.requireChallenge(challengeId);
+  async closeForJudging(challengeId: ChallengeId): Promise<Challenge> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Open) {
       throw new Error(`Cannot move to judging from status "${challenge.status}"`);
     }
     challenge.status = ChallengeStatus.Judging;
-    this.challenges.save(challenge);
+    await this.challenges.save(challenge);
     return challenge;
   }
 
-  completeChallenge(challengeId: ChallengeId): Challenge {
-    const challenge = this.requireChallenge(challengeId);
+  async completeChallenge(challengeId: ChallengeId): Promise<Challenge> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Judging) {
       throw new Error(`Cannot complete challenge from status "${challenge.status}"`);
     }
     challenge.status = ChallengeStatus.Complete;
-    this.challenges.save(challenge);
+    await this.challenges.save(challenge);
     return challenge;
   }
 
-  submitEntry(
+  async submitEntry(
     challengeId: ChallengeId,
     participantId: ParticipantId,
     input: SubmitEntryInput
-  ): Submission {
-    const challenge = this.requireChallenge(challengeId);
+  ): Promise<Submission> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Open) {
       throw new Error("challenge not open");
     }
@@ -93,17 +93,17 @@ export class ChallengeService {
       isPublic: input.isPublic ?? true,
       submittedAt: new Date().toISOString(),
     };
-    this.submissions.save(submission);
+    await this.submissions.save(submission);
     return submission;
   }
 
-  scoreSubmission(submissionId: SubmissionId, input: ScoreInput): Submission {
-    const submission = this.submissions.findById(submissionId);
+  async scoreSubmission(submissionId: SubmissionId, input: ScoreInput): Promise<Submission> {
+    const submission = await this.submissions.findById(submissionId);
     if (!submission) {
       throw new Error(`Submission not found: ${submissionId}`);
     }
 
-    const challenge = this.requireChallenge(submission.challengeId);
+    const challenge = await this.requireChallenge(submission.challengeId);
     if (challenge.status !== ChallengeStatus.Judging) {
       throw new Error(`Cannot score submission when challenge is in status "${challenge.status}"`);
     }
@@ -121,13 +121,12 @@ export class ChallengeService {
     };
 
     submission.score = score;
-    this.submissions.save(submission);
+    await this.submissions.save(submission);
     return submission;
   }
 
-  getLeaderboard(challengeId: ChallengeId): Submission[] {
-    return this.submissions
-      .findByChallengeId(challengeId)
+  async getLeaderboard(challengeId: ChallengeId): Promise<Submission[]> {
+    return (await this.submissions.findByChallengeId(challengeId))
       .filter((s) => s.score !== undefined)
       .sort((a, b) => {
         const scoreA = a.score?.totalScore ?? 0;
@@ -137,21 +136,21 @@ export class ChallengeService {
       });
   }
 
-  getSubmissionsForChallenge(challengeId: ChallengeId): Submission[] {
+  async getSubmissionsForChallenge(challengeId: ChallengeId): Promise<Submission[]> {
     return this.submissions.findByChallengeId(challengeId);
   }
 
-  getSubmissionsForParticipant(participantId: ParticipantId): Submission[] {
+  async getSubmissionsForParticipant(participantId: ParticipantId): Promise<Submission[]> {
     return this.submissions.findByParticipantId(participantId);
   }
 
-  getSubmission(submissionId: SubmissionId): Submission | undefined {
+  async getSubmission(submissionId: SubmissionId): Promise<Submission | undefined> {
     return this.submissions.findById(submissionId);
   }
 
-  diffChallenges(aId: ChallengeId, bId: ChallengeId): ChallengeDiff {
-    const a = this.requireChallenge(aId);
-    const b = this.requireChallenge(bId);
+  async diffChallenges(aId: ChallengeId, bId: ChallengeId): Promise<ChallengeDiff> {
+    const a = await this.requireChallenge(aId);
+    const b = await this.requireChallenge(bId);
 
     const criteriaANames = new Set(a.scoringCriteria.map((c) => c.name));
     const criteriaBNames = new Set(b.scoringCriteria.map((c) => c.name));
@@ -167,8 +166,8 @@ export class ChallengeService {
     };
   }
 
-  private requireChallenge(id: ChallengeId): Challenge {
-    const challenge = this.challenges.findById(id);
+  private async requireChallenge(id: ChallengeId): Promise<Challenge> {
+    const challenge = await this.challenges.findById(id);
     if (!challenge) throw new Error(`Challenge not found: ${id}`);
     return challenge;
   }
