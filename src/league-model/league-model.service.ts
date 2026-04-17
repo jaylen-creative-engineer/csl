@@ -15,64 +15,66 @@ import {
   type Season,
   type SeasonId,
 } from "./types.js";
-
-let leagueCounter = 0;
-let seasonCounter = 0;
-let hostCounter = 0;
-let participantCounter = 0;
-
-function newId(prefix: string, counter: number): string {
-  return `${prefix}:${counter}`;
-}
+import {
+  InMemoryLeagueHostRepository,
+  InMemoryLeagueRepository,
+  InMemoryParticipantRepository,
+  InMemorySeasonRepository,
+} from "../persistence/in-memory/league-model.repositories.js";
+import type {
+  ILeagueHostRepository,
+  ILeagueRepository,
+  IParticipantRepository,
+  ISeasonRepository,
+} from "../persistence/repository.types.js";
 
 export class LeagueModelService {
-  private readonly leagues = new Map<LeagueId, League>();
-  private readonly seasons = new Map<SeasonId, Season>();
-  private readonly hosts = new Map<LeagueHostId, LeagueHost>();
-  private readonly participants = new Map<ParticipantId, Participant>();
+  constructor(
+    private readonly hosts: ILeagueHostRepository = new InMemoryLeagueHostRepository(),
+    private readonly seasons: ISeasonRepository = new InMemorySeasonRepository(),
+    private readonly leagues: ILeagueRepository = new InMemoryLeagueRepository(),
+    private readonly participants: IParticipantRepository = new InMemoryParticipantRepository(),
+  ) {}
 
   createLeagueHost(input: CreateLeagueHostInput): LeagueHost {
-    const id = newId("host", ++hostCounter);
     const host: LeagueHost = {
-      id,
+      id: this.hosts.nextId(),
       name: input.name,
       organization: input.organization,
       leagueIds: [],
       createdAt: new Date().toISOString(),
     };
-    this.hosts.set(id, host);
+    this.hosts.save(host);
     return host;
   }
 
   getLeagueHost(id: LeagueHostId): LeagueHost | undefined {
-    return this.hosts.get(id);
+    return this.hosts.findById(id);
   }
 
   createSeason(input: CreateSeasonInput): Season {
-    const id = newId("season", ++seasonCounter);
     const season: Season = {
-      id,
+      id: this.seasons.nextId(),
       name: input.name,
       startDate: input.startDate,
       endDate: input.endDate,
       createdAt: new Date().toISOString(),
     };
-    this.seasons.set(id, season);
+    this.seasons.save(season);
     return season;
   }
 
   getSeason(id: SeasonId): Season | undefined {
-    return this.seasons.get(id);
+    return this.seasons.findById(id);
   }
 
   createLeague(input: CreateLeagueInput): League {
-    const host = this.hosts.get(input.hostId);
+    const host = this.hosts.findById(input.hostId);
     if (!host) {
       throw new Error(`LeagueHost not found: ${input.hostId}`);
     }
-    const id = newId("league", ++leagueCounter);
     const league: League = {
-      id,
+      id: this.leagues.nextId(),
       name: input.name,
       hostId: input.hostId,
       seasonId: input.seasonId ?? null,
@@ -80,54 +82,56 @@ export class LeagueModelService {
       challengeIds: [],
       createdAt: new Date().toISOString(),
     };
-    this.leagues.set(id, league);
-    host.leagueIds.push(id);
+    this.leagues.save(league);
+    host.leagueIds.push(league.id);
+    this.hosts.save(host);
     return league;
   }
 
   getLeague(id: LeagueId): League | undefined {
-    return this.leagues.get(id);
+    return this.leagues.findById(id);
   }
 
   activateLeague(id: LeagueId): League {
-    const league = this.leagues.get(id);
+    const league = this.leagues.findById(id);
     if (!league) throw new Error(`League not found: ${id}`);
     if (league.status !== LeagueStatus.Draft) {
       throw new Error(`Cannot activate league in status "${league.status}": expected "draft"`);
     }
     league.status = LeagueStatus.Active;
+    this.leagues.save(league);
     return league;
   }
 
   closeLeague(id: LeagueId): League {
-    const league = this.leagues.get(id);
+    const league = this.leagues.findById(id);
     if (!league) throw new Error(`League not found: ${id}`);
     if (league.status !== LeagueStatus.Active) {
       throw new Error(`Cannot close league in status "${league.status}": expected "active"`);
     }
     league.status = LeagueStatus.Closed;
+    this.leagues.save(league);
     return league;
   }
 
   createParticipant(input: CreateParticipantInput): Participant {
-    const id = newId("participant", ++participantCounter);
     const participant: Participant = {
-      id,
+      id: this.participants.nextId(),
       handle: input.handle,
       discipline: input.discipline,
       leagueMemberships: [],
       createdAt: new Date().toISOString(),
     };
-    this.participants.set(id, participant);
+    this.participants.save(participant);
     return participant;
   }
 
   getParticipant(id: ParticipantId): Participant | undefined {
-    return this.participants.get(id);
+    return this.participants.findById(id);
   }
 
   enrollParticipant(leagueId: LeagueId, participantId: ParticipantId): EnrollmentResult {
-    const league = this.leagues.get(leagueId);
+    const league = this.leagues.findById(leagueId);
     if (!league) {
       return {
         success: false,
@@ -138,7 +142,7 @@ export class LeagueModelService {
       };
     }
 
-    const participant = this.participants.get(participantId);
+    const participant = this.participants.findById(participantId);
     if (!participant) {
       return {
         success: false,
@@ -167,6 +171,7 @@ export class LeagueModelService {
       status: EnrollmentStatus.Enrolled,
       enrolledAt: new Date().toISOString(),
     });
+    this.participants.save(participant);
 
     return {
       success: true,
@@ -177,10 +182,10 @@ export class LeagueModelService {
   }
 
   listParticipants(leagueId: LeagueId): Participant[] {
-    const league = this.leagues.get(leagueId);
+    const league = this.leagues.findById(leagueId);
     if (!league) return [];
 
-    return Array.from(this.participants.values()).filter((p) =>
+    return this.participants.findAll().filter((p) =>
       p.leagueMemberships.some(
         (m) => m.leagueId === leagueId && m.status === EnrollmentStatus.Enrolled
       )

@@ -86,12 +86,15 @@ Sponsor ──────── attaches to ────────► Challen
 | Sponsor Intelligence | Brief delivery tied to challenge prompt |
 | Sponsor Intelligence | Record sponsor outcomes |
 | Sponsor Intelligence | Sponsor summary with top submission references |
+| Persistence | Repository interfaces (`IRepository<T>`) for all aggregates |
+| Persistence | In-memory repository implementations (swap-ready for DB) |
+| Persistence | Services refactored to repository injection (backward-compatible) |
 
 ### Known Gaps
 
 | Severity | Domain | Gap |
 |---|---|---|
-| critical | System | No persistence layer — all state in-memory, lost on restart |
+| critical | System | No database-backed repository — state still resets on restart; repository layer now ready for DB implementation |
 | high | League | `League.challengeIds` never populated by ChallengeService |
 | high | League | No `listLeagues()` / `listHosts()` |
 | high | Challenge | No `getChallengesForLeague()` |
@@ -109,7 +112,8 @@ Sponsor ──────── attaches to ────────► Challen
 
 ## Key Decisions
 
-- **In-memory maps** are the current storage layer; all service interfaces are DTO-clean so the repository pattern can be inserted without changing method signatures.
+- **Repository pattern** — services accept `IRepository<T>` instances via constructor injection with in-memory defaults, so existing call sites require no change while DB implementations can be injected.
+- **Explicit `save()` after mutation** — services call `repo.save(entity)` after every in-place mutation so database-backed implementations don't require a separate "dirty tracking" layer.
 - **Scoring is deterministic** — same inputs always produce the same leaderboard order.
 - **BDD step definitions use real implementations** — no mocks of domain logic in acceptance tests.
 - **Status transitions throw on invalid moves** — `activateLeague()` requires `draft`, `closeLeague()` requires `active`.
@@ -121,7 +125,8 @@ Sponsor ──────── attaches to ────────► Challen
 | Phase | Goal | Status |
 |---|---|---|
 | 0 | Domain services + in-memory core | Done |
-| 1 | Repository layer + database migrations | Next |
+| 1a | Repository interfaces + in-memory implementations | Done |
+| 1b | Database-backed repository implementations + migrations | Next |
 | 2 | API routes (REST, validation, idempotency) | Planned |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |
 | 4 | Auth, RBAC, audit log, observability | Planned |

@@ -51,7 +51,9 @@ csl/
 │   ├── league-model/          # Core entities: League, Season, LeagueHost, Participant
 │   ├── challenge-intelligence/ # Sprint lifecycle, scoring, leaderboard, diff
 │   ├── showcase-intelligence/  # Portfolio, skill signals, top performers feed
-│   └── sponsor-intelligence/   # Sponsor attachment, brief, outcome tracking
+│   ├── sponsor-intelligence/   # Sponsor attachment, brief, outcome tracking
+│   └── persistence/           # Repository interfaces + in-memory implementations
+│       └── in-memory/         # Swap-ready InMemory* classes for each aggregate
 ├── features/
 │   ├── challenge.feature
 │   ├── league.feature
@@ -146,7 +148,8 @@ The biggest near-term unlock: one well-run challenge sprint with one real sponso
 | Phase | Goal | Status |
 |---|---|---|
 | 0 | Domain services + in-memory core | Done |
-| 1 | Repository layer + database migrations | Next |
+| 1a | Repository interfaces + in-memory implementations | Done |
+| 1b | Database-backed repository implementations + migrations | Next |
 | 2 | API routes (REST, validation, idempotency) | Planned |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |
 | 4 | Auth, RBAC, audit log, observability | Planned |
