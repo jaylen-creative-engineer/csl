@@ -89,6 +89,26 @@ export class LeagueModelService {
     return this.leagues.get(id);
   }
 
+  activateLeague(id: LeagueId): League {
+    const league = this.leagues.get(id);
+    if (!league) throw new Error(`League not found: ${id}`);
+    if (league.status !== LeagueStatus.Draft) {
+      throw new Error(`Cannot activate league in status "${league.status}": expected "draft"`);
+    }
+    league.status = LeagueStatus.Active;
+    return league;
+  }
+
+  closeLeague(id: LeagueId): League {
+    const league = this.leagues.get(id);
+    if (!league) throw new Error(`League not found: ${id}`);
+    if (league.status !== LeagueStatus.Active) {
+      throw new Error(`Cannot close league in status "${league.status}": expected "active"`);
+    }
+    league.status = LeagueStatus.Closed;
+    return league;
+  }
+
   createParticipant(input: CreateParticipantInput): Participant {
     const id = newId("participant", ++participantCounter);
     const participant: Participant = {

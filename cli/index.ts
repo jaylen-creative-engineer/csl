@@ -113,12 +113,6 @@ interface Gap { domain: string; title: string; detail: string; severity: 'critic
 const GAPS: Gap[] = [
   {
     domain: 'League',
-    severity: 'critical',
-    title: 'No league lifecycle transitions',
-    detail: 'createLeague() always produces status=draft. There is no activateLeague() or closeLeague(). The LeagueStatus enum defines Active and Closed but they are never assigned anywhere.',
-  },
-  {
-    domain: 'League',
     severity: 'high',
     title: 'League.challengeIds never populated',
     detail: 'ChallengeService.createChallenge() stores the leagueId on the Challenge but never adds the challenge ID back to League.challengeIds. The array stays empty forever.',
@@ -242,6 +236,8 @@ async function leagueMenu(rl: RL) {
       { key: '5', label: 'Enroll Participant in League' },
       { key: '6', label: 'List Participants in League' },
       { key: '7', label: 'View League Details' },
+      { key: '8', label: 'Activate League  (draft → active)' },
+      { key: '9', label: 'Close League  (active → closed)' },
       { key: '0', label: dim('Back') },
     ]);
 
@@ -275,7 +271,6 @@ async function leagueMenu(rl: RL) {
         const league = leagueService.createLeague({ name, hostId: host.id, seasonId });
         S.leagues.push(league);
         ok(`League created: ${b(league.name)}  status=${yellow(league.status)}  ${gray(league.id)}`);
-        warn(`GAP: status will always be "${league.status}" — no activateLeague() exists.`);
 
       } else if (choice === '4') {
         const handle      = await ask(rl, 'Handle (e.g. @alex):');
@@ -320,6 +315,20 @@ async function leagueMenu(rl: RL) {
           ? league.challengeIds.join(', ')
           : red('[] — never populated by ChallengeService (gap)'));
         await pressEnter(rl);
+
+      } else if (choice === '8') {
+        const drafts = S.leagues.filter((l) => l.status === 'draft');
+        const league = await pickFrom(rl, 'Draft League', drafts, (l) => `${b(l.name)}  ${gray(l.id)}`);
+        if (!league) continue;
+        Object.assign(league, leagueService.activateLeague(league.id));
+        ok(`"${b(league.name)}" is now ${green('active')}`);
+
+      } else if (choice === '9') {
+        const active = S.leagues.filter((l) => l.status === 'active');
+        const league = await pickFrom(rl, 'Active League', active, (l) => `${b(l.name)}  ${gray(l.id)}`);
+        if (!league) continue;
+        Object.assign(league, leagueService.closeLeague(league.id));
+        ok(`"${b(league.name)}" is now ${yellow('closed')}`);
       }
     } catch (e) {
       fail((e as Error).message);
@@ -707,7 +716,8 @@ async function runDemo(rl: RL) {
   const league = leagueService.createLeague({ name: 'Open Design League', hostId: host.id, seasonId: season.id });
   S.leagues.push(league);
   ok(`League: ${b(league.name)}  status=${yellow(league.status)}  ${gray(league.id)}`);
-  warn(`GAP [critical]: League status is always "${league.status}" — no activateLeague() exists.`);
+  Object.assign(league, leagueService.activateLeague(league.id));
+  ok(`League activated → status: ${green(league.status)}`);
 
   await pressEnter(rl);
 

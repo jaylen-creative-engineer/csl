@@ -36,6 +36,14 @@ Given(
 
 // ---- When ----
 
+When("the host activates the league", function (this: CslWorld) {
+  this.leagueModel.activateLeague(this.currentLeagueId);
+});
+
+When("the host closes the league", function (this: CslWorld) {
+  this.leagueModel.closeLeague(this.currentLeagueId);
+});
+
 When("Jordan creates league {string}", function (this: CslWorld, leagueName: string) {
   const league = this.leagueModel.createLeague({ name: leagueName, hostId: this.currentHostId });
   this.currentLeagueId = league.id;
