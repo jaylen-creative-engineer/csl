@@ -51,7 +51,8 @@ csl/
 │   ├── league-model/          # Core entities: League, Season, LeagueHost, Participant
 │   ├── challenge-intelligence/ # Sprint lifecycle, scoring, leaderboard, diff
 │   ├── showcase-intelligence/  # Portfolio, skill signals, top performers feed
-│   └── sponsor-intelligence/   # Sponsor attachment, brief, outcome tracking
+│   ├── sponsor-intelligence/   # Sponsor attachment, brief, outcome tracking
+│   └── lib/supabase/          # Supabase browser/server/admin clients (@supabase/ssr + supabase-js)
 ├── features/
 │   ├── challenge.feature
 │   ├── league.feature
@@ -68,6 +69,17 @@ csl/
 - BDD step definitions use real implementations, not mocks of domain logic
 - Scoring is deterministic — same inputs, same leaderboard order, every time
 
+### Supabase
+
+| Supabase product | Role in CSL |
+|---|---|
+| **Postgres** | Hosted database; use `DATABASE_URL` when you add the repository layer (Phase 1) |
+| **Auth** | User sessions via `src/lib/supabase/*` (see roadmap Phase 4) |
+| **Storage** | Public or signed URLs for challenge submission artifacts (`SubmissionArtifact.url`) |
+| **Realtime** | Optional live feed or leaderboard updates |
+
+Copy `.env.local.example` to `.env.local` and fill values from the Supabase dashboard.
+
 ---
 
 ## Tech Stack
@@ -75,6 +87,7 @@ csl/
 | Tool | Role |
 |---|---|
 | Next.js 16 + TypeScript | App framework |
+| Supabase (`@supabase/supabase-js`, `@supabase/ssr`) | Auth session, Storage, and other platform APIs |
 | Vitest | Unit tests |
 | Cucumber.js | BDD acceptance scenarios |
 | lat.md | Knowledge graph |
