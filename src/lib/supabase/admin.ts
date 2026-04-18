@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import type { Database } from "./database.types.js";
 
 /**
  * Optional service-role client for trusted server-only code (e.g. Storage uploads, admin APIs).
@@ -12,7 +13,7 @@ export function createSupabaseAdminClient() {
       "NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set for admin client"
     );
   }
-  return createClient(url, serviceRoleKey, {
+  return createClient<Database>(url, serviceRoleKey, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

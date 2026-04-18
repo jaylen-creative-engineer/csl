@@ -21,7 +21,12 @@
     "bdd:showcase": "npm run bdd -- --tags '@showcase'",
     "cli": "tsx cli/index.ts",
     "db:push": "npx supabase db push",
-    "db:diff": "npx supabase db diff"
+    "db:diff": "npx supabase db diff",
+    "db:types": "npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
+    "db:types:url": "npx supabase gen types typescript --db-url \"$DATABASE_URL\" --schema public > src/lib/supabase/database.types.ts",
+    "db:seed": "npx supabase db query -f supabase/seed.sql --local",
+    "db:seed:linked": "npx supabase db query -f supabase/seed.sql --linked",
+    "db:reset": "npx supabase db reset"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^12.7.0",
