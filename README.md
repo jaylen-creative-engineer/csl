@@ -113,6 +113,20 @@ npm run bdd:league      # @league scenarios only
 npm run bdd:showcase    # @showcase scenarios only
 ```
 
+### Validation CLI (interactive + CI-safe modes)
+
+```bash
+npm run csl:cli                 # interactive menus (requires TTY)
+npm run csl:cli -- --smoke      # fast non-interactive wiring check
+npm run csl:cli -- --demo       # non-interactive guided workflow with JSON output
+npm run csl:cli -- --help       # usage + troubleshooting notes
+```
+
+Notes:
+- Interactive mode is intentionally disabled when stdin is not a TTY (common in CI and some IDE Run configs). Use `--smoke` or `--demo` there.
+- The CLI uses `node ./node_modules/tsx/dist/cli.mjs ./cli/entry.ts` to avoid double-loading `tsx`.
+- Do not set `NODE_OPTIONS=--import tsx` for this command path.
+
 ---
 
 ## Test Coverage
