@@ -19,7 +19,8 @@
     "bdd:challenge": "npm run bdd -- --tags '@challenge'",
     "bdd:league": "npm run bdd -- --tags '@league'",
     "bdd:showcase": "npm run bdd -- --tags '@showcase'",
-    "cli": "tsx cli/index.ts",
+    "csl:cli": "node ./node_modules/tsx/dist/cli.mjs ./cli/entry.ts",
+    "cli": "npm run csl:cli",
     "db:push": "npx supabase db push",
     "db:diff": "npx supabase db diff",
     "db:types": "npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
@@ -39,11 +40,14 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
+    "@inquirer/prompts": "^8.4.2",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.3",
+    "dotenv": "^17.4.2",
     "next": "^16.2.3",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "zx": "^8.8.5"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.60.1"
