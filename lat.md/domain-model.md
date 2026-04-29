@@ -38,6 +38,26 @@ Sponsors attach via `attachToChallenge()` → `SponsorAttachment` with brief and
 
 Portfolio construction, skill signals, top performers, public feed — implemented in [[src/showcase-intelligence/showcase.service.ts#ShowcaseService]].
 
+## Domain services (implementation)
+
+In-memory service layer that implements the entities above; same contracts are intended to back a future repository/DB layer ([[lat.md/work-graph#Work graph#Phases (execution spine)#Phase 1 — Persistence & data integrity]]).
+
+### LeagueModelService
+
+Hosts, seasons, leagues, participants, enrollment — see [[lat.md/domain-model#Domain model#Entities]].
+
+### ChallengeService
+
+Challenge lifecycle, submissions, scoring, leaderboard, diff — see [[lat.md/domain-model#Domain model#Entities#Challenge]] and [[lat.md/domain-model#Domain model#Entities#Submission]].
+
+### ShowcaseService
+
+Portfolio, skill signals, top performers, public feed — see [[lat.md/domain-model#Domain model#Entities#Showcase Intelligence]].
+
+### SponsorService
+
+Sponsors, briefs, attachments, outcomes — see [[lat.md/domain-model#Domain model#Entities#Sponsor]].
+
 ## Relationships
 
 Who connects to whom in the domain; guides schema foreign keys and service boundaries.

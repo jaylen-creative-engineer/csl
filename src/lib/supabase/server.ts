@@ -7,6 +7,7 @@ import { getSupabasePublishableKey } from "./env.js";
  * Supabase client for Server Components, Route Handlers, and Server Actions.
  * Uses the publishable (anon) key and the user session from cookies (Supabase Auth).
  */
+// @lat: [[lat.md/current-system#Current system#Delivery surfaces#Supabase#createSupabaseServerClient]]
 export async function createSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = getSupabasePublishableKey();

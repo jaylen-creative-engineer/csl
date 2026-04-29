@@ -27,7 +27,19 @@ Where users and operators touch the system: web app, CLI, database clients.
 
 ### Supabase
 
-Clients in `src/lib/supabase/` ([[src/lib/supabase/client.ts#createSupabaseBrowserClient]], [[src/lib/supabase/server.ts#createSupabaseServerClient]], admin). Types: [[src/lib/supabase/database.types.ts]]. Persistence roadmap: [[lat.md/work-graph#Work graph#Phases (execution spine)#Phase 1 — Persistence & data integrity]].
+Browser, server, and admin entry points in `src/lib/supabase/`; shared types in [[src/lib/supabase/database.types.ts]]. These wire the app to Supabase before the domain repository layer lands.
+
+#### createSupabaseBrowserClient
+
+For Client Components: session in cookies via `@supabase/ssr`.
+
+#### createSupabaseServerClient
+
+For Server Components, route handlers, and server actions: publishable key + cookie session.
+
+#### createSupabaseAdminClient
+
+For trusted server-only use (e.g. storage, admin); requires `SUPABASE_SERVICE_ROLE_KEY`, never exposed to the browser.
 
 ## Source layout
 

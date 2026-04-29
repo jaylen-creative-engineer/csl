@@ -18,6 +18,7 @@ function newId(prefix: string, counter: number): string {
   return `${prefix}:${counter}`;
 }
 
+// @lat: [[lat.md/domain-model#Domain model#Domain services (implementation)#SponsorService]]
 export class SponsorService {
   private readonly sponsors = new Map<SponsorId, Sponsor>();
   private readonly attachments = new Map<SponsorAttachmentId, SponsorAttachment>();

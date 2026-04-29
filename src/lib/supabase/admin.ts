@@ -5,6 +5,7 @@ import type { Database } from "./database.types.js";
  * Optional service-role client for trusted server-only code (e.g. Storage uploads, admin APIs).
  * Never import this into Client Components or expose the key to the browser.
  */
+// @lat: [[lat.md/current-system#Current system#Delivery surfaces#Supabase#createSupabaseAdminClient]]
 export function createSupabaseAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

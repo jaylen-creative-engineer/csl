@@ -21,6 +21,7 @@ function newId(prefix: string, counter: number): string {
   return `${prefix}:${counter}`;
 }
 
+// @lat: [[lat.md/domain-model#Domain model#Domain services (implementation)#ChallengeService]]
 export class ChallengeService {
   private readonly challenges = new Map<ChallengeId, Challenge>();
   private readonly submissions = new Map<SubmissionId, Submission>();

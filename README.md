@@ -97,7 +97,7 @@ Copy `.env.local.example` to `.env.local` and fill values from the Supabase dash
 
 ## Knowledge graph
 
-Interlinked markdown under `lat.md/` documents product vision, the domain model, what is implemented, and a **work graph** (phases, themes, known gaps). Entry: `lat.md/README.md`. Validate links with `npm run lat:check` (runs `npx lat check`).
+Interlinked markdown under `lat.md/` documents product vision, the domain model, what is implemented, and a **work graph** (phases, themes, known gaps). Entry: `lat.md/README.md`. Validate links and `@lat` anchors with `npm run lat:check` (runs `npx lat check`). Use `npx lat refs "<section-id>"` to find code that references a vault section.
 
 ---
 
