@@ -195,7 +195,10 @@ The next product milestone is to make CSL valuable for one creative without rely
 | P0 | Solo studio mode | One user can start and complete project-based sprints privately | `league-model`: personal studio or auto-provisioned personal league |
 | P0 | Project challenge templates | Users can practice creation through constrained, experiential projects | `challenge-intelligence`: challenge templates, drill packs, seeded criteria |
 | P0 | Revision-first submissions | Creation quality improves through required second pass, not one-and-done uploads | `challenge-intelligence`: submission revisions (`v1`, `v2`, etc.), revision state |
+| P0 | AI rubric review | Every project gets actionable skill feedback without requiring external judges | new `review-intelligence` service for criteria-level AI critique |
 | P1 | Rubric critique coach | Feedback translates directly into concrete next creative actions | `challenge-intelligence`: rubric-level feedback, revision prompt generation |
+| P1 | Learning context recommendations | Weak skill areas are paired with relevant courses, articles, and reference material | new `learning-context` service with resource indexing and recommendation |
+| P1 | Guided learning journey | Creatives get a sequenced path of projects + resources based on current gaps | new `learning-journey` service to manage adaptive plans |
 | P1 | Skill growth timeline | User sees craft improvement over time, by criteria domain | `showcase-intelligence`: growth profile, per-domain trend aggregation |
 | P1 | Private practice tape | User retains a personal archive of projects, drafts, and reflection | `showcase-intelligence`: private portfolio feed with publish toggle |
 | P2 | Learning arcs | Project series builds mastery via sequenced creative outcomes | new learning-path service or extension of challenge templates |
@@ -206,4 +209,46 @@ The next product milestone is to make CSL valuable for one creative without rely
 - A solo user can complete 5 project cycles end-to-end with no other participants.
 - Each project cycle produces at least one revision event and a measurable score delta.
 - The app can recommend the next project based on weakest scoring criteria.
+- AI review produces per-criterion feedback plus concrete revision actions for every completed `v1`.
+- Each weak criterion is mapped to at least two learning resources (course/article/reference).
+- The learning journey updates after each project using latest review and score-delta signals.
 - Public discovery features remain optional, not required, for core value delivery.
+
+### Implementation sequence (next build slices)
+
+| Slice | Primary scope | Service/API additions | BDD coverage to add |
+|---|---|---|---|
+| S1 | Solo project loop foundation | `challenge-intelligence`: `createPracticeChallenge()`, `submitRevision()`; `showcase-intelligence`: `getSkillDeltaTimeline()` | Solo user can complete `v1 -> critique placeholder -> v2` |
+| S2 | AI review integration | new `review-intelligence`: `reviewSubmission()`, `generateRevisionActions()`; API: `POST /api/reviews` | AI review returns rubric-aligned feedback and revision actions |
+| S3 | Learning context layer | new `learning-context`: `ingestResource()`, `recommendResourcesForDomains()`; API: `GET /api/learning/resources` | Weak criteria return ranked courses/articles/materials |
+| S4 | Guided journey planner | new `learning-journey`: `buildJourneyPlan()`, `updateJourneyAfterProject()`; API: `GET/POST /api/learning/journey` | Journey plan adapts after each project cycle |
+
+### Suggested domain contracts (draft)
+
+```ts
+type CriterionReview = {
+  criteriaName: string;
+  score: number;
+  strengths: string[];
+  weaknesses: string[];
+  recommendedActions: string[];
+};
+
+type SubmissionAIReview = {
+  id: string;
+  submissionId: string;
+  participantId: string;
+  overallSummary: string;
+  criterionReviews: CriterionReview[];
+  generatedAt: string;
+};
+
+type LearningResource = {
+  id: string;
+  type: "course" | "article" | "video" | "exercise" | "reference";
+  title: string;
+  url: string;
+  domains: string[];
+  level: "beginner" | "intermediate" | "advanced";
+};
+```
