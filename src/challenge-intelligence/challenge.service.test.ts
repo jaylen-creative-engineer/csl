@@ -126,6 +126,49 @@ describe("ChallengeService", () => {
         })
       ).toThrow("challenge not open");
     });
+
+    it("creates a revision linked to the original submission while open", () => {
+      const challenge = service.createChallenge({
+        leagueId: LEAGUE_ID,
+        title: "Revision Sprint",
+        prompt: "Create and refine",
+        deadline: deadline(48),
+      });
+      service.openChallenge(challenge.id);
+
+      const v1 = service.submitEntry(challenge.id, "participant:1", {
+        artifact: { url: "https://alex.design/v1" },
+      });
+      const v2 = service.submitRevision(v1.id, {
+        artifact: { url: "https://alex.design/v2" },
+      });
+
+      expect(v2.revisionNumber).toBe(2);
+      expect(v2.parentSubmissionId).toBe(v1.id);
+      expect(v2.rootSubmissionId).toBe(v1.id);
+      expect(v2.participantId).toBe(v1.participantId);
+      expect(v2.challengeId).toBe(v1.challengeId);
+    });
+
+    it("rejects revision when challenge is no longer open", () => {
+      const challenge = service.createChallenge({
+        leagueId: LEAGUE_ID,
+        title: "Closed Revision Sprint",
+        prompt: "Create and refine",
+        deadline: deadline(48),
+      });
+      service.openChallenge(challenge.id);
+      const v1 = service.submitEntry(challenge.id, "participant:1", {
+        artifact: { url: "https://alex.design/v1" },
+      });
+      service.closeForJudging(challenge.id);
+
+      expect(() =>
+        service.submitRevision(v1.id, {
+          artifact: { url: "https://alex.design/v2" },
+        })
+      ).toThrow("challenge not open");
+    });
   });
 
   describe("scoreSubmission and leaderboard", () => {
