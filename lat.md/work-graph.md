@@ -62,14 +62,18 @@ Cross-cutting capabilities after foundations ship; optional ordering within a th
 
 ### Theme — Individual progression & learning loops
 
-Extends portfolio and signals into guided growth ([[lat.md/product-vision#Product vision#Individual learner journey]]).
+Implements the [[lat.md/individual-learner-journey#Individual learner journey#Behavior vision]]: skill intent, mastery framing, AI-coordinated paths, resources, accountability — still individualized even when social features engage ([[lat.md/product-vision#Product vision#Individual learner journey]]).
 
 | Work item | Enables |
 |-----------|---------|
-| Accounts & learner identity | Persistent portfolio across seasons |
-| Feedback beyond aggregate score | Rubric comments, optional critique |
-| Goals & pathways | Skill gaps from criteria → suggested challenges |
-| Personal dashboard | Progress, streaks, artifacts |
+| Accounts & learner identity | Skill profile and longitudinal evidence |
+| Skill intent & mastery surfaces | Maps rubric/criteria to “skill X” progress ([[lat.md/individual-learner-journey#Individual learner journey#Skill intent & mastery framing]]) |
+| AI-coordinated paths | Recommend frameworks, plans, next actions ([[lat.md/individual-learner-journey#Individual learner journey#AI-coordinated guidance]]) |
+| Plans, frameworks, path library | Executable sequences tied to challenges and resources ([[lat.md/individual-learner-journey#Individual learner journey#Frameworks, plans, and paths]]) |
+| Resources & brief linking | Step-level materials and sponsor/host briefs as learning substrate ([[lat.md/individual-learner-journey#Individual learner journey#Resources]]) |
+| Accountability | Milestones, commitments, drift-aware prompts ([[lat.md/individual-learner-journey#Individual learner journey#Accountability]]) |
+| Feedback beyond aggregate score | Rubric comments, critique — feeds mastery model |
+| Personal dashboard | Progress, upcoming steps, artifacts |
 
 Also grounded in [[lat.md/domain-model#Domain model#Entities#Showcase Intelligence]].
 

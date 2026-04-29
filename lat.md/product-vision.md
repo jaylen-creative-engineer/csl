@@ -10,15 +10,11 @@ The long-term shape is a **self-learning platform** — individual value (portfo
 
 ## Individual learner journey
 
-How single learners gain value from the product today and what is still mostly roadmap.
+Solo learners pursue **skill X** via mastery-oriented guidance: AI-coordinated frameworks, plans, paths, resources, accountability, plus optional social collaboration and competition ([[lat.md/individual-learner-journey#Individual learner journey#Behavior vision]]).
 
-Today the domain model already supports:
+Details on feature areas live in [[lat.md/individual-learner-journey]]. **In product today:** portfolio and skill signals from scored work; leaderboard as competitive anchor ([[lat.md/current-system#Current system#Capabilities implemented]]).
 
-- Public **portfolio** from submissions ([[lat.md/domain-model#Domain model#Entities#Showcase Intelligence]])
-- **Skill signals** derived from criteria-weighted scores, not self-claims
-- **Leaderboard** as a reputation anchor within a league
-
-**Gap toward “self-learning”:** persistence, accounts, personalized paths, and longitudinal progression are staged under [[lat.md/work-graph#Work graph#Work themes#Theme — Individual progression & learning loops]].
+**Gap:** persistence, learner identity, AI orchestration, structured plans, and accountability UX ship incrementally — see [[lat.md/work-graph#Work graph#Work themes#Theme — Individual progression & learning loops]].
 
 ## Collective playground
 
