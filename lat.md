@@ -104,6 +104,9 @@ Sponsor ──────── attaches to ────────► Challen
 | medium | Sponsor | `opportunityExtendedTo` has no follow-up query path |
 | low | System | No typed error classes for programmatic error handling |
 | low | Showcase | No pagination on list operations |
+| high | Product | No single-player practice mode for one-user project cycles |
+| high | Challenge | No revision model (`v1` -> `v2`) to track creative iteration |
+| high | Showcase | No skill trend timeline to visualize growth over repeated projects |
 
 ---
 
@@ -125,3 +128,31 @@ Sponsor ──────── attaches to ────────► Challen
 | 2 | API routes (REST, validation, idempotency) | Planned |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |
 | 4 | Auth, RBAC, audit log, observability | Planned |
+
+---
+
+## Single-Player Experiential Learning Backlog
+
+### North-star Loop
+
+`Start project challenge -> submit v1 -> receive rubric critique -> ship revision v2 -> capture skill delta -> queue next project`
+
+### Prioritized Workstreams
+
+| Priority | Workstream | Why it matters |
+|---|---|---|
+| P0 | Solo studio mode (`personal` league type) | One creative can run full challenge cycles alone |
+| P0 | Project challenge templates + drill packs | Makes practice experiential, constrained, and creation-first |
+| P0 | Revision-first submissions | Forces iteration and quality growth through second-pass work |
+| P1 | Rubric critique coach | Converts score output into specific creative next actions |
+| P1 | Skill growth timeline | Makes progress legible by criteria-domain trend |
+| P1 | Private practice tape | Preserves body of work privately with optional public release |
+| P2 | Learning arcs | Sequences projects into progressive mastery paths |
+| P3 | Multiplayer overlays | Reintroduces sponsors/leagues/feed as optional amplification |
+
+### Solo Success Criteria
+
+- A single user can complete five project cycles with no additional participants.
+- Every completed project includes at least one revision and score delta.
+- Next-project recommendation is derived from weakest scoring criteria.
+- Public discovery is optional and not required for core value.
