@@ -60,7 +60,7 @@ csl/
 │   └── step_definitions/       # Cucumber BDD steps using real service instances
 │       └── support/world.ts    # Shared Cucumber World — all services wired here
 ├── app/                        # Next.js App Router (landing page)
-└── docs/                       # Product roadmap and feature design specs
+└── lat.md/                     # Knowledge graph (lat.md) — vision, domain, work backlog
 ```
 
 **Guiding principles:**
@@ -90,8 +90,14 @@ Copy `.env.local.example` to `.env.local` and fill values from the Supabase dash
 | Supabase (`@supabase/supabase-js`, `@supabase/ssr`) | Auth session, Storage, and other platform APIs |
 | Vitest | Unit tests |
 | Cucumber.js | BDD acceptance scenarios |
-| lat.md | Knowledge graph |
+| lat.md | Knowledge graph (`lat.md/` vault — wiki-linked concepts and backlog) |
 | tsx | TypeScript execution for scripts and BDD |
+
+---
+
+## Knowledge graph
+
+Interlinked markdown under `lat.md/` documents product vision, the domain model, what is implemented, and a **work graph** (phases, themes, known gaps). Entry: `lat.md/README.md`. Validate links and `@lat` anchors with `npm run lat:check` (runs `npx lat check`). Use `npx lat refs "<section-id>"` to find code that references a vault section.
 
 ---
 

@@ -5,6 +5,7 @@ import { getSupabasePublishableKey } from "./env.js";
 /**
  * Supabase client for Client Components (browser). Session is stored in cookies via @supabase/ssr.
  */
+// @lat: [[lat.md/current-system#Current system#Delivery surfaces#Supabase#createSupabaseBrowserClient]]
 export function createSupabaseBrowserClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = getSupabasePublishableKey();

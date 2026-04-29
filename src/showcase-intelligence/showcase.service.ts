@@ -3,6 +3,7 @@ import type { LeagueModelService } from "../league-model/league-model.service.js
 import type { ChallengeService } from "../challenge-intelligence/challenge.service.js";
 import type { Portfolio, PublicProfile, ShowcaseEntry, SkillSignal } from "./types.js";
 
+// @lat: [[lat.md/domain-model#Domain model#Domain services (implementation)#ShowcaseService]]
 export class ShowcaseService {
   constructor(
     private readonly leagueModel: LeagueModelService,

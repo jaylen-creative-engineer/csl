@@ -25,6 +25,7 @@ function newId(prefix: string, counter: number): string {
   return `${prefix}:${counter}`;
 }
 
+// @lat: [[lat.md/domain-model#Domain model#Domain services (implementation)#LeagueModelService]]
 export class LeagueModelService {
   private readonly leagues = new Map<LeagueId, League>();
   private readonly seasons = new Map<SeasonId, Season>();
