@@ -99,8 +99,9 @@ export async function runGuidedDemoBatch(): Promise<number> {
       prompt: "Design a bold identity for urban transit",
       deadline: "2026-05-30",
       scoringCriteria: [
-        { name: "Originality", weight: 0.5 },
-        { name: "Execution", weight: 0.5 },
+        { name: "Originality", weight: 0.4 },
+        { name: "Execution", weight: 0.4 },
+        { name: "Clarity", weight: 0.2 },
       ],
     });
     rt.state.challenges.push(challenge);
@@ -120,19 +121,56 @@ export async function runGuidedDemoBatch(): Promise<number> {
     rt.state.submissions.push(...submissions);
     emit("submissions.created", submissions);
 
+    const revision = rt.challengeService.submitRevision(submissions[0]!.id, {
+      artifact: {
+        url: `https://example.com/${participants[0]!.handle.replace("@", "")}-revision-2`,
+        description: `${participants[0]!.handle} revised entry`,
+      },
+      isPublic: true,
+    });
+    rt.state.submissions.push(revision);
+    emit("submission.revision.created", revision);
+
     emit("challenge.judging", rt.challengeService.closeForJudging(challenge.id));
 
-    const scored = submissions.map((s, idx) =>
+    const judgingSet = [...submissions, revision];
+    const scored = judgingSet.map((s, idx) =>
       rt.challengeService.scoreSubmission(s.id, {
         judgeId: "judge:demo",
         rationale: "Demo score",
         criteriaScores: [
-          { criteriaName: "Originality", score: idx === 0 ? 92 : 84 },
-          { criteriaName: "Execution", score: idx === 0 ? 88 : 86 },
+          {
+            criteriaName: "Originality",
+            score: idx === 0 ? 84 : idx === 1 ? 86 : 91,
+          },
+          {
+            criteriaName: "Execution",
+            score: idx === 0 ? 82 : idx === 1 ? 85 : 89,
+          },
+          {
+            criteriaName: "Clarity",
+            score: idx === 0 ? 80 : idx === 1 ? 84 : 90,
+          },
         ],
       }),
     );
     emit("submissions.scored", scored);
+
+    const review = rt.reviewService.reviewSubmission(revision.id);
+    emit("ai.review.generated", review);
+
+    const weakestDomains = review.criterionReviews
+      .slice()
+      .sort((a, b) => a.score - b.score)
+      .slice(0, 2)
+      .map((r) => r.criteriaName);
+    const resourceRecommendations = rt.learningContextService.recommendResourcesForDomains(
+      weakestDomains
+    );
+    emit("learning.resources.recommended", {
+      weakestDomains,
+      recommendations: resourceRecommendations,
+    });
 
     emit("challenge.completed", rt.challengeService.completeChallenge(challenge.id));
     emit("leaderboard.list", rt.challengeService.getLeaderboard(challenge.id));

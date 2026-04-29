@@ -158,13 +158,13 @@ BDD steps:    35 passing
 
 ## Strategic Sequencing
 
-The partnership and growth sequencing from the product design:
+The near-term sequencing is now **single-player creation value first**, then network effects:
 
-1. **Community anchors first** — Meetup groups, design schools, local orgs seed the talent supply
-2. **Challenge sponsors second** — real stakes and briefs give output legitimacy
-3. **Distribution and hiring partners last** — they're a reward for density, not a way to create it
+1. **Solo experiential loop first** — one creative can run repeated project-based challenges, receive critique, ship revisions, and see skill growth
+2. **Optional social overlays second** — private work can be published into feeds, cohorts, and ranked formats when the creator chooses
+3. **Sponsor and hiring signals third** — external demand layers on only after solo outcomes are strong and repeatable
 
-The biggest near-term unlock: one well-run challenge sprint with one real sponsor, one community host, and public outputs.
+The biggest near-term unlock: a solo creative can complete multiple end-to-end project cycles (`v1 -> critique -> v2`) and measurably improve without any dependency on hosts, sponsors, or audience density.
 
 ---
 
@@ -177,3 +177,78 @@ The biggest near-term unlock: one well-run challenge sprint with one real sponso
 | 2 | API routes (REST, validation, idempotency) | Planned |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |
 | 4 | Auth, RBAC, audit log, observability | Planned |
+
+---
+
+## Product Backlog (Single-Player Experiential Learning First)
+
+The next product milestone is to make CSL valuable for one creative without relying on community density, sponsor demand, or leaderboard effects.
+
+### North-star loop
+
+`Start project challenge -> submit v1 -> receive rubric critique -> ship revision v2 -> capture skill delta -> queue next project`
+
+### Prioritized backlog
+
+| Priority | Workstream | Outcome for solo creative | Domain impact |
+|---|---|---|---|
+| P0 | Solo studio mode | One user can start and complete project-based sprints privately | `league-model`: personal studio or auto-provisioned personal league |
+| P0 | Project challenge templates | Users can practice creation through constrained, experiential projects | `challenge-intelligence`: challenge templates, drill packs, seeded criteria |
+| P0 | Revision-first submissions | Creation quality improves through required second pass, not one-and-done uploads | `challenge-intelligence`: submission revisions (`v1`, `v2`, etc.), revision state |
+| P0 | AI rubric review | Every project gets actionable skill feedback without requiring external judges | new `review-intelligence` service for criteria-level AI critique |
+| P1 | Rubric critique coach | Feedback translates directly into concrete next creative actions | `challenge-intelligence`: rubric-level feedback, revision prompt generation |
+| P1 | Learning context recommendations | Weak skill areas are paired with relevant courses, articles, and reference material | new `learning-context` service with resource indexing and recommendation |
+| P1 | Guided learning journey | Creatives get a sequenced path of projects + resources based on current gaps | new `learning-journey` service to manage adaptive plans |
+| P1 | Skill growth timeline | User sees craft improvement over time, by criteria domain | `showcase-intelligence`: growth profile, per-domain trend aggregation |
+| P1 | Private practice tape | User retains a personal archive of projects, drafts, and reflection | `showcase-intelligence`: private portfolio feed with publish toggle |
+| P2 | Learning arcs | Project series builds mastery via sequenced creative outcomes | new learning-path service or extension of challenge templates |
+| P3 | Multiplayer overlays | Public leagues, sponsor briefs, and ranked feeds become optional accelerators | existing league/sponsor/showcase modules re-enabled on top of solo core |
+
+### Definition of success for this backlog
+
+- A solo user can complete 5 project cycles end-to-end with no other participants.
+- Each project cycle produces at least one revision event and a measurable score delta.
+- The app can recommend the next project based on weakest scoring criteria.
+- AI review produces per-criterion feedback plus concrete revision actions for every completed `v1`.
+- Each weak criterion is mapped to at least two learning resources (course/article/reference).
+- The learning journey updates after each project using latest review and score-delta signals.
+- Public discovery features remain optional, not required, for core value delivery.
+
+### Implementation sequence (next build slices)
+
+| Slice | Primary scope | Service/API additions | BDD coverage to add |
+|---|---|---|---|
+| S1 | Solo project loop foundation | `challenge-intelligence`: `createPracticeChallenge()`, `submitRevision()`; `showcase-intelligence`: `getSkillDeltaTimeline()` | Solo user can complete `v1 -> critique placeholder -> v2` |
+| S2 | AI review integration | new `review-intelligence`: `reviewSubmission()`, `generateRevisionActions()`; API: `POST /api/reviews` | AI review returns rubric-aligned feedback and revision actions |
+| S3 | Learning context layer | new `learning-context`: `ingestResource()`, `recommendResourcesForDomains()`; API: `GET /api/learning/resources` | Weak criteria return ranked courses/articles/materials |
+| S4 | Guided journey planner | new `learning-journey`: `buildJourneyPlan()`, `updateJourneyAfterProject()`; API: `GET/POST /api/learning/journey` | Journey plan adapts after each project cycle |
+
+### Suggested domain contracts (draft)
+
+```ts
+type CriterionReview = {
+  criteriaName: string;
+  score: number;
+  strengths: string[];
+  weaknesses: string[];
+  recommendedActions: string[];
+};
+
+type SubmissionAIReview = {
+  id: string;
+  submissionId: string;
+  participantId: string;
+  overallSummary: string;
+  criterionReviews: CriterionReview[];
+  generatedAt: string;
+};
+
+type LearningResource = {
+  id: string;
+  type: "course" | "article" | "video" | "exercise" | "reference";
+  title: string;
+  url: string;
+  domains: string[];
+  level: "beginner" | "intermediate" | "advanced";
+};
+```

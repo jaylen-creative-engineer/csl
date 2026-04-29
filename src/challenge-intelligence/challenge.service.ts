@@ -90,6 +90,35 @@ export class ChallengeService {
       artifact: input.artifact,
       isPublic: input.isPublic ?? true,
       submittedAt: new Date().toISOString(),
+      revisionNumber: 1,
+      rootSubmissionId: id,
+    };
+    this.submissions.set(id, submission);
+    return submission;
+  }
+
+  submitRevision(submissionId: SubmissionId, input: SubmitEntryInput): Submission {
+    const previousSubmission = this.submissions.get(submissionId);
+    if (!previousSubmission) {
+      throw new Error(`Submission not found: ${submissionId}`);
+    }
+
+    const challenge = this.requireChallenge(previousSubmission.challengeId);
+    if (challenge.status !== ChallengeStatus.Open) {
+      throw new Error("challenge not open");
+    }
+
+    const id = newId("submission", ++submissionCounter);
+    const submission: Submission = {
+      id,
+      challengeId: previousSubmission.challengeId,
+      participantId: previousSubmission.participantId,
+      artifact: input.artifact,
+      isPublic: input.isPublic ?? previousSubmission.isPublic,
+      submittedAt: new Date().toISOString(),
+      revisionNumber: previousSubmission.revisionNumber + 1,
+      parentSubmissionId: previousSubmission.id,
+      rootSubmissionId: previousSubmission.rootSubmissionId,
     };
     this.submissions.set(id, submission);
     return submission;
@@ -149,6 +178,17 @@ export class ChallengeService {
     return Array.from(this.submissions.values()).filter(
       (s) => s.participantId === participantId
     );
+  }
+
+  getSubmissionLineage(submissionId: SubmissionId): Submission[] {
+    const submission = this.submissions.get(submissionId);
+    if (!submission) {
+      throw new Error(`Submission not found: ${submissionId}`);
+    }
+
+    return Array.from(this.submissions.values())
+      .filter((s) => s.rootSubmissionId === submission.rootSubmissionId)
+      .sort((a, b) => a.revisionNumber - b.revisionNumber);
   }
 
   getSubmission(submissionId: SubmissionId): Submission | undefined {

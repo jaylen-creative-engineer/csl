@@ -56,6 +56,9 @@ export interface Submission {
   participantId: ParticipantId;
   artifact: SubmissionArtifact;
   isPublic: boolean;
+  revisionNumber: number;
+  rootSubmissionId: SubmissionId;
+  parentSubmissionId?: SubmissionId;
   submittedAt: string;
   score?: Score;
 }
