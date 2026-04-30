@@ -43,6 +43,7 @@
     "features/**/*.ts",
     ".next/types/**/*.ts",
     "vitest.config.ts",
+    "vitest.setup.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [

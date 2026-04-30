@@ -8,20 +8,28 @@ Ordered roadmap from `README.md`; later phases unlock personalization and collec
 
 ### Phase 0 — Domain services + in-memory core
 
-**Status:** done.
-
-Core services: [[src/league-model/league-model.service.ts#LeagueModelService]], [[src/challenge-intelligence/challenge.service.ts#ChallengeService]], [[src/showcase-intelligence/showcase.service.ts#ShowcaseService]], [[src/sponsor-intelligence/sponsor.service.ts#SponsorService]]. See [[lat.md/current-system#Current system#Verification]].
+**Status:** superseded — contracts preserved; storage moved to Postgres ([[lat.md/work-graph#Work graph#Phases (execution spine)#Phase 1 — Persistence & data integrity]]).
 
 ### Phase 1 — Persistence & data integrity
 
-**Goal:** replace ephemeral maps with Postgres (Supabase), migrations, repository implementations — unlocks durable learner journeys.
+**Status:** repository layer + migrations landed (`src/lib/supabase/repositories/`). Remaining: broaden automated coverage against live DB in CI when secrets available.
+
+**Goal:** durable state in Postgres (Supabase), migrations, repository implementations — unlocks learner journeys.
 
 | Work item | Notes |
 |-----------|--------|
-| Schema & migrations | Align DB with [[lat.md/domain-model#Domain model#Entities]]; RLS plan for multi-tenant leagues |
-| Repository layer | Swap in-memory stores without changing service contracts |
-| Wire `DATABASE_URL` | As documented in `README` / Supabase |
+| Schema & migrations | Align DB with [[lat.md/domain-model#Domain model#Entities]]; optional `participants.user_id` → `auth.users` |
+| Repository layer | Done — typed access + JSON mappers |
+| RLS policies | Deferred to [[lat.md/work-graph#Work graph#Phases (execution spine)#Phase 4 — Auth, RBAC, observability]] (tables have RLS enabled without policies; server uses service role where needed) |
 | Close tracked consistency gaps | [[lat.md/work-graph#Work graph#Known domain gaps (tracked)]] |
+
+#### Next steps (post–Phase 1)
+
+1. **Auth** — Supabase Auth + Next middleware session refresh; set `participants.user_id` on signup.
+2. **RLS** — Policies per role; prefer user-scoped server client over service role in Route Handlers.
+3. **API routes** — Phase 2 REST / Server Actions wrapping services.
+
+Core services: [[src/league-model/league-model.service.ts#LeagueModelService]], [[src/challenge-intelligence/challenge.service.ts#ChallengeService]], [[src/showcase-intelligence/showcase.service.ts#ShowcaseService]], [[src/sponsor-intelligence/sponsor.service.ts#SponsorService]]. See [[lat.md/current-system#Current system#Verification]].
 
 ### Phase 2 — API routes
 
@@ -104,7 +112,7 @@ Concrete inconsistencies and omissions to close in Phase 1–2 unless noted.
 
 | Severity | Topic | Work |
 |----------|-------|------|
-| critical | No persistence | Phase 1 |
+| critical | Auth + RLS not wired — services/tests use service-role bypass | Phase 4 |
 | high | `League.challengeIds` not populated from challenges | Service + league linkage |
 | high | No `listLeagues()` / `listHosts()` | Discovery APIs |
 | high | No `getChallengesForLeague()` | Host UX & queries |

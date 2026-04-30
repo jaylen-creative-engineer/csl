@@ -1,133 +1,106 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../lib/supabase/database.types.js";
 import type { ParticipantId } from "../league-model/types.js";
+import {
+  newChallengeId,
+  newScoreId,
+  newSubmissionId,
+} from "../lib/supabase/ids.js";
+import {
+  insertChallenge,
+  fetchChallenge,
+  updateChallengeStatus,
+  insertSubmission,
+  fetchSubmission,
+  insertScore,
+  listSubmissionsForChallenge,
+  listSubmissionsForParticipant,
+} from "../lib/supabase/repositories/challenge.repository.js";
+import { deadlineToDb } from "../lib/supabase/mappers.js";
 import {
   type Challenge,
   type ChallengeDiff,
   type ChallengeId,
   ChallengeStatus,
   type CreateChallengeInput,
-  type Score,
-  type ScoreId,
   type ScoreInput,
   type Submission,
   type SubmissionId,
   type SubmitEntryInput,
 } from "./types.js";
 
-let challengeCounter = 0;
-let submissionCounter = 0;
-let scoreCounter = 0;
-
-function newId(prefix: string, counter: number): string {
-  return `${prefix}:${counter}`;
-}
-
 // @lat: [[lat.md/domain-model#Domain model#Domain services (implementation)#ChallengeService]]
 export class ChallengeService {
-  private readonly challenges = new Map<ChallengeId, Challenge>();
-  private readonly submissions = new Map<SubmissionId, Submission>();
+  constructor(private readonly client: SupabaseClient<Database>) {}
 
-  createChallenge(input: CreateChallengeInput): Challenge {
-    const id = newId("challenge", ++challengeCounter);
-    const challenge: Challenge = {
-      id,
-      leagueId: input.leagueId,
-      title: input.title,
-      prompt: input.prompt,
-      deadline: input.deadline,
-      status: ChallengeStatus.Draft,
-      scoringCriteria: input.scoringCriteria ?? [],
-      sponsorId: input.sponsorId,
-      createdAt: new Date().toISOString(),
-    };
-    this.challenges.set(id, challenge);
-    return challenge;
+  async createChallenge(input: CreateChallengeInput): Promise<Challenge> {
+    const id = newChallengeId();
+    return insertChallenge(this.client, id, input);
   }
 
-  getChallenge(id: ChallengeId): Challenge | undefined {
-    return this.challenges.get(id);
+  async getChallenge(id: ChallengeId): Promise<Challenge | undefined> {
+    return (await fetchChallenge(this.client, id)) ?? undefined;
   }
 
-  openChallenge(challengeId: ChallengeId): Challenge {
-    const challenge = this.requireChallenge(challengeId);
+  async openChallenge(challengeId: ChallengeId): Promise<Challenge> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Draft) {
       throw new Error(`Cannot open challenge in status "${challenge.status}"`);
     }
-    challenge.status = ChallengeStatus.Open;
-    return challenge;
+    await updateChallengeStatus(this.client, challengeId, "open");
+    return (await fetchChallenge(this.client, challengeId))!;
   }
 
-  closeForJudging(challengeId: ChallengeId): Challenge {
-    const challenge = this.requireChallenge(challengeId);
+  async closeForJudging(challengeId: ChallengeId): Promise<Challenge> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Open) {
       throw new Error(`Cannot move to judging from status "${challenge.status}"`);
     }
-    challenge.status = ChallengeStatus.Judging;
-    return challenge;
+    await updateChallengeStatus(this.client, challengeId, "judging");
+    return (await fetchChallenge(this.client, challengeId))!;
   }
 
-  completeChallenge(challengeId: ChallengeId): Challenge {
-    const challenge = this.requireChallenge(challengeId);
+  async completeChallenge(challengeId: ChallengeId): Promise<Challenge> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Judging) {
       throw new Error(`Cannot complete challenge from status "${challenge.status}"`);
     }
-    challenge.status = ChallengeStatus.Complete;
-    return challenge;
+    await updateChallengeStatus(this.client, challengeId, "complete");
+    return (await fetchChallenge(this.client, challengeId))!;
   }
 
-  submitEntry(
+  async submitEntry(
     challengeId: ChallengeId,
     participantId: ParticipantId,
     input: SubmitEntryInput
-  ): Submission {
-    const challenge = this.requireChallenge(challengeId);
+  ): Promise<Submission> {
+    const challenge = await this.requireChallenge(challengeId);
     if (challenge.status !== ChallengeStatus.Open) {
       throw new Error("challenge not open");
     }
-    const id = newId("submission", ++submissionCounter);
-    const submission: Submission = {
-      id,
-      challengeId,
-      participantId,
-      artifact: input.artifact,
-      isPublic: input.isPublic ?? true,
-      submittedAt: new Date().toISOString(),
-    };
-    this.submissions.set(id, submission);
-    return submission;
+    const id = newSubmissionId();
+    return insertSubmission(this.client, id, challengeId, participantId, input);
   }
 
-  scoreSubmission(submissionId: SubmissionId, input: ScoreInput): Submission {
-    const submission = this.submissions.get(submissionId);
+  async scoreSubmission(submissionId: SubmissionId, input: ScoreInput): Promise<Submission> {
+    const submission = await fetchSubmission(this.client, submissionId);
     if (!submission) {
       throw new Error(`Submission not found: ${submissionId}`);
     }
 
-    const challenge = this.requireChallenge(submission.challengeId);
+    const challenge = await this.requireChallenge(submission.challengeId);
     if (challenge.status !== ChallengeStatus.Judging) {
       throw new Error(`Cannot score submission when challenge is in status "${challenge.status}"`);
     }
 
     const totalScore = this.computeTotalScore(input, challenge);
-    const scoreId: ScoreId = newId("score", ++scoreCounter);
-
-    const score: Score = {
-      id: scoreId,
-      submissionId,
-      judgeId: input.judgeId,
-      criteriaScores: input.criteriaScores,
-      totalScore,
-      rationale: input.rationale,
-      scoredAt: new Date().toISOString(),
-    };
-
-    submission.score = score;
-    return submission;
+    const scoreId = newScoreId();
+    await insertScore(this.client, scoreId, submissionId, input, totalScore);
+    return (await fetchSubmission(this.client, submissionId))!;
   }
 
-  getLeaderboard(challengeId: ChallengeId): Submission[] {
-    const submissions = Array.from(this.submissions.values()).filter(
-      (s) => s.challengeId === challengeId
-    );
+  async getLeaderboard(challengeId: ChallengeId): Promise<Submission[]> {
+    const submissions = await listSubmissionsForChallenge(this.client, challengeId);
 
     return submissions
       .filter((s) => s.score !== undefined)
@@ -135,30 +108,25 @@ export class ChallengeService {
         const scoreA = a.score?.totalScore ?? 0;
         const scoreB = b.score?.totalScore ?? 0;
         if (scoreB !== scoreA) return scoreB - scoreA;
-        // Deterministic tiebreak: sort by submission id (lexicographic)
         return a.id.localeCompare(b.id);
       });
   }
 
-  getSubmissionsForChallenge(challengeId: ChallengeId): Submission[] {
-    return Array.from(this.submissions.values()).filter(
-      (s) => s.challengeId === challengeId
-    );
+  async getSubmissionsForChallenge(challengeId: ChallengeId): Promise<Submission[]> {
+    return listSubmissionsForChallenge(this.client, challengeId);
   }
 
-  getSubmissionsForParticipant(participantId: ParticipantId): Submission[] {
-    return Array.from(this.submissions.values()).filter(
-      (s) => s.participantId === participantId
-    );
+  async getSubmissionsForParticipant(participantId: ParticipantId): Promise<Submission[]> {
+    return listSubmissionsForParticipant(this.client, participantId);
   }
 
-  getSubmission(submissionId: SubmissionId): Submission | undefined {
-    return this.submissions.get(submissionId);
+  async getSubmission(submissionId: SubmissionId): Promise<Submission | undefined> {
+    return (await fetchSubmission(this.client, submissionId)) ?? undefined;
   }
 
-  diffChallenges(aId: ChallengeId, bId: ChallengeId): ChallengeDiff {
-    const a = this.requireChallenge(aId);
-    const b = this.requireChallenge(bId);
+  async diffChallenges(aId: ChallengeId, bId: ChallengeId): Promise<ChallengeDiff> {
+    const a = await this.requireChallenge(aId);
+    const b = await this.requireChallenge(bId);
 
     const criteriaANames = new Set(a.scoringCriteria.map((c) => c.name));
     const criteriaBNames = new Set(b.scoringCriteria.map((c) => c.name));
@@ -171,27 +139,25 @@ export class ChallengeService {
       challengeB: bId,
       titleChanged: a.title !== b.title,
       promptChanged: a.prompt !== b.prompt,
-      deadlineChanged: a.deadline !== b.deadline,
+      deadlineChanged: deadlineToDb(a.deadline) !== deadlineToDb(b.deadline),
       criteriaAdded,
       criteriaRemoved,
     };
   }
 
-  private requireChallenge(id: ChallengeId): Challenge {
-    const challenge = this.challenges.get(id);
+  private async requireChallenge(id: ChallengeId): Promise<Challenge> {
+    const challenge = await fetchChallenge(this.client, id);
     if (!challenge) throw new Error(`Challenge not found: ${id}`);
     return challenge;
   }
 
   private computeTotalScore(input: ScoreInput, challenge: Challenge): number {
     if (challenge.scoringCriteria.length === 0) {
-      // No criteria defined: average raw scores
       if (input.criteriaScores.length === 0) return 0;
       const sum = input.criteriaScores.reduce((acc, cs) => acc + cs.score, 0);
       return sum / input.criteriaScores.length;
     }
 
-    // Weighted sum
     return input.criteriaScores.reduce((total, cs) => {
       const criterion = challenge.scoringCriteria.find((c) => c.name === cs.criteriaName);
       const weight = criterion?.weight ?? 0;

@@ -1,3 +1,25 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../lib/supabase/database.types.js";
+import {
+  insertEnrollment,
+  insertLeague,
+  insertLeagueHost,
+  insertParticipant,
+  insertSeason,
+  fetchLeagueHost,
+  fetchSeason,
+  fetchLeague,
+  fetchParticipant,
+  updateLeagueStatus,
+  listParticipantsForLeague,
+  leagueExists,
+} from "../lib/supabase/repositories/league.repository.js";
+import {
+  newHostId,
+  newLeagueId,
+  newParticipantId,
+  newSeasonId,
+} from "../lib/supabase/ids.js";
 import {
   type CreateLeagueHostInput,
   type CreateLeagueInput,
@@ -7,129 +29,93 @@ import {
   EnrollmentStatus,
   type League,
   type LeagueHost,
-  type LeagueHostId,
   type LeagueId,
-  LeagueStatus,
   type Participant,
   type ParticipantId,
   type Season,
   type SeasonId,
 } from "./types.js";
 
-let leagueCounter = 0;
-let seasonCounter = 0;
-let hostCounter = 0;
-let participantCounter = 0;
-
-function newId(prefix: string, counter: number): string {
-  return `${prefix}:${counter}`;
-}
-
 // @lat: [[lat.md/domain-model#Domain model#Domain services (implementation)#LeagueModelService]]
 export class LeagueModelService {
-  private readonly leagues = new Map<LeagueId, League>();
-  private readonly seasons = new Map<SeasonId, Season>();
-  private readonly hosts = new Map<LeagueHostId, LeagueHost>();
-  private readonly participants = new Map<ParticipantId, Participant>();
+  constructor(private readonly client: SupabaseClient<Database>) {}
 
-  createLeagueHost(input: CreateLeagueHostInput): LeagueHost {
-    const id = newId("host", ++hostCounter);
-    const host: LeagueHost = {
-      id,
-      name: input.name,
-      organization: input.organization,
-      leagueIds: [],
-      createdAt: new Date().toISOString(),
-    };
-    this.hosts.set(id, host);
-    return host;
+  async createLeagueHost(input: CreateLeagueHostInput): Promise<LeagueHost> {
+    const id = newHostId();
+    await insertLeagueHost(this.client, id, input);
+    return fetchLeagueHost(this.client, id);
   }
 
-  getLeagueHost(id: LeagueHostId): LeagueHost | undefined {
-    return this.hosts.get(id);
+  async getLeagueHost(id: string): Promise<LeagueHost | undefined> {
+    try {
+      return await fetchLeagueHost(this.client, id);
+    } catch {
+      return undefined;
+    }
   }
 
-  createSeason(input: CreateSeasonInput): Season {
-    const id = newId("season", ++seasonCounter);
-    const season: Season = {
-      id,
-      name: input.name,
-      startDate: input.startDate,
-      endDate: input.endDate,
-      createdAt: new Date().toISOString(),
-    };
-    this.seasons.set(id, season);
-    return season;
+  async createSeason(input: CreateSeasonInput): Promise<Season> {
+    const id = newSeasonId();
+    return insertSeason(this.client, id, input);
   }
 
-  getSeason(id: SeasonId): Season | undefined {
-    return this.seasons.get(id);
+  async getSeason(id: SeasonId): Promise<Season | undefined> {
+    const row = await fetchSeason(this.client, id);
+    return row ?? undefined;
   }
 
-  createLeague(input: CreateLeagueInput): League {
-    const host = this.hosts.get(input.hostId);
+  async createLeague(input: CreateLeagueInput): Promise<League> {
+    const host = await this.getLeagueHost(input.hostId);
     if (!host) {
       throw new Error(`LeagueHost not found: ${input.hostId}`);
     }
-    const id = newId("league", ++leagueCounter);
-    const league: League = {
-      id,
-      name: input.name,
-      hostId: input.hostId,
-      seasonId: input.seasonId ?? null,
-      status: LeagueStatus.Draft,
-      challengeIds: [],
-      createdAt: new Date().toISOString(),
-    };
-    this.leagues.set(id, league);
-    host.leagueIds.push(id);
-    return league;
+    const id = newLeagueId();
+    return insertLeague(this.client, id, input);
   }
 
-  getLeague(id: LeagueId): League | undefined {
-    return this.leagues.get(id);
+  async getLeague(id: LeagueId): Promise<League | undefined> {
+    try {
+      return await fetchLeague(this.client, id);
+    } catch {
+      return undefined;
+    }
   }
 
-  activateLeague(id: LeagueId): League {
-    const league = this.leagues.get(id);
+  async activateLeague(id: LeagueId): Promise<League> {
+    const league = await this.getLeague(id);
     if (!league) throw new Error(`League not found: ${id}`);
-    if (league.status !== LeagueStatus.Draft) {
+    if (league.status !== "draft") {
       throw new Error(`Cannot activate league in status "${league.status}": expected "draft"`);
     }
-    league.status = LeagueStatus.Active;
-    return league;
+    await updateLeagueStatus(this.client, id, "active");
+    return fetchLeague(this.client, id);
   }
 
-  closeLeague(id: LeagueId): League {
-    const league = this.leagues.get(id);
+  async closeLeague(id: LeagueId): Promise<League> {
+    const league = await this.getLeague(id);
     if (!league) throw new Error(`League not found: ${id}`);
-    if (league.status !== LeagueStatus.Active) {
+    if (league.status !== "active") {
       throw new Error(`Cannot close league in status "${league.status}": expected "active"`);
     }
-    league.status = LeagueStatus.Closed;
-    return league;
+    await updateLeagueStatus(this.client, id, "closed");
+    return fetchLeague(this.client, id);
   }
 
-  createParticipant(input: CreateParticipantInput): Participant {
-    const id = newId("participant", ++participantCounter);
-    const participant: Participant = {
-      id,
-      handle: input.handle,
-      discipline: input.discipline,
-      leagueMemberships: [],
-      createdAt: new Date().toISOString(),
-    };
-    this.participants.set(id, participant);
-    return participant;
+  async createParticipant(input: CreateParticipantInput): Promise<Participant> {
+    const id = newParticipantId();
+    await insertParticipant(this.client, id, input);
+    const p = await fetchParticipant(this.client, id);
+    if (!p) throw new Error("Participant insert failed");
+    return p;
   }
 
-  getParticipant(id: ParticipantId): Participant | undefined {
-    return this.participants.get(id);
+  async getParticipant(id: ParticipantId): Promise<Participant | undefined> {
+    return (await fetchParticipant(this.client, id)) ?? undefined;
   }
 
-  enrollParticipant(leagueId: LeagueId, participantId: ParticipantId): EnrollmentResult {
-    const league = this.leagues.get(leagueId);
-    if (!league) {
+  async enrollParticipant(leagueId: LeagueId, participantId: ParticipantId): Promise<EnrollmentResult> {
+    const leagueOk = await leagueExists(this.client, leagueId);
+    if (!leagueOk) {
       return {
         success: false,
         participantId,
@@ -139,7 +125,7 @@ export class LeagueModelService {
       };
     }
 
-    const participant = this.participants.get(participantId);
+    const participant = await fetchParticipant(this.client, participantId);
     if (!participant) {
       return {
         success: false,
@@ -150,10 +136,8 @@ export class LeagueModelService {
       };
     }
 
-    const existing = participant.leagueMemberships.find(
-      (m) => m.leagueId === leagueId && m.status === EnrollmentStatus.Enrolled
-    );
-    if (existing) {
+    const enroll = await insertEnrollment(this.client, leagueId, participantId);
+    if (!enroll.ok) {
       return {
         success: false,
         participantId,
@@ -163,12 +147,6 @@ export class LeagueModelService {
       };
     }
 
-    participant.leagueMemberships.push({
-      leagueId,
-      status: EnrollmentStatus.Enrolled,
-      enrolledAt: new Date().toISOString(),
-    });
-
     return {
       success: true,
       participantId,
@@ -177,14 +155,9 @@ export class LeagueModelService {
     };
   }
 
-  listParticipants(leagueId: LeagueId): Participant[] {
-    const league = this.leagues.get(leagueId);
-    if (!league) return [];
-
-    return Array.from(this.participants.values()).filter((p) =>
-      p.leagueMemberships.some(
-        (m) => m.leagueId === leagueId && m.status === EnrollmentStatus.Enrolled
-      )
-    );
+  async listParticipants(leagueId: LeagueId): Promise<Participant[]> {
+    const leagueOk = await leagueExists(this.client, leagueId);
+    if (!leagueOk) return [];
+    return listParticipantsForLeague(this.client, leagueId);
   }
 }

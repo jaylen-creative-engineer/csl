@@ -4,7 +4,7 @@ Core nouns and relationships for Creative Sports League services; mirrors `src/*
 
 ## Entities
 
-Persisted in-memory for now; Postgres replaces maps in [[lat.md/work-graph#Work graph#Phases (execution spine)#Phase 1 — Persistence & data integrity]].
+Primary store is **Postgres** via Supabase repositories (`src/lib/supabase/repositories/`); participants link to `auth.users` when `user_id` is set ([[lat.md/work-graph#Work graph#Phases (execution spine)#Phase 4 — Auth, RBAC, observability]]).
 
 ### LeagueHost
 
@@ -20,7 +20,7 @@ League lifecycle `draft` → `active` → `closed`. Tracks `challengeIds[]` — 
 
 ### Participant
 
-Enrollment with duplicate prevention; disciplines include design, writing, code, video, strategy, photography, illustration, other.
+Enrollment with duplicate prevention; disciplines include design, writing, code, video, strategy, photography, illustration, other. Optional `userId` links to Supabase Auth once onboarding wires accounts.
 
 ### Challenge
 
@@ -40,7 +40,7 @@ Portfolio construction, skill signals, top performers, public feed — implement
 
 ## Domain services (implementation)
 
-In-memory service layer that implements the entities above; same contracts are intended to back a future repository/DB layer ([[lat.md/work-graph#Work graph#Phases (execution spine)#Phase 1 — Persistence & data integrity]]).
+Async services backed by **Supabase Postgres** through typed repositories; admin/service-role client used in tests and trusted server paths until RLS policies ship ([[lat.md/current-system#Current system#Delivery surfaces#Supabase]]).
 
 ### LeagueModelService
 

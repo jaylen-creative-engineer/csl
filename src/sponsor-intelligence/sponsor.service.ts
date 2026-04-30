@@ -1,7 +1,17 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "../lib/supabase/database.types.js";
 import type { ChallengeId, Submission } from "../challenge-intelligence/types.js";
 import type { ChallengeService } from "../challenge-intelligence/challenge.service.js";
 import {
-  type AttachSponsorInput,
+  insertSponsor,
+  fetchSponsor,
+  insertSponsorAttachment,
+  fetchSponsorAttachment,
+  updateAttachmentOutcome,
+  listAttachmentsForSponsor,
+} from "../lib/supabase/repositories/sponsor.repository.js";
+import { newSponsorAttachmentId, newSponsorId } from "../lib/supabase/ids.js";
+import {
   type ChallengeBrief,
   type CreateSponsorInput,
   type Sponsor,
@@ -11,85 +21,63 @@ import {
   type SponsorOutcome,
 } from "./types.js";
 
-let sponsorCounter = 0;
-let attachmentCounter = 0;
-
-function newId(prefix: string, counter: number): string {
-  return `${prefix}:${counter}`;
-}
-
 // @lat: [[lat.md/domain-model#Domain model#Domain services (implementation)#SponsorService]]
 export class SponsorService {
-  private readonly sponsors = new Map<SponsorId, Sponsor>();
-  private readonly attachments = new Map<SponsorAttachmentId, SponsorAttachment>();
+  constructor(
+    private readonly client: SupabaseClient<Database>,
+    private readonly challengeService: ChallengeService
+  ) {}
 
-  constructor(private readonly challengeService: ChallengeService) {}
-
-  createSponsor(input: CreateSponsorInput): Sponsor {
-    const id = newId("sponsor", ++sponsorCounter);
-    const sponsor: Sponsor = {
-      id,
-      name: input.name,
-      organization: input.organization,
-      contactEmail: input.contactEmail,
-      createdAt: new Date().toISOString(),
-    };
-    this.sponsors.set(id, sponsor);
-    return sponsor;
+  async createSponsor(input: CreateSponsorInput): Promise<Sponsor> {
+    const id = newSponsorId();
+    return insertSponsor(this.client, id, input);
   }
 
-  getSponsor(id: SponsorId): Sponsor | undefined {
-    return this.sponsors.get(id);
+  async getSponsor(id: SponsorId): Promise<Sponsor | undefined> {
+    try {
+      return await fetchSponsor(this.client, id);
+    } catch {
+      return undefined;
+    }
   }
 
-  attachToChallenge(
+  async attachToChallenge(
     sponsorId: SponsorId,
     challengeId: ChallengeId,
     brief: ChallengeBrief
-  ): SponsorAttachment {
-    const sponsor = this.sponsors.get(sponsorId);
-    if (!sponsor) throw new Error(`Sponsor not found: ${sponsorId}`);
+  ): Promise<SponsorAttachment> {
+    await fetchSponsor(this.client, sponsorId);
 
-    const challenge = this.challengeService.getChallenge(challengeId);
+    const challenge = await this.challengeService.getChallenge(challengeId);
     if (!challenge) throw new Error(`Challenge not found: ${challengeId}`);
 
-    const id = newId("attachment", ++attachmentCounter);
-    const attachment: SponsorAttachment = {
-      id,
-      sponsorId,
-      challengeId,
-      brief,
-      attachedAt: new Date().toISOString(),
-    };
-    this.attachments.set(id, attachment);
-    return attachment;
+    const id = newSponsorAttachmentId();
+    return insertSponsorAttachment(this.client, id, sponsorId, challengeId, brief);
   }
 
-  getAttachment(id: SponsorAttachmentId): SponsorAttachment | undefined {
-    return this.attachments.get(id);
+  async getAttachment(id: SponsorAttachmentId): Promise<SponsorAttachment | undefined> {
+    try {
+      return await fetchSponsorAttachment(this.client, id);
+    } catch {
+      return undefined;
+    }
   }
 
-  recordOutcome(attachmentId: SponsorAttachmentId, outcome: SponsorOutcome): SponsorAttachment {
-    const attachment = this.attachments.get(attachmentId);
-    if (!attachment) throw new Error(`SponsorAttachment not found: ${attachmentId}`);
-
-    attachment.outcome = outcome;
-    return attachment;
+  async recordOutcome(attachmentId: SponsorAttachmentId, outcome: SponsorOutcome): Promise<SponsorAttachment> {
+    await updateAttachmentOutcome(this.client, attachmentId, outcome);
+    return fetchSponsorAttachment(this.client, attachmentId);
   }
 
-  getSponsorSummary(
+  async getSponsorSummary(
     sponsorId: SponsorId
-  ): { challenges: number; topSubmissions: Submission[] } {
-    const sponsor = this.sponsors.get(sponsorId);
-    if (!sponsor) throw new Error(`Sponsor not found: ${sponsorId}`);
+  ): Promise<{ challenges: number; topSubmissions: Submission[] }> {
+    await fetchSponsor(this.client, sponsorId);
 
-    const sponsorAttachments = Array.from(this.attachments.values()).filter(
-      (a) => a.sponsorId === sponsorId
-    );
+    const sponsorAttachments = await listAttachmentsForSponsor(this.client, sponsorId);
 
     const topSubmissions: Submission[] = [];
     for (const attachment of sponsorAttachments) {
-      const leaderboard = this.challengeService.getLeaderboard(attachment.challengeId);
+      const leaderboard = await this.challengeService.getLeaderboard(attachment.challengeId);
       if (leaderboard.length > 0 && leaderboard[0]) {
         topSubmissions.push(leaderboard[0]);
       }

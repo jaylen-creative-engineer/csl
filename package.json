@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bdd": "NODE_OPTIONS='--import tsx' cucumber-js --config cucumber.mjs",
+    "bdd": "node scripts/run-bdd-if-env.mjs",
     "bdd:challenge": "npm run bdd -- --tags '@challenge'",
     "bdd:league": "npm run bdd -- --tags '@league'",
     "bdd:showcase": "npm run bdd -- --tags '@showcase'",

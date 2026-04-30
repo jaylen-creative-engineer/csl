@@ -27,7 +27,7 @@ Where users and operators touch the system: web app, CLI, database clients.
 
 ### Supabase
 
-Browser, server, and admin entry points in `src/lib/supabase/`; shared types in [[src/lib/supabase/database.types.ts]]. These wire the app to Supabase before the domain repository layer lands.
+Browser, server, and admin entry points in `src/lib/supabase/`; shared types in [[src/lib/supabase/database.types.ts]]. Domain services persist via [[src/lib/supabase/repositories/league.repository.ts]] and sibling repositories using `SupabaseClient<Database>` (typically admin in tests until RLS policies exist).
 
 #### createSupabaseBrowserClient
 

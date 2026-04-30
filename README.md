@@ -64,16 +64,16 @@ csl/
 ```
 
 **Guiding principles:**
-- Domain logic lives in services — no direct DB or UI coupling
-- All services use in-memory maps now; repository layer slots in without changing the service interface
-- BDD step definitions use real implementations, not mocks of domain logic
+- Domain logic lives in services — repositories encapsulate Supabase table access
+- Services take `SupabaseClient<Database>` (typically admin on server/tests until RLS policies exist)
+- BDD step definitions use real implementations against Postgres (requires `.env.local`)
 - Scoring is deterministic — same inputs, same leaderboard order, every time
 
 ### Supabase
 
 | Supabase product | Role in CSL |
 |---|---|
-| **Postgres** | Hosted database; use `DATABASE_URL` when you add the repository layer (Phase 1) |
+| **Postgres** | Hosted database; repositories in `src/lib/supabase/repositories/` |
 | **Auth** | User sessions via `src/lib/supabase/*` (see roadmap Phase 4) |
 | **Storage** | Public or signed URLs for challenge submission artifacts (`SubmissionArtifact.url`) |
 | **Realtime** | Optional live feed or leaderboard updates |
@@ -105,10 +105,11 @@ Interlinked markdown under `lat.md/` documents product vision, the domain model,
 
 ```bash
 npm install
+cp .env.local.example .env.local   # Fill Supabase URL + service role key for DB-backed tests/BDD
 npm run dev        # Start Next.js dev server
-npm test           # Run Vitest unit tests (41 tests)
-npm run bdd        # Run Cucumber BDD scenarios (9 scenarios, 35 steps)
-npm run verify     # Run full integration check: typecheck + tests + BDD
+npm test           # Vitest (integration specs skip if Supabase env vars are missing)
+npm run bdd        # Cucumber BDD — requires `.env.local` with Supabase credentials
+npm run verify     # typecheck + tests + BDD
 ```
 
 Tag-scoped BDD runs:

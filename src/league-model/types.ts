@@ -53,6 +53,8 @@ export interface League {
 
 export interface Participant {
   id: ParticipantId;
+  /** Set when the row is linked to Supabase Auth (`auth.users.id`). */
+  userId: string | null;
   handle: string;
   discipline: Discipline;
   leagueMemberships: LeagueMembership[];
@@ -93,4 +95,6 @@ export interface CreateLeagueHostInput {
 export interface CreateParticipantInput {
   handle: string;
   discipline: Discipline;
+  /** Optional link to `auth.users.id` once auth is wired. */
+  userId?: string | null;
 }

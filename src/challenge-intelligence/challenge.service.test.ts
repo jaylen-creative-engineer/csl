@@ -1,24 +1,41 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import { randomUUID } from "node:crypto";
 import { ChallengeService } from "./challenge.service.js";
 import { ChallengeStatus } from "./types.js";
-
-const LEAGUE_ID = "league:1";
+import { LeagueModelService } from "../league-model/league-model.service.js";
+import { createTestSupabaseClient } from "../test/supabase-test.js";
+import { hasSupabaseTestEnv } from "../test/supabase-env.js";
 
 function deadline(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 3_600_000).toISOString();
 }
 
-describe("ChallengeService", () => {
+describe.skipIf(!hasSupabaseTestEnv())("ChallengeService", () => {
   let service: ChallengeService;
+  let leagueModel: LeagueModelService;
+  let leagueId: string;
+  let suffix: string;
 
-  beforeEach(() => {
-    service = new ChallengeService();
+  beforeEach(async () => {
+    suffix = randomUUID().slice(0, 8);
+    const client = createTestSupabaseClient();
+    leagueModel = new LeagueModelService(client);
+    service = new ChallengeService(client);
+    const host = await leagueModel.createLeagueHost({
+      name: "Jordan",
+      organization: "Design Chicago",
+    });
+    const league = await leagueModel.createLeague({
+      name: `Test League-${suffix}`,
+      hostId: host.id,
+    });
+    leagueId = league.id;
   });
 
   describe("createChallenge", () => {
-    it("creates a challenge in draft state", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("creates a challenge in draft state", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh in 48h",
         prompt: "Rebrand a local coffee shop",
         deadline: deadline(48),
@@ -26,14 +43,14 @@ describe("ChallengeService", () => {
 
       expect(challenge.status).toBe(ChallengeStatus.Draft);
       expect(challenge.title).toBe("Brand Refresh in 48h");
-      expect(service.getChallenge(challenge.id)).toBeDefined();
+      expect(await service.getChallenge(challenge.id)).toBeDefined();
     });
   });
 
   describe("state transitions", () => {
-    it("transitions draft → open → judging → complete", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("transitions draft → open → judging → complete", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh in 48h",
         prompt: "Rebrand a local coffee shop",
         deadline: deadline(48),
@@ -41,97 +58,112 @@ describe("ChallengeService", () => {
 
       expect(challenge.status).toBe(ChallengeStatus.Draft);
 
-      const opened = service.openChallenge(challenge.id);
+      const opened = await service.openChallenge(challenge.id);
       expect(opened.status).toBe(ChallengeStatus.Open);
 
-      const judging = service.closeForJudging(challenge.id);
+      const judging = await service.closeForJudging(challenge.id);
       expect(judging.status).toBe(ChallengeStatus.Judging);
 
-      const completed = service.completeChallenge(challenge.id);
+      const completed = await service.completeChallenge(challenge.id);
       expect(completed.status).toBe(ChallengeStatus.Complete);
     });
 
-    it("cannot open a challenge that is already open", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("cannot open a challenge that is already open", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Test",
         prompt: "Test prompt",
         deadline: deadline(24),
       });
-      service.openChallenge(challenge.id);
+      await service.openChallenge(challenge.id);
 
-      expect(() => service.openChallenge(challenge.id)).toThrow();
+      await expect(service.openChallenge(challenge.id)).rejects.toThrow();
     });
 
-    it("cannot complete a challenge that is not in judging state", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("cannot complete a challenge that is not in judging state", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Test",
         prompt: "Test prompt",
         deadline: deadline(24),
       });
-      service.openChallenge(challenge.id);
+      await service.openChallenge(challenge.id);
 
-      expect(() => service.completeChallenge(challenge.id)).toThrow();
+      await expect(service.completeChallenge(challenge.id)).rejects.toThrow();
     });
   });
 
   describe("submitEntry", () => {
-    it("accepts a submission to an open challenge", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("accepts a submission to an open challenge", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh in 48h",
         prompt: "Rebrand a local coffee shop",
         deadline: deadline(48),
       });
-      service.openChallenge(challenge.id);
+      await service.openChallenge(challenge.id);
 
-      const submission = service.submitEntry(challenge.id, "participant:1", {
+      const participant = await leagueModel.createParticipant({
+        handle: `p-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      const submission = await service.submitEntry(challenge.id, participant.id, {
         artifact: { url: "https://alex.design/brand-refresh" },
       });
 
       expect(submission.challengeId).toBe(challenge.id);
-      expect(submission.participantId).toBe("participant:1");
+      expect(submission.participantId).toBe(participant.id);
       expect(submission.isPublic).toBe(true);
     });
 
-    it("rejects submission to a draft challenge", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("rejects submission to a draft challenge", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh in 48h",
         prompt: "Rebrand a local coffee shop",
         deadline: deadline(48),
       });
 
-      expect(() =>
-        service.submitEntry(challenge.id, "participant:1", {
+      const participant = await leagueModel.createParticipant({
+        handle: `p-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      await expect(
+        service.submitEntry(challenge.id, participant.id, {
           artifact: { url: "https://alex.design/brand-refresh" },
         })
-      ).toThrow("challenge not open");
+      ).rejects.toThrow("challenge not open");
     });
 
-    it("rejects submission to a judging challenge", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("rejects submission to a judging challenge", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh in 48h",
         prompt: "Rebrand a local coffee shop",
         deadline: deadline(48),
       });
-      service.openChallenge(challenge.id);
-      service.closeForJudging(challenge.id);
+      await service.openChallenge(challenge.id);
+      await service.closeForJudging(challenge.id);
 
-      expect(() =>
-        service.submitEntry(challenge.id, "participant:1", {
+      const participant = await leagueModel.createParticipant({
+        handle: `p-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      await expect(
+        service.submitEntry(challenge.id, participant.id, {
           artifact: { url: "https://alex.design/brand-refresh" },
         })
-      ).toThrow("challenge not open");
+      ).rejects.toThrow("challenge not open");
     });
   });
 
   describe("scoreSubmission and leaderboard", () => {
-    it("scores a submission and retrieves sorted leaderboard", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("scores a submission and retrieves sorted leaderboard", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh",
         prompt: "Prompt",
         deadline: deadline(48),
@@ -140,18 +172,27 @@ describe("ChallengeService", () => {
           { name: "Execution", weight: 0.5 },
         ],
       });
-      service.openChallenge(challenge.id);
+      await service.openChallenge(challenge.id);
 
-      const s1 = service.submitEntry(challenge.id, "participant:1", {
+      const p1 = await leagueModel.createParticipant({
+        handle: `alex-${suffix}`,
+        discipline: "design" as any,
+      });
+      const p2 = await leagueModel.createParticipant({
+        handle: `sam-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      const s1 = await service.submitEntry(challenge.id, p1.id, {
         artifact: { url: "https://alex.design/entry" },
       });
-      const s2 = service.submitEntry(challenge.id, "participant:2", {
+      const s2 = await service.submitEntry(challenge.id, p2.id, {
         artifact: { url: "https://sam.design/entry" },
       });
 
-      service.closeForJudging(challenge.id);
+      await service.closeForJudging(challenge.id);
 
-      service.scoreSubmission(s1.id, {
+      await service.scoreSubmission(s1.id, {
         judgeId: "judge:1",
         criteriaScores: [
           { criteriaName: "Creativity", score: 80 },
@@ -160,7 +201,7 @@ describe("ChallengeService", () => {
         rationale: "Strong concept, solid execution",
       });
 
-      service.scoreSubmission(s2.id, {
+      await service.scoreSubmission(s2.id, {
         judgeId: "judge:1",
         criteriaScores: [
           { criteriaName: "Creativity", score: 90 },
@@ -169,89 +210,106 @@ describe("ChallengeService", () => {
         rationale: "Exceptional creativity and execution",
       });
 
-      const leaderboard = service.getLeaderboard(challenge.id);
+      const leaderboard = await service.getLeaderboard(challenge.id);
       expect(leaderboard).toHaveLength(2);
-      // s2 has higher score (87.5) than s1 (75)
-      expect(leaderboard[0]?.participantId).toBe("participant:2");
-      expect(leaderboard[1]?.participantId).toBe("participant:1");
+      expect(leaderboard[0]?.participantId).toBe(p2.id);
+      expect(leaderboard[1]?.participantId).toBe(p1.id);
     });
 
-    it("produces a deterministic leaderboard for equal scores", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("produces a deterministic leaderboard for equal scores", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Tiebreaker Test",
         prompt: "Prompt",
         deadline: deadline(24),
       });
-      service.openChallenge(challenge.id);
+      await service.openChallenge(challenge.id);
 
-      const s1 = service.submitEntry(challenge.id, "participant:1", {
+      const p1 = await leagueModel.createParticipant({
+        handle: `p1-${suffix}`,
+        discipline: "design" as any,
+      });
+      const p2 = await leagueModel.createParticipant({
+        handle: `p2-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      const s1 = await service.submitEntry(challenge.id, p1.id, {
         artifact: { url: "https://p1.design/entry" },
       });
-      const s2 = service.submitEntry(challenge.id, "participant:2", {
+      const s2 = await service.submitEntry(challenge.id, p2.id, {
         artifact: { url: "https://p2.design/entry" },
       });
 
-      service.closeForJudging(challenge.id);
+      await service.closeForJudging(challenge.id);
 
-      service.scoreSubmission(s1.id, {
+      await service.scoreSubmission(s1.id, {
         judgeId: "judge:1",
         criteriaScores: [{ criteriaName: "Overall", score: 75 }],
         rationale: "Good",
       });
-      service.scoreSubmission(s2.id, {
+      await service.scoreSubmission(s2.id, {
         judgeId: "judge:1",
         criteriaScores: [{ criteriaName: "Overall", score: 75 }],
         rationale: "Also good",
       });
 
-      const leaderboard1 = service.getLeaderboard(challenge.id);
-      const leaderboard2 = service.getLeaderboard(challenge.id);
+      const leaderboard1 = await service.getLeaderboard(challenge.id);
+      const leaderboard2 = await service.getLeaderboard(challenge.id);
 
       expect(leaderboard1.map((s) => s.id)).toEqual(leaderboard2.map((s) => s.id));
     });
 
-    it("excludes unscored submissions from the leaderboard", () => {
-      const challenge = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("excludes unscored submissions from the leaderboard", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
         title: "Mixed Scored",
         prompt: "Prompt",
         deadline: deadline(24),
       });
-      service.openChallenge(challenge.id);
+      await service.openChallenge(challenge.id);
 
-      const s1 = service.submitEntry(challenge.id, "participant:1", {
+      const p1 = await leagueModel.createParticipant({
+        handle: `p1-${suffix}`,
+        discipline: "design" as any,
+      });
+      const p2 = await leagueModel.createParticipant({
+        handle: `p2-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      const s1 = await service.submitEntry(challenge.id, p1.id, {
         artifact: { url: "https://p1.design/entry" },
       });
-      service.submitEntry(challenge.id, "participant:2", {
+      await service.submitEntry(challenge.id, p2.id, {
         artifact: { url: "https://p2.design/entry" },
       });
 
-      service.closeForJudging(challenge.id);
+      await service.closeForJudging(challenge.id);
 
-      service.scoreSubmission(s1.id, {
+      await service.scoreSubmission(s1.id, {
         judgeId: "judge:1",
         criteriaScores: [{ criteriaName: "Overall", score: 80 }],
         rationale: "Good",
       });
 
-      const leaderboard = service.getLeaderboard(challenge.id);
+      const leaderboard = await service.getLeaderboard(challenge.id);
       expect(leaderboard).toHaveLength(1);
-      expect(leaderboard[0]?.participantId).toBe("participant:1");
+      expect(leaderboard[0]?.participantId).toBe(p1.id);
     });
   });
 
   describe("diffChallenges", () => {
-    it("detects title and prompt changes between challenges", () => {
-      const a = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("detects title and prompt changes between challenges", async () => {
+      const a = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh v1",
         prompt: "Original prompt",
         deadline: deadline(24),
         scoringCriteria: [{ name: "Creativity", weight: 1 }],
       });
-      const b = service.createChallenge({
-        leagueId: LEAGUE_ID,
+      const b = await service.createChallenge({
+        leagueId,
         title: "Brand Refresh v2",
         prompt: "Updated prompt",
         deadline: deadline(24),
@@ -261,7 +319,7 @@ describe("ChallengeService", () => {
         ],
       });
 
-      const diff = service.diffChallenges(a.id, b.id);
+      const diff = await service.diffChallenges(a.id, b.id);
       expect(diff.titleChanged).toBe(true);
       expect(diff.promptChanged).toBe(true);
       expect(diff.criteriaAdded).toHaveLength(1);
@@ -269,21 +327,21 @@ describe("ChallengeService", () => {
       expect(diff.criteriaRemoved).toHaveLength(0);
     });
 
-    it("reports no differences for identical challenges", () => {
-      const a = service.createChallenge({
-        leagueId: LEAGUE_ID,
+    it("reports no differences for identical challenges", async () => {
+      const a = await service.createChallenge({
+        leagueId,
         title: "Same",
         prompt: "Same prompt",
         deadline: "2026-06-01T00:00:00.000Z",
       });
-      const b = service.createChallenge({
-        leagueId: LEAGUE_ID,
+      const b = await service.createChallenge({
+        leagueId,
         title: "Same",
         prompt: "Same prompt",
         deadline: "2026-06-01T00:00:00.000Z",
       });
 
-      const diff = service.diffChallenges(a.id, b.id);
+      const diff = await service.diffChallenges(a.id, b.id);
       expect(diff.titleChanged).toBe(false);
       expect(diff.promptChanged).toBe(false);
       expect(diff.deadlineChanged).toBe(false);
