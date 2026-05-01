@@ -35,12 +35,14 @@ Core services: [[src/league-model/league-model.service.ts#LeagueModelService]], 
 
 **Goal:** external REST (or RPC) with validation and idempotency for clients and integrations.
 
+**Status (partial):** v1 REST handlers under `app/api/v1/` — see [[lat.md/api-architecture#HTTP API architecture#Resource map]]. Still missing: Zod validation, auth gates, idempotency keys, pagination, OpenAPI.
+
 | Work item | Notes |
 |-----------|--------|
-| Challenge & submission APIs | External submit flows; signed URLs for artifacts |
-| League & enrollment APIs | Host operations; duplicate enrollment rules |
-| Showcase & leaderboard APIs | Feed pagination (also a gap today) |
-| Sponsor APIs | Brief + outcome reporting |
+| Challenge & submission APIs | v1 routes live; add signed URLs for artifacts |
+| League & enrollment APIs | v1 routes live; wire auth + RLS |
+| Showcase & leaderboard APIs | v1 routes live; add feed pagination |
+| Sponsor APIs | v1 routes live |
 
 ### Phase 3 — UX workflows
 

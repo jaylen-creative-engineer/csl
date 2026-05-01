@@ -1,7 +1,6 @@
-import { LeagueModelService } from "../src/league-model/league-model.service.js";
-import { ChallengeService } from "../src/challenge-intelligence/challenge.service.js";
-import { ShowcaseService } from "../src/showcase-intelligence/showcase.service.js";
-import { SponsorService } from "../src/sponsor-intelligence/sponsor.service.js";
+import { createSupabaseAdminClient } from "../src/lib/supabase/admin.js";
+import { resetIdCounters } from "../src/lib/supabase/ids.js";
+import { createCslServices, type CslServices } from "../src/lib/csl-services.js";
 import { Discipline } from "../src/league-model/types.js";
 import type { LeagueHost, League, Participant } from "../src/league-model/types.js";
 import type { Challenge, Submission } from "../src/challenge-intelligence/types.js";
@@ -27,10 +26,10 @@ export type RuntimeState = {
 };
 
 export type Runtime = {
-  leagueService: LeagueModelService;
-  challengeService: ChallengeService;
-  showcaseService: ShowcaseService;
-  sponsorService: SponsorService;
+  leagueService: CslServices["league"];
+  challengeService: CslServices["challenge"];
+  showcaseService: CslServices["showcase"];
+  sponsorService: CslServices["sponsor"];
   state: RuntimeState;
   session: CliSession;
   reset: () => void;
@@ -46,11 +45,12 @@ const defaultState = (): RuntimeState => ({
   attachments: [],
 });
 
+function createServicesFromEnv(): CslServices {
+  return createCslServices(createSupabaseAdminClient());
+}
+
 export function createRuntime(): Runtime {
-  let leagueService = new LeagueModelService();
-  let challengeService = new ChallengeService();
-  let showcaseService = new ShowcaseService(leagueService, challengeService);
-  let sponsorService = new SponsorService(challengeService);
+  let services = createServicesFromEnv();
   let state = defaultState();
 
   const session: CliSession = {
@@ -59,25 +59,23 @@ export function createRuntime(): Runtime {
   };
 
   const reset = () => {
-    leagueService = new LeagueModelService();
-    challengeService = new ChallengeService();
-    showcaseService = new ShowcaseService(leagueService, challengeService);
-    sponsorService = new SponsorService(challengeService);
+    resetIdCounters();
+    services = createServicesFromEnv();
     state = defaultState();
   };
 
   return {
     get leagueService() {
-      return leagueService;
+      return services.league;
     },
     get challengeService() {
-      return challengeService;
+      return services.challenge;
     },
     get showcaseService() {
-      return showcaseService;
+      return services.showcase;
     },
     get sponsorService() {
-      return sponsorService;
+      return services.sponsor;
     },
     get state() {
       return state;

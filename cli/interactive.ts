@@ -2,6 +2,7 @@ import process from "node:process";
 import { confirm, input, select, Separator } from "@inquirer/prompts";
 import { $ } from "zx";
 import { Discipline } from "../src/league-model/types.js";
+import { SponsorOutcomeStatus } from "../src/sponsor-intelligence/types.js";
 import { createRuntime, fail, j, listDisciplines, ok } from "./shared.js";
 
 $.verbose = false;
@@ -23,7 +24,7 @@ export async function startInteractive(): Promise<void> {
         { name: "Agreements: create/list/confirm/complete/dispute", value: "agreements" },
         { name: "Reputation: score + events", value: "reputation" },
         { name: "Session: actor/roles", value: "session" },
-        { name: "Reset in-memory runtime", value: "reset" },
+        { name: "Reset runtime (new Supabase session + ID counters)", value: "reset" },
         new Separator(),
         { name: "Tools: run typecheck/tests", value: "tools" },
         { name: "Exit", value: "exit" },
@@ -99,7 +100,7 @@ async function listingsMenu(rt: RuntimeLike): Promise<void> {
         message: "Discipline",
         choices: listDisciplines().map((d) => ({ name: d, value: d })),
       });
-      const participant = rt.leagueService.createParticipant({
+      const participant = await rt.leagueService.createParticipant({
         handle,
         discipline: discipline as Discipline,
       });
@@ -109,20 +110,20 @@ async function listingsMenu(rt: RuntimeLike): Promise<void> {
     }
 
     const host = rt.state.hosts[0] ??
-      rt.leagueService.createLeagueHost({
+      (await rt.leagueService.createLeagueHost({
         name: "CLI Host",
         organization: "CLI Org",
-      });
+      }));
     if (!rt.state.hosts.find((h) => h.id === host.id)) rt.state.hosts.push(host);
 
     const league = rt.state.leagues[0] ??
-      rt.leagueService.createLeague({
+      (await rt.leagueService.createLeague({
         name: "CLI League",
         hostId: host.id,
-      });
+      }));
     if (!rt.state.leagues.find((l) => l.id === league.id)) {
       rt.state.leagues.push(league);
-      rt.leagueService.activateLeague(league.id);
+      await rt.leagueService.activateLeague(league.id);
     }
 
     if (action === "create-listing") {
@@ -130,7 +131,7 @@ async function listingsMenu(rt: RuntimeLike): Promise<void> {
       const prompt = await input({ message: "Challenge prompt", default: "Validate behavior flow" });
       const deadline = await input({ message: "Deadline YYYY-MM-DD", default: "2026-12-31" });
 
-      const listing = rt.challengeService.createChallenge({
+      const listing = await rt.challengeService.createChallenge({
         leagueId: league.id,
         title,
         prompt,
@@ -220,11 +221,11 @@ async function agreementsMenu(rt: RuntimeLike): Promise<void> {
 
   if (action === "create") {
     const sponsor = rt.state.sponsors[0] ??
-      rt.sponsorService.createSponsor({
+      (await rt.sponsorService.createSponsor({
         name: "CLI Sponsor",
         organization: "CLI Org",
         contactEmail: "cli@example.com",
-      });
+      }));
     if (!rt.state.sponsors.find((s) => s.id === sponsor.id)) rt.state.sponsors.push(sponsor);
 
     const challenge = rt.state.challenges[0];
@@ -233,7 +234,7 @@ async function agreementsMenu(rt: RuntimeLike): Promise<void> {
       return;
     }
 
-    const attachment = rt.sponsorService.attachToChallenge(sponsor.id, challenge.id, {
+    const attachment = await rt.sponsorService.attachToChallenge(sponsor.id, challenge.id, {
       headline: "CLI Agreement",
       description: "Auto-generated agreement",
       deliverables: ["demo deliverable"],
@@ -249,8 +250,13 @@ async function agreementsMenu(rt: RuntimeLike): Promise<void> {
     return;
   }
 
-  const status = action === "confirm" ? "pending" : action === "complete" ? "delivered" : "cancelled";
-  const updated = rt.sponsorService.recordOutcome(latest.id, { status, notes: `set via ${action}` });
+  const status =
+    action === "confirm"
+      ? SponsorOutcomeStatus.Pending
+      : action === "complete"
+        ? SponsorOutcomeStatus.Delivered
+        : SponsorOutcomeStatus.Cancelled;
+  const updated = await rt.sponsorService.recordOutcome(latest.id, { status, notes: `set via ${action}` });
   console.log(j(ok({ action, updated })));
 }
 
@@ -261,10 +267,10 @@ async function reputationMenu(rt: RuntimeLike): Promise<void> {
     return;
   }
 
-  const score = rt.showcaseService.buildPortfolio(participant.id).aggregateScore;
-  const events = rt.challengeService
-    .getSubmissionsForParticipant(participant.id)
-    .map((s) => ({ submissionId: s.id, scored: s.score?.totalScore ?? null }));
+  const portfolio = await rt.showcaseService.buildPortfolio(participant.id);
+  const score = portfolio.aggregateScore;
+  const subs = await rt.challengeService.getSubmissionsForParticipant(participant.id);
+  const events = subs.map((s) => ({ submissionId: s.id, scored: s.score?.totalScore ?? null }));
 
   console.log(j(ok({ participantId: participant.id, score, events })));
 }
@@ -296,28 +302,28 @@ async function guidedFlow(rt: RuntimeLike): Promise<void> {
     });
     if (!shouldRun) return;
 
-    const host = rt.leagueService.createLeagueHost({
+    const host = await rt.leagueService.createLeagueHost({
       name: "Guided Host",
       organization: "Guided Org",
     });
-    const league = rt.leagueService.createLeague({
+    const league = await rt.leagueService.createLeague({
       name: "Guided League",
       hostId: host.id,
     });
-    rt.leagueService.activateLeague(league.id);
+    await rt.leagueService.activateLeague(league.id);
     rt.state.hosts.push(host);
     rt.state.leagues.push(league);
     console.log(j(ok({ step: "league", host, league })));
 
-    const participant = rt.leagueService.createParticipant({
-      handle: "@guided",
+    const participant = await rt.leagueService.createParticipant({
+      handle: `@guided-${Date.now()}`,
       discipline: Discipline.Design,
     });
     rt.state.participants.push(participant);
-    const enrollment = rt.leagueService.enrollParticipant(league.id, participant.id);
+    const enrollment = await rt.leagueService.enrollParticipant(league.id, participant.id);
     console.log(j(ok({ step: "member", participant, enrollment })));
 
-    const challenge = rt.challengeService.createChallenge({
+    const challenge = await rt.challengeService.createChallenge({
       leagueId: league.id,
       title: "Guided Challenge",
       prompt: "Walk through app flow",
@@ -325,23 +331,23 @@ async function guidedFlow(rt: RuntimeLike): Promise<void> {
       scoringCriteria: [{ name: "Quality", weight: 1 }],
     });
     rt.state.challenges.push(challenge);
-    rt.challengeService.openChallenge(challenge.id);
-    const submission = rt.challengeService.submitEntry(challenge.id, participant.id, {
+    await rt.challengeService.openChallenge(challenge.id);
+    const submission = await rt.challengeService.submitEntry(challenge.id, participant.id, {
       artifact: { url: "https://example.com/guided", description: "guided artifact" },
       isPublic: true,
     });
     rt.state.submissions.push(submission);
-    rt.challengeService.closeForJudging(challenge.id);
-    const scored = rt.challengeService.scoreSubmission(submission.id, {
+    await rt.challengeService.closeForJudging(challenge.id);
+    const scored = await rt.challengeService.scoreSubmission(submission.id, {
       judgeId: "judge:guided",
       rationale: "guided",
       criteriaScores: [{ criteriaName: "Quality", score: 91 }],
     });
-    rt.challengeService.completeChallenge(challenge.id);
+    await rt.challengeService.completeChallenge(challenge.id);
     console.log(j(ok({ step: "challenge", challenge, scored })));
 
-    console.log(j(ok({ step: "leaderboard", leaderboard: rt.challengeService.getLeaderboard(challenge.id) })));
-    console.log(j(ok({ step: "showcase", feed: rt.showcaseService.getShowcaseFeed(league.id) })));
+    console.log(j(ok({ step: "leaderboard", leaderboard: await rt.challengeService.getLeaderboard(challenge.id) })));
+    console.log(j(ok({ step: "showcase", feed: await rt.showcaseService.getShowcaseFeed(league.id) })));
   } catch (error) {
     console.error(j(fail(error)));
   }

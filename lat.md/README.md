@@ -13,3 +13,4 @@ Jump pages for product intent, domain shape, shipped code, and backlog.
 - [[lat.md/domain-model#Domain model#Entities]] — entities and relationships
 - [[lat.md/current-system#Current system#Capabilities implemented]] — shipped behavior
 - [[lat.md/work-graph#Work graph#Work themes]] — backlog themes and phases
+- [[lat.md/api-architecture#HTTP API architecture#Resource map]] — `/api/v1` REST routes and envelope

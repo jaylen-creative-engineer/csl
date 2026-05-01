@@ -8,3 +8,4 @@ Navigation hub for the CSL knowledge vault; open any page below then follow `[[w
 - [[domain-model]] — entities, relationships, decisions
 - [[current-system]] — shipped features and repo layout
 - [[work-graph]] — phases, themes, tracked gaps
+- [[api-architecture]] — `/api/v1` REST map and envelope conventions

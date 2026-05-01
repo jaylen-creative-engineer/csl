@@ -59,7 +59,7 @@ csl/
 │   ├── showcase.feature
 │   └── step_definitions/       # Cucumber BDD steps using real service instances
 │       └── support/world.ts    # Shared Cucumber World — all services wired here
-├── app/                        # Next.js App Router (landing page)
+├── app/                        # Next.js App Router (`app/api/v1/*` REST → domain services)
 └── lat.md/                     # Knowledge graph (lat.md) — vision, domain, work backlog
 ```
 
@@ -79,6 +79,8 @@ csl/
 | **Realtime** | Optional live feed or leaderboard updates |
 
 Copy `.env.local.example` to `.env.local` and fill values from the Supabase dashboard.
+
+**HTTP API:** `GET/POST` (and `PATCH` for sponsor outcomes) under `/api/v1/…` — see `lat.md/api-architecture.md`. Responses use `{ ok, data }` / `{ ok, error }`.
 
 ---
 
