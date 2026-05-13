@@ -1,10 +1,10 @@
 # Work graph
 
-Backlog and phases linking vision to engineering: persistence, APIs, UX, auth, then learner and social themes ([[lat.md/product-vision#Product vision#North star]]).
+Backlog and phases linking vision to engineering: persistence, APIs, UX, auth, then learner, social, and rollout themes ([[lat.md/product-vision#Product vision#North star]], [[lat.md/rollout-strategy#Rollout strategy]]).
 
 ## Phases (execution spine)
 
-Ordered roadmap from `README.md`; later phases unlock personalization and collective features.
+Ordered roadmap from `README.md`; later phases unlock personalization and collective features. Rollout milestones are mapped to phases in [[lat.md/rollout-strategy#Rollout strategy#Relation to engineering phases]].
 
 ### Phase 0 — Domain services + in-memory core
 
@@ -72,12 +72,12 @@ Cross-cutting capabilities after foundations ship; optional ordering within a th
 
 ### Theme — Individual progression & learning loops
 
-Implements the [[lat.md/individual-learner-journey#Individual learner journey#Behavior vision]]: skill intent, mastery framing, AI-coordinated paths, resources, accountability — still individualized even when social features engage ([[lat.md/product-vision#Product vision#Individual learner journey]]).
+Implements the [[lat.md/individual-learner-journey#Individual learner journey#Behavior vision]]: skill intent, mastery framing, AI-coordinated paths, resources, accountability — still individualized even when social features engage ([[lat.md/product-vision#Product vision#Individual learner journey]]). This theme is the backbone of single-player mode ([[lat.md/rollout-strategy#Rollout strategy#Interaction patterns#Single-player mode (open source)]]).
 
 | Work item | Enables |
 |-----------|---------|
 | Accounts & learner identity | Skill profile and longitudinal evidence |
-| Skill intent & mastery surfaces | Maps rubric/criteria to “skill X” progress ([[lat.md/individual-learner-journey#Individual learner journey#Skill intent & mastery framing]]) |
+| Skill intent & mastery surfaces | Maps rubric/criteria to "skill X" progress ([[lat.md/individual-learner-journey#Individual learner journey#Skill intent & mastery framing]]) |
 | AI-coordinated paths | Recommend frameworks, plans, next actions ([[lat.md/individual-learner-journey#Individual learner journey#AI-coordinated guidance]]) |
 | Plans, frameworks, path library | Executable sequences tied to challenges and resources ([[lat.md/individual-learner-journey#Individual learner journey#Frameworks, plans, and paths]]) |
 | Resources & brief linking | Step-level materials and sponsor/host briefs as learning substrate ([[lat.md/individual-learner-journey#Individual learner journey#Resources]]) |
@@ -89,7 +89,7 @@ Also grounded in [[lat.md/domain-model#Domain model#Entities#Showcase Intelligen
 
 ### Theme — Social & collective layers
 
-Makes collaboration and mixed formats first-class ([[lat.md/product-vision#Product vision#Collective playground]]).
+Makes collaboration and mixed formats first-class ([[lat.md/product-vision#Product vision#Collective playground]]). This theme powers the transition from single-player to network mode ([[lat.md/rollout-strategy#Rollout strategy#Interaction patterns#Network mode (community platform)]]).
 
 | Work item | Enables |
 |-----------|---------|
@@ -107,6 +107,44 @@ Strengthens fairness and sponsor stakes alongside [[lat.md/domain-model#Domain m
 | Multi-judge aggregation | Replace single-score overwrite ([[lat.md/work-graph#Work graph#Known domain gaps (tracked)]]) |
 | Anti-gaming & dispute hooks | Trust in public proof |
 | Sponsor stakes UX | Outcomes ↔ visibility |
+
+### Theme — Single-player open-source readiness
+
+Engineering work to make CSL downloadable and self-hostable as a single-player tool ([[lat.md/rollout-strategy#Rollout strategy#Interaction patterns#Single-player mode (open source)]]). Target: Q4 public launch.
+
+| Work item | Enables |
+|-----------|---------|
+| Frictionless local setup | `clone → configure → run` in under 5 minutes |
+| API key as sole external dependency | Single environment variable to activate AI coordination |
+| Local Supabase or lightweight DB fallback | Self-hosted without cloud dependency |
+| CLI-driven goal and strategy workflows | Single-player loops without web UI |
+| README-driven onboarding | First-run experience that works without documentation hunting |
+| Open-source licensing and contribution guide | Community adoption and contribution |
+
+### Theme — Network mode infrastructure
+
+Engineering work to support the community-level Creative Sports League network ([[lat.md/rollout-strategy#Rollout strategy#Interaction patterns#Network mode (community platform)]]).
+
+| Work item | Enables |
+|-----------|---------|
+| Public profiles and portable portfolios | Meritocratic visibility beyond single leagues |
+| League and host discovery | New participants find communities without warm intros |
+| Network-wide showcase feed | Cross-league talent surfacing |
+| Sponsor and hiring org dashboards | Demand-side access to talent signals |
+| Invitation and onboarding flows | Community growth without gatekeeping |
+| Reputation portability | Skill signals belong to the participant, not the platform |
+
+### Theme — Rollout and announcement
+
+Non-engineering work that intersects with product readiness ([[lat.md/rollout-strategy#Rollout strategy#Announcement timeline]]).
+
+| Work item | Enables |
+|-----------|---------|
+| Founder hero use case documentation | First-person narrative for Q3/Q4 announcement |
+| Artifact and portfolio evidence from founder usage | Proof that the tool works |
+| Q3 soft announcement content | Awareness and anticipation |
+| Q4 launch content and landing page | Public availability of both modes |
+| Early adopter outreach (community anchors) | Seed network density before sponsors |
 
 ## Known domain gaps (tracked)
 

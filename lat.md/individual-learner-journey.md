@@ -1,22 +1,37 @@
 # Individual learner journey
 
-Specification for **solo-first** customer behavior: choosing a skill, receiving mastery-oriented guidance (including AI-coordinated paths), executing with resources and accountability, while optional social layers add collaboration and competition ([[lat.md/product-vision#Product vision#North star]]).
+Solo-first customer behavior: skill mastery, AI-coordinated paths, accountability, and the backbone of single-player mode ([[lat.md/product-vision#Product vision#Two interaction patterns#Single-player mode]]).
+
+Choose a skill, receive mastery-oriented guidance (including AI-coordinated paths), execute with resources and accountability, while optional social layers add collaboration and competition ([[lat.md/product-vision#Product vision#North star]]).
 
 ## Behavior vision
 
-The learner acts as an **individual** who wants to **learn skill X**. The product supports that intent with:
+The learner acts as an **individual** who wants to **learn skill X**. In single-player mode, this is the entire product: one person, one tool, long-range creative vision and strategic daily execution. The product supports that intent with:
 
-1. **Mastery-oriented progression** — goals and proficiency are framed around demonstrated competence, not vanity metrics alone (aligned with challenge scoring and portfolio signals).
-2. **AI-coordinated selection** — an intelligent layer proposes **frameworks**, **plans**, and **paths** the learner can execute, coordinated with their skill intent and evidence of progress.
-3. **Resources** — curated or linked materials tied to plan steps (briefs, exemplars, tooling, sponsor content where relevant).
-4. **Accountability** — commitments, milestones, deadlines, and lightweight checks so execution stays on track (compatible with sprint deadlines and submission artifacts).
-5. **Social experience** — optional **collaboration** (cohorts, critique, shared briefs) and **competition** (leaderboards, ranked sprints) that **inspire** without replacing the solo learning arc.
+1. **Long-range vision and strategy** — define where you want to be, establish the path to get there, and hold that vision alongside daily execution. Balance future goals with wellness, relationships, and the execution factor.
+2. **Mastery-oriented progression** — goals and proficiency are framed around demonstrated competence, not vanity metrics alone (aligned with challenge scoring and portfolio signals).
+3. **AI-coordinated selection** — an intelligent layer proposes **frameworks**, **plans**, and **paths** the learner can execute, coordinated with their skill intent and evidence of progress.
+4. **Resources** — curated or linked materials tied to plan steps (briefs, exemplars, tooling, sponsor content where relevant).
+5. **Accountability** — commitments, milestones, deadlines, and lightweight checks so execution stays on track (compatible with sprint deadlines and submission artifacts).
+6. **Social experience** — optional **collaboration** (cohorts, critique, shared briefs) and **competition** (leaderboards, ranked sprints) that **inspire** without replacing the solo learning arc. This is the bridge to network mode ([[lat.md/product-vision#Product vision#Two interaction patterns#Network mode]]).
 
-CSL’s existing proof-of-skill loop (challenges → artifacts → scored criteria → portfolio / leaderboard) is the **spine**; the features below extend it into this fuller journey.
+CSL's existing proof-of-skill loop (challenges → artifacts → scored criteria → portfolio / leaderboard) is the **spine**; the features below extend it into this fuller journey.
+
+## Single-player mode alignment
+
+The individual learner journey is what ships as single-player mode ([[lat.md/rollout-strategy#Rollout strategy#Interaction patterns#Single-player mode (open source)]]). The open-source, downloadable experience must deliver value at this layer alone — no network, no community, no league host required.
+
+| Single-player capability | Learner journey feature |
+|--------------------------|------------------------|
+| Define long-range creative vision | Skill intent & profile |
+| Establish strategy | Learning plans, path variants |
+| Execute daily | Commitments & milestones, progress prompts |
+| Review and rebalance | AI-coordinated adaptive next actions |
+| Track evidence | Portfolio, evidence timeline, completion receipts |
 
 ## Skill intent & mastery framing
 
-Express “I want skill X,” map to domains/criteria, and show momentum toward mastery.
+Express "I want skill X," map to domains/criteria, and show momentum toward mastery.
 
 | Feature idea | Customer behavior supported |
 |--------------|----------------------------|
@@ -66,7 +81,7 @@ Milestones, nudges, and proof of follow-through so solo learners stay on path.
 
 ## Social layer — collaboration & competition
 
-Social features **wrap** the solo journey: inspiration, rivalry, and co-creation without forcing group work.
+Social features **wrap** the solo journey: inspiration, rivalry, and co-creation without forcing group work. This is the transition point from single-player to network mode ([[lat.md/rollout-strategy#Rollout strategy#Interaction patterns#Network mode (community platform)]]).
 
 | Feature idea | Customer behavior supported |
 |--------------|----------------------------|
