@@ -152,27 +152,30 @@ Notes:
 ## Test Coverage
 
 ```
-Unit tests:   41 passing
-BDD scenarios: 9 passing
-BDD steps:    35 passing
+Unit tests:   53 passing
+BDD scenarios: 12 passing
+BDD steps:    ~50 passing
 ```
 
 **Unit test breakdown:**
 
 | Service | Tests |
 |---|---|
-| LeagueModelService | 13 |
-| ChallengeService | 12 |
+| LeagueModelService | 17 |
+| ChallengeService | 14 |
 | ShowcaseService | 7 |
 | SponsorService | 9 |
+
+**Note:** New tests cover `listHosts()`, `listLeagues()`, and `getChallengesForLeague()` discovery APIs.
 
 **BDD scenario breakdown:**
 
 | Feature | Scenarios |
 |---|---|
 | Challenge sprint lifecycle | 4 |
-| League model and enrollment | 3 |
+| League model and enrollment | 4 |
 | Showcase and talent signals | 2 |
+| Sponsor intelligence | 3 |
 
 ---
 

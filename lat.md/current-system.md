@@ -8,8 +8,8 @@ Matches the feature table in `README.md`: leagues, challenge sprints, showcase, 
 
 | Area | What exists |
 |------|-------------|
-| League model | Hosts, seasons, leagues, enrollment, participant listing |
-| Challenge intelligence | Sprint lifecycle, submissions, scoring, leaderboard, challenge diff |
+| League model | Hosts, seasons, leagues, enrollment, participant listing, **discovery (listHosts, listLeagues)** |
+| Challenge intelligence | Sprint lifecycle, submissions, scoring, leaderboard, challenge diff, **getChallengesForLeague** |
 | Showcase intelligence | Portfolio, skill signals, top performers, public feed |
 | Sponsor intelligence | Sponsors, attachments, briefs, outcomes, sponsor summaries |
 
@@ -24,6 +24,8 @@ Where users and operators touch the system: web app, CLI, database clients.
 ### CLI
 
 `cli/entry.ts` — interactive and CI-safe (`--smoke`, `--demo`) workflows over the same services used in tests.
+
+Interactive mode includes discovery (browse hosts, leagues, challenges), sponsor management, and full guided demo. `--demo` exercises all four intelligence modules end-to-end including sponsor lifecycle.
 
 ### Supabase
 
@@ -58,7 +60,7 @@ Maps directories to responsibilities for navigation and ownership.
 Automated gates before merge: unit tests, BDD, typecheck.
 
 - **Vitest** — unit tests per service
-- **Cucumber** — BDD scenarios tagged `@challenge`, `@league`, `@showcase`
+- **Cucumber** — BDD scenarios tagged `@challenge`, `@league`, `@showcase`, `@sponsor`
 - `npm run verify` — typecheck + unit + BDD
 
 Core services under test: [[src/league-model/league-model.service.ts#LeagueModelService]], [[src/challenge-intelligence/challenge.service.ts#ChallengeService]], [[src/showcase-intelligence/showcase.service.ts#ShowcaseService]], [[src/sponsor-intelligence/sponsor.service.ts#SponsorService]].

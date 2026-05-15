@@ -154,8 +154,8 @@ Concrete inconsistencies and omissions to close in Phase 1–2 unless noted.
 |----------|-------|------|
 | critical | Auth + RLS not wired — services/tests use service-role bypass | Phase 4 |
 | high | `League.challengeIds` not populated from challenges | Service + league linkage |
-| high | No `listLeagues()` / `listHosts()` | Discovery APIs |
-| high | No `getChallengesForLeague()` | Host UX & queries |
+| ~~high~~ | ~~No `listLeagues()` / `listHosts()`~~ | Done — `listLeagues()`, `listHosts()` shipped |
+| ~~high~~ | ~~No `getChallengesForLeague()`~~ | Done — `getChallengesForLeague()` shipped |
 | high | Multi-judge scoring overwrites | Aggregation model |
 | high | `attachToChallenge()` vs `Challenge.sponsorId` sync | Data consistency |
 | medium | Withdraw participant / submission | Lifecycle completeness |
