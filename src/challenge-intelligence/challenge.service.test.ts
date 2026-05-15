@@ -349,4 +349,41 @@ describe.skipIf(!hasSupabaseTestEnv())("ChallengeService", () => {
       expect(diff.criteriaRemoved).toHaveLength(0);
     });
   });
+
+  describe("getChallengesForLeague", () => {
+    it("returns all challenges for a league", async () => {
+      const c1 = await service.createChallenge({
+        leagueId,
+        title: `Challenge A-${suffix}`,
+        prompt: "Prompt A",
+        deadline: deadline(24),
+      });
+      const c2 = await service.createChallenge({
+        leagueId,
+        title: `Challenge B-${suffix}`,
+        prompt: "Prompt B",
+        deadline: deadline(48),
+      });
+
+      const challenges = await service.getChallengesForLeague(leagueId);
+      expect(challenges.length).toBeGreaterThanOrEqual(2);
+      const ids = challenges.map((c) => c.id);
+      expect(ids).toContain(c1.id);
+      expect(ids).toContain(c2.id);
+    });
+
+    it("returns empty array for a league with no challenges", async () => {
+      const host2 = await leagueModel.createLeagueHost({
+        name: `Empty Host-${suffix}`,
+        organization: "Org",
+      });
+      const emptyLeague = await leagueModel.createLeague({
+        name: `Empty League-${suffix}`,
+        hostId: host2.id,
+      });
+
+      const challenges = await service.getChallengesForLeague(emptyLeague.id);
+      expect(challenges).toHaveLength(0);
+    });
+  });
 });

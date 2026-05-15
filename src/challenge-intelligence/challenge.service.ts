@@ -15,6 +15,7 @@ import {
   insertScore,
   listSubmissionsForChallenge,
   listSubmissionsForParticipant,
+  listChallengesForLeague,
 } from "../lib/supabase/repositories/challenge.repository.js";
 import { deadlineToDb } from "../lib/supabase/mappers.js";
 import {
@@ -110,6 +111,10 @@ export class ChallengeService {
         if (scoreB !== scoreA) return scoreB - scoreA;
         return a.id.localeCompare(b.id);
       });
+  }
+
+  async getChallengesForLeague(leagueId: string): Promise<Challenge[]> {
+    return listChallengesForLeague(this.client, leagueId);
   }
 
   async getSubmissionsForChallenge(challengeId: ChallengeId): Promise<Submission[]> {

@@ -307,4 +307,65 @@ describe.skipIf(!hasSupabaseTestEnv())("LeagueModelService", () => {
       expect(found?.name).toBe(`Spring 2026-${suffix}`);
     });
   });
+
+  describe("listHosts", () => {
+    it("returns all hosts including a newly created one", async () => {
+      const host = await service.createLeagueHost({
+        name: `ListHost-${suffix}`,
+        organization: "List Org",
+      });
+
+      const hosts = await service.listHosts();
+      expect(hosts.length).toBeGreaterThanOrEqual(1);
+      expect(hosts.find((h) => h.id === host.id)).toBeDefined();
+    });
+
+    it("includes leagueIds for each host", async () => {
+      const host = await service.createLeagueHost({
+        name: `ListHost-${suffix}`,
+        organization: "List Org",
+      });
+      const league = await service.createLeague({
+        name: `ListLeague-${suffix}`,
+        hostId: host.id,
+      });
+
+      const hosts = await service.listHosts();
+      const found = hosts.find((h) => h.id === host.id);
+      expect(found?.leagueIds).toContain(league.id);
+    });
+  });
+
+  describe("listLeagues", () => {
+    it("returns all leagues including a newly created one", async () => {
+      const host = await service.createLeagueHost({
+        name: `ListHost-${suffix}`,
+        organization: "List Org",
+      });
+      const league = await service.createLeague({
+        name: `ListLeague-${suffix}`,
+        hostId: host.id,
+      });
+
+      const leagues = await service.listLeagues();
+      expect(leagues.length).toBeGreaterThanOrEqual(1);
+      expect(leagues.find((l) => l.id === league.id)).toBeDefined();
+    });
+
+    it("returns leagues with correct status", async () => {
+      const host = await service.createLeagueHost({
+        name: `ListHost-${suffix}`,
+        organization: "List Org",
+      });
+      const league = await service.createLeague({
+        name: `ListLeague-${suffix}`,
+        hostId: host.id,
+      });
+      await service.activateLeague(league.id);
+
+      const leagues = await service.listLeagues();
+      const found = leagues.find((l) => l.id === league.id);
+      expect(found?.status).toBe(LeagueStatus.Active);
+    });
+  });
 });

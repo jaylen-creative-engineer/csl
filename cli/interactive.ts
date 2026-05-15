@@ -19,9 +19,11 @@ export async function startInteractive(): Promise<void> {
       choices: [
         { name: "Guided demo (domain happy path)", value: "guided" },
         new Separator(),
+        { name: "Discovery: browse hosts, leagues, challenges", value: "discovery" },
         { name: "Listings: create/list", value: "listings" },
         { name: "Matching: run/list/accept/reject", value: "matching" },
         { name: "Agreements: create/list/confirm/complete/dispute", value: "agreements" },
+        { name: "Sponsors: create/attach/outcome/summary", value: "sponsors" },
         { name: "Reputation: score + events", value: "reputation" },
         { name: "Session: actor/roles", value: "session" },
         { name: "Reset runtime (new Supabase session + ID counters)", value: "reset" },
@@ -41,6 +43,11 @@ export async function startInteractive(): Promise<void> {
       continue;
     }
 
+    if (action === "discovery") {
+      await discoveryMenu(rt);
+      continue;
+    }
+
     if (action === "listings") {
       await listingsMenu(rt);
       continue;
@@ -53,6 +60,11 @@ export async function startInteractive(): Promise<void> {
 
     if (action === "agreements") {
       await agreementsMenu(rt);
+      continue;
+    }
+
+    if (action === "sponsors") {
+      await sponsorsMenu(rt);
       continue;
     }
 
@@ -79,6 +91,129 @@ export async function startInteractive(): Promise<void> {
 }
 
 type RuntimeLike = ReturnType<typeof createRuntime>;
+
+async function discoveryMenu(rt: RuntimeLike): Promise<void> {
+  const action = await select({
+    message: "Discovery",
+    choices: [
+      { name: "List all hosts", value: "hosts" },
+      { name: "List all leagues", value: "leagues" },
+      { name: "List challenges for a league", value: "challenges" },
+      { name: "Back", value: "back" },
+    ],
+  });
+
+  if (action === "back") return;
+
+  try {
+    if (action === "hosts") {
+      const hosts = await rt.leagueService.listHosts();
+      console.log(j(ok({ action, count: hosts.length, hosts })));
+      return;
+    }
+
+    if (action === "leagues") {
+      const leagues = await rt.leagueService.listLeagues();
+      console.log(j(ok({ action, count: leagues.length, leagues })));
+      return;
+    }
+
+    if (action === "challenges") {
+      const league = rt.state.leagues[0];
+      if (!league) {
+        console.log(j(fail("No league in session — create one first via Listings or Guided demo")));
+        return;
+      }
+      const leagueId = await input({ message: "League ID", default: league.id });
+      const challenges = await rt.challengeService.getChallengesForLeague(leagueId);
+      console.log(j(ok({ action, leagueId, count: challenges.length, challenges })));
+    }
+  } catch (error) {
+    console.error(j(fail(error)));
+  }
+}
+
+async function sponsorsMenu(rt: RuntimeLike): Promise<void> {
+  const action = await select({
+    message: "Sponsors",
+    choices: [
+      { name: "Create sponsor", value: "create" },
+      { name: "Attach to challenge", value: "attach" },
+      { name: "Record outcome", value: "outcome" },
+      { name: "View sponsor summary", value: "summary" },
+      { name: "Back", value: "back" },
+    ],
+  });
+
+  if (action === "back") return;
+
+  try {
+    if (action === "create") {
+      const name = await input({ message: "Sponsor name", default: "Demo Sponsor" });
+      const organization = await input({ message: "Organization", default: name });
+      const contactEmail = await input({ message: "Contact email", default: "sponsor@example.com" });
+      const sponsor = await rt.sponsorService.createSponsor({ name, organization, contactEmail });
+      rt.state.sponsors.push(sponsor);
+      console.log(j(ok({ action, sponsor })));
+      return;
+    }
+
+    if (action === "attach") {
+      const sponsor = rt.state.sponsors[0];
+      if (!sponsor) {
+        console.log(j(fail("Create a sponsor first")));
+        return;
+      }
+      const challenge = rt.state.challenges[0];
+      if (!challenge) {
+        console.log(j(fail("Create a challenge first")));
+        return;
+      }
+      const headline = await input({ message: "Brief headline", default: "Sponsor Brief" });
+      const description = await input({ message: "Brief description", default: "Creative direction" });
+      const attachment = await rt.sponsorService.attachToChallenge(sponsor.id, challenge.id, {
+        headline,
+        description,
+        deliverables: ["deliverable"],
+      });
+      rt.state.attachments.push(attachment);
+      console.log(j(ok({ action, attachment })));
+      return;
+    }
+
+    if (action === "outcome") {
+      const latest = rt.state.attachments[rt.state.attachments.length - 1];
+      if (!latest) {
+        console.log(j(fail("Attach a sponsor to a challenge first")));
+        return;
+      }
+      const status = await select({
+        message: "Outcome status",
+        choices: [
+          { name: "Delivered", value: SponsorOutcomeStatus.Delivered },
+          { name: "Pending", value: SponsorOutcomeStatus.Pending },
+          { name: "Cancelled", value: SponsorOutcomeStatus.Cancelled },
+        ],
+      });
+      const notes = await input({ message: "Notes", default: "" });
+      const updated = await rt.sponsorService.recordOutcome(latest.id, { status, notes });
+      console.log(j(ok({ action, updated })));
+      return;
+    }
+
+    if (action === "summary") {
+      const sponsor = rt.state.sponsors[0];
+      if (!sponsor) {
+        console.log(j(fail("Create a sponsor first")));
+        return;
+      }
+      const summary = await rt.sponsorService.getSponsorSummary(sponsor.id);
+      console.log(j(ok({ action, sponsorId: sponsor.id, summary })));
+    }
+  } catch (error) {
+    console.error(j(fail(error)));
+  }
+}
 
 async function listingsMenu(rt: RuntimeLike): Promise<void> {
   const action = await select({
