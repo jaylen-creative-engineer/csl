@@ -12,6 +12,8 @@ import {
   fetchParticipant,
   updateLeagueStatus,
   listParticipantsForLeague,
+  listAllLeagueHosts,
+  listAllLeagues,
   leagueExists,
 } from "../lib/supabase/repositories/league.repository.js";
 import {
@@ -111,6 +113,14 @@ export class LeagueModelService {
 
   async getParticipant(id: ParticipantId): Promise<Participant | undefined> {
     return (await fetchParticipant(this.client, id)) ?? undefined;
+  }
+
+  async listHosts(): Promise<LeagueHost[]> {
+    return listAllLeagueHosts(this.client);
+  }
+
+  async listLeagues(): Promise<League[]> {
+    return listAllLeagues(this.client);
   }
 
   async enrollParticipant(leagueId: LeagueId, participantId: ParticipantId): Promise<EnrollmentResult> {

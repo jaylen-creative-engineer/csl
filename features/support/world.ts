@@ -8,6 +8,7 @@ import { createSupabaseAdminClient } from "../../src/lib/supabase/admin.js";
 import { resetIdCounters } from "../../src/lib/supabase/ids.js";
 import type { Submission } from "../../src/challenge-intelligence/types.js";
 import type { EnrollmentResult } from "../../src/league-model/types.js";
+import type { SponsorAttachment } from "../../src/sponsor-intelligence/types.js";
 
 config({ path: ".env.local" });
 
@@ -21,8 +22,11 @@ export class CslWorld extends World {
   currentHostId!: string;
   currentChallengeId!: string;
   currentParticipantId!: string;
+  currentSponsorId!: string;
+  currentAttachmentId!: string;
   lastSubmission: Submission | undefined;
   lastEnrollmentResult: EnrollmentResult | undefined;
+  lastAttachment: SponsorAttachment | undefined;
   lastError: Error | undefined;
   submissionsInJudging!: Submission[];
 
@@ -42,8 +46,11 @@ export class CslWorld extends World {
     this.currentHostId = "";
     this.currentChallengeId = "";
     this.currentParticipantId = "";
+    this.currentSponsorId = "";
+    this.currentAttachmentId = "";
     this.lastSubmission = undefined;
     this.lastEnrollmentResult = undefined;
+    this.lastAttachment = undefined;
     this.lastError = undefined;
     this.submissionsInJudging = [];
   }

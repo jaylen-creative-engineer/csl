@@ -1,4 +1,5 @@
 import { Discipline } from "../src/league-model/types.js";
+import { SponsorOutcomeStatus } from "../src/sponsor-intelligence/types.js";
 import { createRuntime, fail, j, ok } from "./shared.js";
 
 export function printHelp(): void {
@@ -53,6 +54,35 @@ export async function runSmoke(): Promise<number> {
     console.log(
       j(ok({ step: "list-participants", participants: await rt.leagueService.listParticipants(league.id) }))
     );
+
+    const hosts = await rt.leagueService.listHosts();
+    console.log(j(ok({ step: "discovery-hosts", count: hosts.length, includes: hosts.some((h) => h.id === host.id) })));
+
+    const leagues = await rt.leagueService.listLeagues();
+    console.log(j(ok({ step: "discovery-leagues", count: leagues.length, includes: leagues.some((l) => l.id === league.id) })));
+
+    const challenge = await rt.challengeService.createChallenge({
+      leagueId: league.id,
+      title: "Smoke Challenge",
+      prompt: "Validate wiring",
+      deadline: "2026-12-31",
+    });
+    const challengesForLeague = await rt.challengeService.getChallengesForLeague(league.id);
+    console.log(j(ok({ step: "discovery-challenges-for-league", count: challengesForLeague.length, includes: challengesForLeague.some((c) => c.id === challenge.id) })));
+
+    const sponsor = await rt.sponsorService.createSponsor({
+      name: "Smoke Sponsor",
+      organization: "Smoke Org",
+      contactEmail: "smoke@example.com",
+    });
+    const attachment = await rt.sponsorService.attachToChallenge(sponsor.id, challenge.id, {
+      headline: "Smoke Brief",
+      description: "Validate sponsor wiring",
+      deliverables: ["demo"],
+    });
+    const summary = await rt.sponsorService.getSponsorSummary(sponsor.id);
+    console.log(j(ok({ step: "sponsor-wiring", sponsor: sponsor.id, attachment: attachment.id, challenges: summary.challenges })));
+
     return 0;
   } catch (error) {
     console.error(j(fail(error)));
@@ -157,6 +187,56 @@ export async function runGuidedDemoBatch(): Promise<number> {
     emit("challenge.completed", await rt.challengeService.completeChallenge(challenge.id));
     emit("leaderboard.list", await rt.challengeService.getLeaderboard(challenge.id));
     emit("showcase.feed", await rt.showcaseService.getShowcaseFeed(league.id));
+
+    // --- Discovery APIs ---
+    const allHosts = await rt.leagueService.listHosts();
+    emit("discovery.hosts", { count: allHosts.length, latest: allHosts.find((h) => h.id === host.id)?.name });
+
+    const allLeagues = await rt.leagueService.listLeagues();
+    emit("discovery.leagues", { count: allLeagues.length, latest: allLeagues.find((l) => l.id === league.id)?.name });
+
+    const leagueChallenges = await rt.challengeService.getChallengesForLeague(league.id);
+    emit("discovery.challengesForLeague", { leagueId: league.id, count: leagueChallenges.length, titles: leagueChallenges.map((c) => c.title) });
+
+    // --- Sponsor Intelligence ---
+    const sponsor = await rt.sponsorService.createSponsor({
+      name: "Neon Studios",
+      organization: "Neon Studios Inc",
+      contactEmail: "sponsors@neonstudios.example.com",
+    });
+    rt.state.sponsors.push(sponsor);
+    emit("sponsor.created", sponsor);
+
+    const attachment = await rt.sponsorService.attachToChallenge(sponsor.id, challenge.id, {
+      headline: "Transit Identity Challenge",
+      description: "Design a bold identity system for urban transit riders",
+      deliverables: ["brand book", "signage concepts", "digital assets"],
+      prize: "$2,500 design grant",
+    });
+    rt.state.attachments.push(attachment);
+    emit("sponsor.attached", attachment);
+
+    const outcomeAttachment = await rt.sponsorService.recordOutcome(attachment.id, {
+      status: SponsorOutcomeStatus.Delivered,
+      notes: "Prize delivered to top performer",
+      opportunityExtendedTo: participants[0]!.id,
+    });
+    emit("sponsor.outcome", outcomeAttachment);
+
+    const sponsorSummary = await rt.sponsorService.getSponsorSummary(sponsor.id);
+    emit("sponsor.summary", sponsorSummary);
+
+    // --- Showcase: Portfolio + Skill Signals ---
+    const portfolio = await rt.showcaseService.buildPortfolio(participants[0]!.id);
+    emit("showcase.portfolio", {
+      handle: portfolio.handle,
+      entries: portfolio.entries.length,
+      aggregateScore: portfolio.aggregateScore,
+      skillSignals: portfolio.skillSignals,
+    });
+
+    const topPerformers = await rt.showcaseService.getTopPerformers(league.id, 5);
+    emit("showcase.topPerformers", topPerformers);
 
     return 0;
   } catch (error) {

@@ -197,3 +197,22 @@ export async function listSubmissionsForParticipant(
   }
   return out;
 }
+
+export async function listChallengesForLeague(
+  client: SupabaseClient<Database>,
+  leagueId: string
+): Promise<Challenge[]> {
+  const { data: rows, error } = await client
+    .from("challenges")
+    .select("id")
+    .eq("league_id", leagueId)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+
+  const out: Challenge[] = [];
+  for (const r of rows ?? []) {
+    const full = await fetchChallenge(client, r.id);
+    if (full) out.push(full);
+  }
+  return out;
+}

@@ -1,6 +1,17 @@
 # Creative Sports League (CSL)
 
-A structured challenge sprint platform for emerging creatives — built to prove skill publicly, run leagues without a marketing budget, and surface talent signals for sponsors and hiring organizations.
+The hero tool for creatives, technologists, analysts, and synthesizers — built to define long-range creative vision, establish strategy, and execute through structured challenge sprints that prove skill publicly, surface talent signals, and remove the gatekeeping that keeps hidden genius hidden.
+
+---
+
+## What is CSL?
+
+CSL operates at two levels:
+
+- **Single-player mode** — download the open-source tool, add your API key, and you have a personal environment for long-range creative goals, strategic execution, and balancing vision with daily work.
+- **Network mode** — join a Creative Sports League community to demonstrate capability, get feedback, find moments to execute, and build meritocratic reputation without needing insider access or warm introductions.
+
+The platform serves four archetypes: the **creative** proving skill through public artifacts, the **technologist** managing long-range technical goals, the **analyst** working with signal-rich scored data, and the **synthesizer** balancing vision, strategy, wellness, relationships, and execution.
 
 ---
 
@@ -37,7 +48,7 @@ The platform operates at three levels simultaneously:
 - **Talent signal for organizations** — sponsors embed real briefs into challenges. Hiring orgs get a ranked, credentialed pool without a sourcing process.
 - **Content engine for communities** — league hosts publish challenge results as a feed. Every sprint is a content event with a leaderboard, a story, and real stakes.
 
-The MVP obsesses over one user: the **emerging creative** who needs a structured, public way to prove their skill. The **league host** is the distribution engine — community organizers with existing trust and audience who gain structure and content output in exchange for running the cohort.
+The anti-gatekeeping thesis: talent should surface through demonstrated work, not through who you know. CSL gives capable people who lack access to traditional networks a meritocratic path to visibility.
 
 ---
 
@@ -60,7 +71,7 @@ csl/
 │   └── step_definitions/       # Cucumber BDD steps using real service instances
 │       └── support/world.ts    # Shared Cucumber World — all services wired here
 ├── app/                        # Next.js App Router (`app/api/v1/*` REST → domain services)
-└── lat.md/                     # Knowledge graph (lat.md) — vision, domain, work backlog
+└── lat.md/                     # Knowledge graph (lat.md) — vision, domain, rollout, work backlog
 ```
 
 **Guiding principles:**
@@ -99,7 +110,7 @@ Copy `.env.local.example` to `.env.local` and fill values from the Supabase dash
 
 ## Knowledge graph
 
-Interlinked markdown under `lat.md/` documents product vision, the domain model, what is implemented, and a **work graph** (phases, themes, known gaps). Entry: `lat.md/README.md`. Validate links and `@lat` anchors with `npm run lat:check` (runs `npx lat check`). Use `npx lat refs "<section-id>"` to find code that references a vault section.
+Interlinked markdown under `lat.md/` documents product vision, the domain model, rollout strategy, what is implemented, and a **work graph** (phases, themes, known gaps). Entry: `lat.md/README.md`. Validate links and `@lat` anchors with `npm run lat:check` (runs `npx lat check`). Use `npx lat refs "<section-id>"` to find code that references a vault section.
 
 ---
 
@@ -141,27 +152,30 @@ Notes:
 ## Test Coverage
 
 ```
-Unit tests:   41 passing
-BDD scenarios: 9 passing
-BDD steps:    35 passing
+Unit tests:   53 passing
+BDD scenarios: 12 passing
+BDD steps:    ~50 passing
 ```
 
 **Unit test breakdown:**
 
 | Service | Tests |
 |---|---|
-| LeagueModelService | 13 |
-| ChallengeService | 12 |
+| LeagueModelService | 17 |
+| ChallengeService | 14 |
 | ShowcaseService | 7 |
 | SponsorService | 9 |
+
+**Note:** New tests cover `listHosts()`, `listLeagues()`, and `getChallengesForLeague()` discovery APIs.
 
 **BDD scenario breakdown:**
 
 | Feature | Scenarios |
 |---|---|
 | Challenge sprint lifecycle | 4 |
-| League model and enrollment | 3 |
+| League model and enrollment | 4 |
 | Showcase and talent signals | 2 |
+| Sponsor intelligence | 3 |
 
 ---
 
@@ -169,9 +183,11 @@ BDD steps:    35 passing
 
 The partnership and growth sequencing from the product design:
 
-1. **Community anchors first** — Meetup groups, design schools, local orgs seed the talent supply
-2. **Challenge sponsors second** — real stakes and briefs give output legitimacy
-3. **Distribution and hiring partners last** — they're a reward for density, not a way to create it
+1. **Founder as hero user** — first-person proof that the tool works for long-range creative vision and strategic execution
+2. **Single-player early adopters** — open-source users who download, configure, and use independently
+3. **Community anchors** — Meetup groups, design schools, local orgs seed the talent supply
+4. **Challenge sponsors** — real stakes and briefs give output legitimacy
+5. **Distribution and hiring partners** — they're a reward for density, not a way to create it
 
 The biggest near-term unlock: one well-run challenge sprint with one real sponsor, one community host, and public outputs.
 
@@ -182,7 +198,9 @@ The biggest near-term unlock: one well-run challenge sprint with one real sponso
 | Phase | Goal | Status |
 |---|---|---|
 | 0 | Domain services + in-memory core | Done |
-| 1 | Repository layer + database migrations | Next |
-| 2 | API routes (REST, validation, idempotency) | Planned |
+| 1 | Repository layer + database migrations | Done |
+| 2 | API routes (REST, validation, idempotency) | Partial |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |
 | 4 | Auth, RBAC, audit log, observability | Planned |
+
+See `lat.md/rollout-strategy.md` for Q3/Q4 announcement plan and `lat.md/work-graph.md` for detailed backlog.

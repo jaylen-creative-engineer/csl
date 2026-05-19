@@ -246,3 +246,47 @@ export async function leagueExists(client: SupabaseClient<Database>, id: string)
   if (error) throw new Error(error.message);
   return data !== null;
 }
+
+export async function listAllLeagueHosts(client: SupabaseClient<Database>): Promise<LeagueHost[]> {
+  const { data: rows, error } = await client
+    .from("league_hosts")
+    .select("id, name, organization, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+
+  const hosts: LeagueHost[] = [];
+  for (const row of rows ?? []) {
+    const { data: leagues } = await client.from("leagues").select("id").eq("host_id", row.id);
+    hosts.push({
+      id: row.id,
+      name: row.name,
+      organization: row.organization,
+      leagueIds: (leagues ?? []).map((l) => l.id),
+      createdAt: row.created_at,
+    });
+  }
+  return hosts;
+}
+
+export async function listAllLeagues(client: SupabaseClient<Database>): Promise<League[]> {
+  const { data: rows, error } = await client
+    .from("leagues")
+    .select("id, name, host_id, season_id, status, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+
+  const leagues: League[] = [];
+  for (const row of rows ?? []) {
+    const { data: challenges } = await client.from("challenges").select("id").eq("league_id", row.id);
+    leagues.push({
+      id: row.id,
+      name: row.name,
+      hostId: row.host_id,
+      seasonId: row.season_id,
+      status: mapLeagueStatus(row.status),
+      challengeIds: (challenges ?? []).map((c) => c.id),
+      createdAt: row.created_at,
+    });
+  }
+  return leagues;
+}
