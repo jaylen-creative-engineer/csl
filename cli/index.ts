@@ -92,7 +92,7 @@ async function menu(
 
 // ─── Services & Session State ─────────────────────────────────────────────────
 const leagueService   = new LeagueModelService();
-const challengeService = new ChallengeService();
+const challengeService = new ChallengeService(leagueService);
 const showcaseService  = new ShowcaseService(leagueService, challengeService);
 const sponsorService   = new SponsorService(challengeService);
 
@@ -179,9 +179,9 @@ const GAPS: Gap[] = [
   },
   {
     domain: 'System',
-    severity: 'critical',
-    title: 'No persistence layer',
-    detail: 'All state is in-memory. Process restart destroys all data. (Phase 1 roadmap item.)',
+    severity: 'medium',
+    title: 'Postgres migration still partial',
+    detail: 'Core schema and repository scaffolding exist, but CLI paths still run in-process and do not persist across sessions.',
   },
   {
     domain: 'System',
@@ -922,7 +922,7 @@ async function main() {
   console.log('  ╚════════════════════════════════════════════════════╝');
   console.log(`\x1b[0m`);
   console.log(`  ${gray('Exercises all domain services and surfaces implementation gaps.')}`);
-  console.log(`  ${gray('Data is in-memory — resets on exit.')}\n`);
+  console.log(`  ${gray('This validator runs ephemeral session data for fast local walkthroughs.')}\n`);
 
   while (true) {
     header('Main Menu');

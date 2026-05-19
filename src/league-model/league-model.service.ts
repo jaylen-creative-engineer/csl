@@ -48,6 +48,10 @@ export class LeagueModelService {
     return this.hosts.get(id);
   }
 
+  listHosts(): LeagueHost[] {
+    return Array.from(this.hosts.values());
+  }
+
   createSeason(input: CreateSeasonInput): Season {
     const id = newId("season", ++seasonCounter);
     const season: Season = {
@@ -87,6 +91,10 @@ export class LeagueModelService {
 
   getLeague(id: LeagueId): League | undefined {
     return this.leagues.get(id);
+  }
+
+  listLeagues(): League[] {
+    return Array.from(this.leagues.values());
   }
 
   activateLeague(id: LeagueId): League {
@@ -185,5 +193,15 @@ export class LeagueModelService {
         (m) => m.leagueId === leagueId && m.status === EnrollmentStatus.Enrolled
       )
     );
+  }
+
+  registerChallenge(leagueId: LeagueId, challengeId: string): void {
+    const league = this.leagues.get(leagueId);
+    if (!league) {
+      return;
+    }
+    if (!league.challengeIds.includes(challengeId)) {
+      league.challengeIds.push(challengeId);
+    }
   }
 }

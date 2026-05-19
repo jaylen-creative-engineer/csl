@@ -28,7 +28,7 @@ export class CslWorld extends World {
 
   reset() {
     this.leagueModel = new LeagueModelService();
-    this.challengeService = new ChallengeService();
+    this.challengeService = new ChallengeService(this.leagueModel);
     this.showcaseService = new ShowcaseService(this.leagueModel, this.challengeService);
     this.sponsorService = new SponsorService(this.challengeService);
     this.currentLeagueId = "";

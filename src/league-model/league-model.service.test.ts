@@ -199,4 +199,24 @@ describe("LeagueModelService", () => {
       expect(found?.name).toBe("Spring 2026");
     });
   });
+
+  describe("listing and challenge linkage", () => {
+    it("lists hosts and leagues", () => {
+      const host = service.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+      service.createLeague({ name: "Pixel League", hostId: host.id });
+
+      expect(service.listHosts()).toHaveLength(1);
+      expect(service.listLeagues()).toHaveLength(1);
+    });
+
+    it("registers challenge ids on a league", () => {
+      const host = service.createLeagueHost({ name: "Jordan", organization: "Design Chicago" });
+      const league = service.createLeague({ name: "Pixel League", hostId: host.id });
+
+      service.registerChallenge(league.id, "challenge:1");
+      service.registerChallenge(league.id, "challenge:1");
+
+      expect(service.getLeague(league.id)?.challengeIds).toEqual(["challenge:1"]);
+    });
+  });
 });

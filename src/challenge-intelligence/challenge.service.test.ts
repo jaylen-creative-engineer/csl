@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { ChallengeService } from "./challenge.service.js";
 import { ChallengeStatus } from "./types.js";
 
@@ -13,6 +13,41 @@ describe("ChallengeService", () => {
 
   beforeEach(() => {
     service = new ChallengeService();
+  });
+
+  describe("league linkage", () => {
+    it("registers challenge ids on league model when registrar is provided", () => {
+      const registerChallenge = vi.fn();
+      const linkedService = new ChallengeService({ registerChallenge });
+
+      const challenge = linkedService.createChallenge({
+        leagueId: LEAGUE_ID,
+        title: "Linked",
+        prompt: "Prompt",
+        deadline: deadline(24),
+      });
+
+      expect(registerChallenge).toHaveBeenCalledWith(LEAGUE_ID, challenge.id);
+    });
+
+    it("lists all challenges for a league", () => {
+      service.createChallenge({
+        leagueId: LEAGUE_ID,
+        title: "League One",
+        prompt: "Prompt",
+        deadline: deadline(24),
+      });
+      service.createChallenge({
+        leagueId: "league:2",
+        title: "League Two",
+        prompt: "Prompt",
+        deadline: deadline(24),
+      });
+
+      const challenges = service.getChallengesForLeague(LEAGUE_ID);
+      expect(challenges).toHaveLength(1);
+      expect(challenges[0]?.leagueId).toBe(LEAGUE_ID);
+    });
   });
 
   describe("createChallenge", () => {

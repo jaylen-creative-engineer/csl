@@ -65,7 +65,7 @@ csl/
 
 **Guiding principles:**
 - Domain logic lives in services — no direct DB or UI coupling
-- All services use in-memory maps now; repository layer slots in without changing the service interface
+- Persistence is being migrated to Postgres-backed repositories; legacy in-process services remain for local validation flows
 - BDD step definitions use real implementations, not mocks of domain logic
 - Scoring is deterministic — same inputs, same leaderboard order, every time
 
@@ -158,7 +158,7 @@ The biggest near-term unlock: one well-run challenge sprint with one real sponso
 
 | Phase | Goal | Status |
 |---|---|---|
-| 0 | Domain services + in-memory core | Done |
+| 0 | Domain services + core behavior | Done |
 | 1 | Repository layer + database migrations | Next |
 | 2 | API routes (REST, validation, idempotency) | Planned |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |

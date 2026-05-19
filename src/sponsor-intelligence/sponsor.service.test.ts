@@ -61,6 +61,7 @@ describe("SponsorService", () => {
       expect(attachment.challengeId).toBe(challenge.id);
       expect(attachment.brief.headline).toBe("Redesign with Figma");
       expect(attachment.outcome).toBeUndefined();
+      expect(challengeService.getChallenge(challenge.id)?.sponsorId).toBe(sponsor.id);
     });
 
     it("throws when sponsor does not exist", () => {

@@ -51,6 +51,7 @@ export class SponsorService {
 
     const challenge = this.challengeService.getChallenge(challengeId);
     if (!challenge) throw new Error(`Challenge not found: ${challengeId}`);
+    this.challengeService.setChallengeSponsor(challengeId, sponsorId);
 
     const id = newId("attachment", ++attachmentCounter);
     const attachment: SponsorAttachment = {

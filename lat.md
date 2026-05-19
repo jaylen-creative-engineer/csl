@@ -91,7 +91,7 @@ Sponsor ──────── attaches to ────────► Challen
 
 | Severity | Domain | Gap |
 |---|---|---|
-| critical | System | No persistence layer — all state in-memory, lost on restart |
+| medium | System | Postgres integration exists for core domain services, but not all modules are migrated yet |
 | high | League | `League.challengeIds` never populated by ChallengeService |
 | high | League | No `listLeagues()` / `listHosts()` |
 | high | Challenge | No `getChallengesForLeague()` |
@@ -120,7 +120,7 @@ Sponsor ──────── attaches to ────────► Challen
 
 | Phase | Goal | Status |
 |---|---|---|
-| 0 | Domain services + in-memory core | Done |
+| 0 | Domain services + core behavior | Done |
 | 1 | Repository layer + database migrations | Next |
 | 2 | API routes (REST, validation, idempotency) | Planned |
 | 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |

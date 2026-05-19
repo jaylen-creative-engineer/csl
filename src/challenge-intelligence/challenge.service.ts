@@ -13,6 +13,10 @@ import {
   type SubmitEntryInput,
 } from "./types.js";
 
+type LeagueChallengeRegistrar = {
+  registerChallenge(leagueId: string, challengeId: string): void;
+};
+
 let challengeCounter = 0;
 let submissionCounter = 0;
 let scoreCounter = 0;
@@ -24,6 +28,8 @@ function newId(prefix: string, counter: number): string {
 export class ChallengeService {
   private readonly challenges = new Map<ChallengeId, Challenge>();
   private readonly submissions = new Map<SubmissionId, Submission>();
+
+  constructor(private readonly leagueRegistrar?: LeagueChallengeRegistrar) {}
 
   createChallenge(input: CreateChallengeInput): Challenge {
     const id = newId("challenge", ++challengeCounter);
@@ -39,11 +45,22 @@ export class ChallengeService {
       createdAt: new Date().toISOString(),
     };
     this.challenges.set(id, challenge);
+    this.leagueRegistrar?.registerChallenge(challenge.leagueId, challenge.id);
     return challenge;
   }
 
   getChallenge(id: ChallengeId): Challenge | undefined {
     return this.challenges.get(id);
+  }
+
+  getChallengesForLeague(leagueId: string): Challenge[] {
+    return Array.from(this.challenges.values()).filter((challenge) => challenge.leagueId === leagueId);
+  }
+
+  setChallengeSponsor(challengeId: ChallengeId, sponsorId: string): Challenge {
+    const challenge = this.requireChallenge(challengeId);
+    challenge.sponsorId = sponsorId;
+    return challenge;
   }
 
   openChallenge(challengeId: ChallengeId): Challenge {
