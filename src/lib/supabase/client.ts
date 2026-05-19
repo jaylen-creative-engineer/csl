@@ -1,9 +1,11 @@
 import { createBrowserClient } from "@supabase/ssr";
+import type { Database } from "./database.types.js";
 import { getSupabasePublishableKey } from "./env.js";
 
 /**
  * Supabase client for Client Components (browser). Session is stored in cookies via @supabase/ssr.
  */
+// @lat: [[lat.md/current-system#Current system#Delivery surfaces#Supabase#createSupabaseBrowserClient]]
 export function createSupabaseBrowserClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const publishableKey = getSupabasePublishableKey();
@@ -12,5 +14,5 @@ export function createSupabaseBrowserClient() {
       "NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY (or NEXT_PUBLIC_SUPABASE_ANON_KEY) must be set"
     );
   }
-  return createBrowserClient(url, publishableKey);
+  return createBrowserClient<Database>(url, publishableKey);
 }

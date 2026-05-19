@@ -1,0 +1,9 @@
+# Supabase CLI — https://supabase.com/docs/guides/cli
+# After `supabase link`, project_id matches your hosted project.
+# Apply migrations to the linked DB: `npx supabase db push`
+
+project_id = "csl"
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]

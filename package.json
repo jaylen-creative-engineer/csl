@@ -7,24 +7,29 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lat:check": "lat --dir docs check",
-    "graph:view": "tsx src/knowledge-graph/write-graph-view.cli.ts",
-    "graph:check": "tsx src/knowledge-graph/check-graph-view.cli.ts",
+    "lat:check": "lat check",
     "integration:check": "npm run typecheck && npm test && npm run bdd",
     "verify": "npm run integration:check",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "bdd": "NODE_OPTIONS='--import tsx' cucumber-js --config cucumber.mjs",
+    "bdd": "node scripts/run-bdd-if-env.mjs",
     "bdd:challenge": "npm run bdd -- --tags '@challenge'",
     "bdd:league": "npm run bdd -- --tags '@league'",
     "bdd:showcase": "npm run bdd -- --tags '@showcase'",
-    "cli": "tsx cli/index.ts"
+    "csl:cli": "node ./node_modules/tsx/dist/cli.mjs ./cli/entry.ts",
+    "cli": "npm run csl:cli",
+    "db:push": "npx supabase db push",
+    "db:diff": "npx supabase db diff",
+    "db:types": "npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
+    "db:types:url": "npx supabase gen types typescript --db-url \"$DATABASE_URL\" --schema public > src/lib/supabase/database.types.ts",
+    "db:seed": "npx supabase db query -f supabase/seed.sql --local",
+    "db:seed:linked": "npx supabase db query -f supabase/seed.sql --linked",
+    "db:reset": "npx supabase db reset"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^12.7.0",
     "@types/node": "^22.10.0",
-    "@types/pg": "^8.20.0",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "lat.md": "^0.11.0",
@@ -33,12 +38,14 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
+    "@inquirer/prompts": "^8.4.2",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.3",
+    "dotenv": "^17.4.2",
     "next": "^16.2.3",
-    "pg": "^8.21.0",
     "react": "^19.2.5",
-    "react-dom": "^19.2.5"
+    "react-dom": "^19.2.5",
+    "zx": "^8.8.5"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.60.1"

@@ -1,10 +1,16 @@
+import { config } from "dotenv";
 import { setWorldConstructor, World } from "@cucumber/cucumber";
 import { LeagueModelService } from "../../src/league-model/league-model.service.js";
 import { ChallengeService } from "../../src/challenge-intelligence/challenge.service.js";
 import { ShowcaseService } from "../../src/showcase-intelligence/showcase.service.js";
 import { SponsorService } from "../../src/sponsor-intelligence/sponsor.service.js";
+import { createSupabaseAdminClient } from "../../src/lib/supabase/admin.js";
+import { resetIdCounters } from "../../src/lib/supabase/ids.js";
 import type { Submission } from "../../src/challenge-intelligence/types.js";
 import type { EnrollmentResult } from "../../src/league-model/types.js";
+import type { SponsorAttachment } from "../../src/sponsor-intelligence/types.js";
+
+config({ path: ".env.local" });
 
 export class CslWorld extends World {
   leagueModel!: LeagueModelService;
@@ -16,8 +22,11 @@ export class CslWorld extends World {
   currentHostId!: string;
   currentChallengeId!: string;
   currentParticipantId!: string;
+  currentSponsorId!: string;
+  currentAttachmentId!: string;
   lastSubmission: Submission | undefined;
   lastEnrollmentResult: EnrollmentResult | undefined;
+  lastAttachment: SponsorAttachment | undefined;
   lastError: Error | undefined;
   submissionsInJudging!: Submission[];
 
@@ -27,16 +36,21 @@ export class CslWorld extends World {
   }
 
   reset() {
-    this.leagueModel = new LeagueModelService();
-    this.challengeService = new ChallengeService(this.leagueModel);
+    resetIdCounters();
+    const client = createSupabaseAdminClient();
+    this.leagueModel = new LeagueModelService(client);
+    this.challengeService = new ChallengeService(client);
     this.showcaseService = new ShowcaseService(this.leagueModel, this.challengeService);
-    this.sponsorService = new SponsorService(this.challengeService);
+    this.sponsorService = new SponsorService(client, this.challengeService);
     this.currentLeagueId = "";
     this.currentHostId = "";
     this.currentChallengeId = "";
     this.currentParticipantId = "";
+    this.currentSponsorId = "";
+    this.currentAttachmentId = "";
     this.lastSubmission = undefined;
     this.lastEnrollmentResult = undefined;
+    this.lastAttachment = undefined;
     this.lastError = undefined;
     this.submissionsInJudging = [];
   }

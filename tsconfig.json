@@ -41,8 +41,10 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     "features/**/*.ts",
+    "cli/**/*.ts",
     ".next/types/**/*.ts",
     "vitest.config.ts",
+    "vitest.setup.ts",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": [

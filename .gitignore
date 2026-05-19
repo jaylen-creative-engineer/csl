@@ -12,4 +12,3 @@ coverage/
 tsconfig.tsbuildinfo
 .claude/worktrees/
 skills-lock.json
-supabase/.temp/
