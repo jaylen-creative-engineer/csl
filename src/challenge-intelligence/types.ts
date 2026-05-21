@@ -56,8 +56,9 @@ export interface Submission {
   participantId: ParticipantId;
   artifact: SubmissionArtifact;
   isPublic: boolean;
+  withdrawn: boolean;
   submittedAt: string;
-  score?: Score;
+  scores?: Score[]; // one entry per judge; aggregate for ranking
 }
 
 export interface ChallengeDiff {
@@ -89,3 +90,5 @@ export interface ScoreInput {
   criteriaScores: CriteriaScore[];
   rationale: string;
 }
+
+export type ChallengeUpdateInput = Partial<Pick<Challenge, "title" | "prompt" | "deadline" | "scoringCriteria">>;

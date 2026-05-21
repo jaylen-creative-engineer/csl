@@ -35,3 +35,9 @@ export interface PublicProfile {
   submissionCount: number;
   leagueIds: LeagueId[];
 }
+
+// Gap 8: cursor-based pagination options for the showcase feed
+export interface ShowcaseFeedOptions {
+  limit?: number;   // default 20
+  cursor?: string;  // submittedAt ISO timestamp of the last seen entry
+}

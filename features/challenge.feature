@@ -28,3 +28,30 @@ Feature: Challenge sprint lifecycle
     Given a challenge in "draft" state
     When a participant attempts to submit
     Then the submission is rejected with reason "challenge not open"
+
+  @challenge
+  Scenario: Multiple judges score a submission without overwriting
+    Given a challenge in "judging" state with 1 submissions
+    When judge "alpha" scores submission 0 with score 80
+    And judge "beta" scores submission 0 with score 60
+    Then the leaderboard shows aggregate score 70
+
+  @challenge
+  Scenario: A host updates a challenge while in draft
+    Given a challenge in "draft" state
+    When the host updates the challenge title to "Revised Title"
+    Then the challenge title is "Revised Title"
+
+  @challenge
+  Scenario: Updating a challenge after opening is rejected
+    Given a challenge in "open" state
+    When the host attempts to update the challenge title to "Too Late"
+    Then the update is rejected
+
+  @challenge
+  Scenario: A participant withdraws a submission while challenge is open
+    Given an open challenge "Brand Refresh in 48h"
+    And a participant "alex" with discipline "design"
+    When "alex" submits an artifact URL "https://alex.design/brand-refresh"
+    And "alex" withdraws the submission
+    Then the submission no longer appears in the challenge list

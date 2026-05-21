@@ -2,8 +2,14 @@ import process from "node:process";
 import { confirm, input, select, Separator } from "@inquirer/prompts";
 import { $ } from "zx";
 import { Discipline } from "../src/league-model/types.js";
+import type { Submission } from "../src/challenge-intelligence/types.js";
 import { SponsorOutcomeStatus } from "../src/sponsor-intelligence/types.js";
 import { createRuntime, fail, j, listDisciplines, ok } from "./shared.js";
+
+function avgScore(s: Submission): number {
+  const scores = s.scores ?? [];
+  return scores.length === 0 ? 0 : scores.reduce((sum, x) => sum + x.totalScore, 0) / scores.length;
+}
 
 $.verbose = false;
 
@@ -301,12 +307,12 @@ async function matchingMenu(rt: RuntimeLike): Promise<void> {
   if (action === "back") return;
 
   const candidates = rt.state.submissions
-    .filter((s) => s.score)
-    .sort((a, b) => (b.score?.totalScore ?? 0) - (a.score?.totalScore ?? 0))
+    .filter((s) => (s.scores?.length ?? 0) > 0)
+    .sort((a, b) => avgScore(b) - avgScore(a))
     .map((s) => ({
       submissionId: s.id,
       participantId: s.participantId,
-      score: s.score?.totalScore ?? 0,
+      score: avgScore(s),
       status: "pending",
     }));
 
@@ -405,7 +411,7 @@ async function reputationMenu(rt: RuntimeLike): Promise<void> {
   const portfolio = await rt.showcaseService.buildPortfolio(participant.id);
   const score = portfolio.aggregateScore;
   const subs = await rt.challengeService.getSubmissionsForParticipant(participant.id);
-  const events = subs.map((s) => ({ submissionId: s.id, scored: s.score?.totalScore ?? null }));
+  const events = subs.map((s) => ({ submissionId: s.id, scored: (s.scores?.length ?? 0) > 0 ? avgScore(s) : null }));
 
   console.log(j(ok({ participantId: participant.id, score, events })));
 }

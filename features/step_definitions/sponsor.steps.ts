@@ -126,3 +126,33 @@ Then("the summary includes top submissions from the challenge", function (this: 
     "Expected top submission from the sponsored challenge"
   );
 });
+
+// ---- Gap 3: Challenge.sponsorId sync ----
+
+Then("the challenge sponsorId matches the sponsor", async function (this: CslWorld) {
+  const challenge = await this.challengeService.getChallenge(this.currentChallengeId);
+  assert.ok(challenge, "Expected challenge to exist");
+  assert.equal(challenge.sponsorId, this.currentSponsorId, "Expected challenge.sponsorId to match sponsor");
+});
+
+// ---- Gap 8: Showcase feed pagination ----
+
+When(
+  "the showcase feed is requested with limit {int}",
+  async function (this: CslWorld, limit: number) {
+    (this as any).lastShowcaseFeed = await this.showcaseService.getShowcaseFeed(
+      this.currentLeagueId,
+      { limit }
+    );
+  }
+);
+
+Then(
+  "the feed returns {int} entry and a nextCursor is null",
+  function (this: CslWorld, expectedCount: number) {
+    const result = (this as any).lastShowcaseFeed;
+    assert.ok(result, "Expected a feed result");
+    assert.equal(result.entries.length, expectedCount);
+    assert.equal(result.nextCursor, null);
+  }
+);

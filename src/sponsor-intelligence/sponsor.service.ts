@@ -10,7 +10,9 @@ import {
   updateAttachmentOutcome,
   listAttachmentsForSponsor,
 } from "../lib/supabase/repositories/sponsor.repository.js";
+import { updateChallengeSponsorId } from "../lib/supabase/repositories/challenge.repository.js";
 import { newSponsorAttachmentId, newSponsorId } from "../lib/supabase/ids.js";
+import { NotFoundError } from "../lib/errors.js";
 import {
   type ChallengeBrief,
   type CreateSponsorInput,
@@ -49,10 +51,15 @@ export class SponsorService {
     await fetchSponsor(this.client, sponsorId);
 
     const challenge = await this.challengeService.getChallenge(challengeId);
-    if (!challenge) throw new Error(`Challenge not found: ${challengeId}`);
+    if (!challenge) throw new NotFoundError("Challenge", challengeId);
 
     const id = newSponsorAttachmentId();
-    return insertSponsorAttachment(this.client, id, sponsorId, challengeId, brief);
+    const attachment = await insertSponsorAttachment(this.client, id, sponsorId, challengeId, brief);
+
+    // Gap 3: keep Challenge.sponsorId in sync with the canonical SponsorAttachment record
+    await updateChallengeSponsorId(this.client, challengeId, sponsorId);
+
+    return attachment;
   }
 
   async getAttachment(id: SponsorAttachmentId): Promise<SponsorAttachment | undefined> {

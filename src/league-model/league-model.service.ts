@@ -11,11 +11,13 @@ import {
   fetchLeague,
   fetchParticipant,
   updateLeagueStatus,
+  updateEnrollmentStatus,
   listParticipantsForLeague,
   listAllLeagueHosts,
   listAllLeagues,
   leagueExists,
 } from "../lib/supabase/repositories/league.repository.js";
+import { NotFoundError, ConflictError, InvalidStateError } from "../lib/errors.js";
 import {
   newHostId,
   newLeagueId,
@@ -68,9 +70,7 @@ export class LeagueModelService {
 
   async createLeague(input: CreateLeagueInput): Promise<League> {
     const host = await this.getLeagueHost(input.hostId);
-    if (!host) {
-      throw new Error(`LeagueHost not found: ${input.hostId}`);
-    }
+    if (!host) throw new NotFoundError("LeagueHost", input.hostId);
     const id = newLeagueId();
     return insertLeague(this.client, id, input);
   }
@@ -85,9 +85,9 @@ export class LeagueModelService {
 
   async activateLeague(id: LeagueId): Promise<League> {
     const league = await this.getLeague(id);
-    if (!league) throw new Error(`League not found: ${id}`);
+    if (!league) throw new NotFoundError("League", id);
     if (league.status !== "draft") {
-      throw new Error(`Cannot activate league in status "${league.status}": expected "draft"`);
+      throw new InvalidStateError("League", league.status, "draft");
     }
     await updateLeagueStatus(this.client, id, "active");
     return fetchLeague(this.client, id);
@@ -95,9 +95,9 @@ export class LeagueModelService {
 
   async closeLeague(id: LeagueId): Promise<League> {
     const league = await this.getLeague(id);
-    if (!league) throw new Error(`League not found: ${id}`);
+    if (!league) throw new NotFoundError("League", id);
     if (league.status !== "active") {
-      throw new Error(`Cannot close league in status "${league.status}": expected "active"`);
+      throw new InvalidStateError("League", league.status, "active");
     }
     await updateLeagueStatus(this.client, id, "closed");
     return fetchLeague(this.client, id);
@@ -109,6 +109,23 @@ export class LeagueModelService {
     const p = await fetchParticipant(this.client, id);
     if (!p) throw new Error("Participant insert failed");
     return p;
+  }
+
+  // Gap 4: soft-withdraw a participant from a league (sets enrollment status to Withdrawn)
+  async withdrawParticipant(leagueId: LeagueId, participantId: ParticipantId): Promise<void> {
+    const leagueOk = await leagueExists(this.client, leagueId);
+    if (!leagueOk) throw new NotFoundError("League", leagueId);
+
+    const participant = await fetchParticipant(this.client, participantId);
+    if (!participant) throw new NotFoundError("Participant", participantId);
+
+    const membership = participant.leagueMemberships.find((m) => m.leagueId === leagueId);
+    if (!membership) throw new NotFoundError("Enrollment", `${participantId} in ${leagueId}`);
+    if (membership.status === EnrollmentStatus.Withdrawn) {
+      throw new ConflictError(`Participant ${participantId} is already withdrawn from league ${leagueId}`);
+    }
+
+    await updateEnrollmentStatus(this.client, leagueId, participantId, "withdrawn");
   }
 
   async getParticipant(id: ParticipantId): Promise<Participant | undefined> {

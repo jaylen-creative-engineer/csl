@@ -152,17 +152,17 @@ Concrete inconsistencies and omissions to close in Phase 1–2 unless noted.
 
 | Severity | Topic | Work |
 |----------|-------|------|
-| critical | Auth + RLS not wired — services/tests use service-role bypass | Phase 4 |
-| high | `League.challengeIds` not populated from challenges | Service + league linkage |
+| critical | Auth + RLS not wired — services/tests use service-role bypass | Phase 4 — deferred to `csl-auth-rbac` |
+| ~~high~~ | ~~`League.challengeIds` not populated from challenges~~ | Done — derived from challenges table in `fetchLeague()`; BDD scenario added |
 | ~~high~~ | ~~No `listLeagues()` / `listHosts()`~~ | Done — `listLeagues()`, `listHosts()` shipped |
 | ~~high~~ | ~~No `getChallengesForLeague()`~~ | Done — `getChallengesForLeague()` shipped |
-| high | Multi-judge scoring overwrites | Aggregation model |
-| high | `attachToChallenge()` vs `Challenge.sponsorId` sync | Data consistency |
-| medium | Withdraw participant / submission | Lifecycle completeness |
-| medium | No `updateChallenge()` | Editorial workflows |
-| medium | `sponsorId` validation vs sponsor service | Validation rules |
-| low | Typed error classes | API ergonomics |
-| low | Showcase list pagination | Scale |
+| ~~high~~ | ~~Multi-judge scoring overwrites~~ | Done — `Submission.scores[]` + `aggregateScore()` helper; unique constraint removed via migration |
+| ~~high~~ | ~~`attachToChallenge()` vs `Challenge.sponsorId` sync~~ | Done — `updateChallengeSponsorId()` called after attachment insert |
+| ~~medium~~ | ~~Withdraw participant / submission~~ | Done — `withdrawParticipant()` + `withdrawSubmission()` with state guard |
+| ~~medium~~ | ~~No `updateChallenge()`~~ | Done — draft-only guard; BDD scenario added |
+| ~~medium~~ | ~~`sponsorId` validation vs sponsor service~~ | Done — sponsor existence check in `insertChallenge()` |
+| ~~low~~ | ~~Typed error classes~~ | Done — `src/lib/errors.ts`: `NotFoundError`, `ConflictError`, `InvalidStateError`, `ValidationError` |
+| ~~low~~ | ~~Showcase list pagination~~ | Done — cursor-based `getShowcaseFeed(options)` with `nextCursor`; API route updated |
 
 ## How to use this graph
 
