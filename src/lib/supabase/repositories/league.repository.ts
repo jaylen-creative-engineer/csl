@@ -204,6 +204,21 @@ export async function fetchParticipant(
   };
 }
 
+// Gap 4: soft-withdrawal for participants
+export async function updateEnrollmentStatus(
+  client: SupabaseClient<Database>,
+  leagueId: string,
+  participantId: string,
+  status: "enrolled" | "withdrawn"
+): Promise<void> {
+  const { error } = await client
+    .from("league_enrollments")
+    .update({ status })
+    .eq("league_id", leagueId)
+    .eq("participant_id", participantId);
+  if (error) throw new Error(error.message);
+}
+
 export async function insertEnrollment(
   client: SupabaseClient<Database>,
   leagueId: string,

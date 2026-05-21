@@ -8,6 +8,16 @@ Feature: Sponsor intelligence
     When the sponsor attaches a brief to the challenge
     Then the sponsor attachment is recorded with the brief
     And the sponsor summary shows 1 challenge
+    And the challenge sponsorId matches the sponsor
+
+  @sponsor
+  Scenario: A showcase feed returns paginated results
+    Given a league "Pixel League" with host "Jordan"
+    And the host creates a challenge "Brand Refresh" with deadline 48 hours from now
+    And a participant "alex" with discipline "design"
+    And the challenge is completed with scored submissions
+    When the showcase feed is requested with limit 1
+    Then the feed returns 1 entry and a nextCursor is null
 
   @sponsor
   Scenario: A sponsor records an outcome after challenge completion

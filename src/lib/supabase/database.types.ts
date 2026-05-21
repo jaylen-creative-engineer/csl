@@ -246,7 +246,7 @@ export type Database = {
           {
             foreignKeyName: "scores_submission_id_fkey"
             columns: ["submission_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "submissions"
             referencedColumns: ["id"]
           },
@@ -379,6 +379,7 @@ export type Database = {
           is_public: boolean
           participant_id: string
           submitted_at: string
+          withdrawn: boolean
         }
         Insert: {
           artifact: Json
@@ -387,6 +388,7 @@ export type Database = {
           is_public?: boolean
           participant_id: string
           submitted_at?: string
+          withdrawn?: boolean
         }
         Update: {
           artifact?: Json
@@ -395,6 +397,7 @@ export type Database = {
           is_public?: boolean
           participant_id?: string
           submitted_at?: string
+          withdrawn?: boolean
         }
         Relationships: [
           {

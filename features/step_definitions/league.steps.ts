@@ -99,3 +99,42 @@ Then("enrollment fails with reason {string}", function (this: CslWorld, reason: 
   assert.equal(this.lastEnrollmentResult.success, false);
   assert.equal(this.lastEnrollmentResult.reason, reason);
 });
+
+// ---- League.challengeIds linkage (Gap 1) ----
+
+When(
+  "the host creates a challenge {string} for the current league",
+  async function (this: CslWorld, title: string) {
+    const challenge = await this.challengeService.createChallenge({
+      leagueId: this.currentLeagueId,
+      title,
+      prompt: "Test prompt",
+      deadline: new Date(Date.now() + 48 * 3_600_000).toISOString(),
+    });
+    this.currentChallengeId = challenge.id;
+  }
+);
+
+Then("the league challengeIds includes the new challenge", async function (this: CslWorld) {
+  const league = await this.leagueModel.getLeague(this.currentLeagueId);
+  assert.ok(league, "Expected league to exist");
+  assert.ok(
+    league.challengeIds.includes(this.currentChallengeId),
+    `Expected challengeIds to include ${this.currentChallengeId}, got [${league.challengeIds.join(", ")}]`
+  );
+});
+
+// ---- withdrawParticipant (Gap 4) ----
+
+When("{string} is withdrawn from the league", async function (this: CslWorld, _handle: string) {
+  await this.leagueModel.withdrawParticipant(this.currentLeagueId, this.currentParticipantId);
+});
+
+Then(
+  "{string} does not appear in the active participant list",
+  async function (this: CslWorld, handle: string) {
+    const participants = await this.leagueModel.listParticipants(this.currentLeagueId);
+    const found = participants.find((p) => p.handle === handle);
+    assert.equal(found, undefined, `Expected "${handle}" to be absent from the active participant list`);
+  }
+);

@@ -29,3 +29,15 @@ Feature: League model and participant enrollment
     Then the league exists with status "active"
     When the host closes the league
     Then the league exists with status "closed"
+
+  @league
+  Scenario: League challengeIds reflects newly created challenges
+    Given a league "Pixel League Season 1" in draft state
+    When the host creates a challenge "Sprint One" for the current league
+    Then the league challengeIds includes the new challenge
+
+  @league
+  Scenario: A participant is withdrawn from a league
+    Given "alex" is already enrolled in "Pixel League Season 1"
+    When "alex" is withdrawn from the league
+    Then "alex" does not appear in the active participant list

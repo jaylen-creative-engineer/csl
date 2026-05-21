@@ -12,6 +12,7 @@ import {
 } from "../mappers.js";
 import type {
   Challenge,
+  ChallengeUpdateInput,
   CreateChallengeInput,
   Score,
   ScoreInput,
@@ -19,6 +20,7 @@ import type {
   SubmitEntryInput,
 } from "../../../challenge-intelligence/types.js";
 import { ChallengeStatus } from "../../../challenge-intelligence/types.js";
+import { NotFoundError } from "../../errors.js";
 
 function mapChallengeStatus(s: string): ChallengeStatus {
   if (s === "draft" || s === "open" || s === "judging" || s === "complete") {
@@ -32,6 +34,16 @@ export async function insertChallenge(
   id: string,
   input: CreateChallengeInput
 ): Promise<Challenge> {
+  // Gap 6: validate sponsorId before insert to avoid orphaned references
+  if (input.sponsorId) {
+    const { data: sponsor } = await client
+      .from("sponsors")
+      .select("id")
+      .eq("id", input.sponsorId)
+      .maybeSingle();
+    if (!sponsor) throw new NotFoundError("Sponsor", input.sponsorId);
+  }
+
   const criteria = input.scoringCriteria ?? [];
   const { error } = await client.from("challenges").insert({
     id,
@@ -82,6 +94,40 @@ export async function updateChallengeStatus(
   if (error) throw new Error(error.message);
 }
 
+// Gap 5: update challenge fields while in draft state
+export async function updateChallenge(
+  client: SupabaseClient<Database>,
+  id: string,
+  patch: ChallengeUpdateInput
+): Promise<Challenge> {
+  type ChallengeRow = Database["public"]["Tables"]["challenges"]["Update"];
+  const updatePayload: ChallengeRow = {};
+  if (patch.title !== undefined) updatePayload.title = patch.title;
+  if (patch.prompt !== undefined) updatePayload.prompt = patch.prompt;
+  if (patch.deadline !== undefined) updatePayload.deadline = deadlineToDb(patch.deadline);
+  if (patch.scoringCriteria !== undefined)
+    updatePayload.scoring_criteria = scoringCriteriaToJson(patch.scoringCriteria);
+
+  const { error } = await client.from("challenges").update(updatePayload).eq("id", id);
+  if (error) throw new Error(error.message);
+  const row = await fetchChallenge(client, id);
+  if (!row) throw new NotFoundError("Challenge", id);
+  return row;
+}
+
+// Gap 3: sync Challenge.sponsorId when a sponsor attaches
+export async function updateChallengeSponsorId(
+  client: SupabaseClient<Database>,
+  challengeId: string,
+  sponsorId: string
+): Promise<void> {
+  const { error } = await client
+    .from("challenges")
+    .update({ sponsor_id: sponsorId })
+    .eq("id", challengeId);
+  if (error) throw new Error(error.message);
+}
+
 export async function insertSubmission(
   client: SupabaseClient<Database>,
   id: string,
@@ -108,30 +154,29 @@ export async function fetchSubmission(
 ): Promise<Submission | null> {
   const { data: sub, error: sErr } = await client
     .from("submissions")
-    .select("id, challenge_id, participant_id, artifact, is_public, submitted_at")
+    .select("id, challenge_id, participant_id, artifact, is_public, withdrawn, submitted_at")
     .eq("id", id)
     .maybeSingle();
   if (sErr) throw new Error(sErr.message);
   if (!sub) return null;
 
-  const { data: scoreRow } = await client
+  // Gap 2: fetch ALL scores for this submission (multi-judge support)
+  const { data: scoreRows, error: scErr } = await client
     .from("scores")
     .select("id, judge_id, criteria_scores, total_score, rationale, scored_at")
     .eq("submission_id", id)
-    .maybeSingle();
+    .order("scored_at", { ascending: true });
+  if (scErr) throw new Error(scErr.message);
 
-  let score: Score | undefined;
-  if (scoreRow) {
-    score = {
-      id: scoreRow.id,
-      submissionId: id,
-      judgeId: scoreRow.judge_id,
-      criteriaScores: criteriaScoresFromJson(scoreRow.criteria_scores),
-      totalScore: scoreRow.total_score,
-      rationale: scoreRow.rationale,
-      scoredAt: scoreRow.scored_at,
-    };
-  }
+  const scores: Score[] = (scoreRows ?? []).map((r) => ({
+    id: r.id,
+    submissionId: id,
+    judgeId: r.judge_id,
+    criteriaScores: criteriaScoresFromJson(r.criteria_scores),
+    totalScore: r.total_score,
+    rationale: r.rationale,
+    scoredAt: r.scored_at,
+  }));
 
   return {
     id: sub.id,
@@ -139,9 +184,22 @@ export async function fetchSubmission(
     participantId: sub.participant_id,
     artifact: artifactFromJson(sub.artifact),
     isPublic: sub.is_public,
+    withdrawn: sub.withdrawn,
     submittedAt: sub.submitted_at,
-    score,
+    scores,
   };
+}
+
+// Gap 4: soft-delete a submission (only while challenge is open, enforced by service)
+export async function markSubmissionWithdrawn(
+  client: SupabaseClient<Database>,
+  submissionId: string
+): Promise<void> {
+  const { error } = await client
+    .from("submissions")
+    .update({ withdrawn: true })
+    .eq("id", submissionId);
+  if (error) throw new Error(error.message);
 }
 
 export async function insertScore(
@@ -169,7 +227,8 @@ export async function listSubmissionsForChallenge(
   const { data: subs, error } = await client
     .from("submissions")
     .select("id")
-    .eq("challenge_id", challengeId);
+    .eq("challenge_id", challengeId)
+    .eq("withdrawn", false);
   if (error) throw new Error(error.message);
 
   const out: Submission[] = [];
@@ -187,7 +246,8 @@ export async function listSubmissionsForParticipant(
   const { data: subs, error } = await client
     .from("submissions")
     .select("id")
-    .eq("participant_id", participantId);
+    .eq("participant_id", participantId)
+    .eq("withdrawn", false);
   if (error) throw new Error(error.message);
 
   const out: Submission[] = [];

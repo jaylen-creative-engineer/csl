@@ -2,7 +2,13 @@ import { Given, When, Then, Before } from "@cucumber/cucumber";
 import { strict as assert } from "node:assert";
 import { Discipline } from "../../src/league-model/types.js";
 import { ChallengeStatus } from "../../src/challenge-intelligence/types.js";
+import type { Submission } from "../../src/challenge-intelligence/types.js";
 import type { CslWorld } from "../support/world.js";
+
+function aggScore(s: Submission): number {
+  const scores = s.scores ?? [];
+  return scores.length === 0 ? 0 : scores.reduce((sum, x) => sum + x.totalScore, 0) / scores.length;
+}
 
 function deadlineHours(h: number): string {
   return new Date(Date.now() + h * 3_600_000).toISOString();
@@ -234,8 +240,8 @@ Then("the leaderboard is sorted by score descending", async function (this: CslW
   assert.ok(leaderboard.length > 0, "Leaderboard should not be empty");
 
   for (let i = 1; i < leaderboard.length; i++) {
-    const prev = leaderboard[i - 1]?.score?.totalScore ?? 0;
-    const curr = leaderboard[i]?.score?.totalScore ?? 0;
+    const prev = aggScore(leaderboard[i - 1]!);
+    const curr = aggScore(leaderboard[i]!);
     assert.ok(prev >= curr, `Expected leaderboard to be sorted descending at index ${i}`);
   }
 });
@@ -255,3 +261,74 @@ Then("the submission is rejected with reason {string}", function (this: CslWorld
   assert.ok(this.lastError, "Expected an error to have been thrown");
   assert.equal(this.lastError.message, reason);
 });
+
+// ---- Multi-judge scoring (Gap 2) ----
+
+When(
+  "judge {string} scores submission {int} with score {int}",
+  async function (this: CslWorld, judgeId: string, submissionIndex: number, score: number) {
+    const submission = this.submissionsInJudging[submissionIndex];
+    assert.ok(submission, `No submission at index ${submissionIndex}`);
+    await this.challengeService.scoreSubmission(submission.id, {
+      judgeId,
+      criteriaScores: [{ criteriaName: "Overall", score }],
+      rationale: `Scored by ${judgeId}`,
+    });
+  }
+);
+
+Then("the leaderboard shows aggregate score {int}", async function (this: CslWorld, expected: number) {
+  const leaderboard = await this.challengeService.getLeaderboard(this.currentChallengeId);
+  assert.ok(leaderboard.length > 0, "Leaderboard should not be empty");
+  const top = leaderboard[0]!;
+  assert.equal(aggScore(top), expected, `Expected aggregate score ${expected}, got ${aggScore(top)}`);
+});
+
+// ---- updateChallenge (Gap 5) ----
+
+When(
+  "the host updates the challenge title to {string}",
+  async function (this: CslWorld, newTitle: string) {
+    await this.challengeService.updateChallenge(this.currentChallengeId, { title: newTitle });
+  }
+);
+
+Then("the challenge title is {string}", async function (this: CslWorld, expectedTitle: string) {
+  const challenge = await this.challengeService.getChallenge(this.currentChallengeId);
+  assert.ok(challenge, "Expected challenge to exist");
+  assert.equal(challenge.title, expectedTitle);
+});
+
+When(
+  "the host attempts to update the challenge title to {string}",
+  async function (this: CslWorld, newTitle: string) {
+    this.lastError = undefined;
+    try {
+      await this.challengeService.updateChallenge(this.currentChallengeId, { title: newTitle });
+    } catch (err) {
+      this.lastError = err as Error;
+    }
+  }
+);
+
+Then("the update is rejected", function (this: CslWorld) {
+  assert.ok(this.lastError, "Expected an error to have been thrown");
+});
+
+// ---- withdrawSubmission (Gap 4) ----
+
+When("{string} withdraws the submission", async function (this: CslWorld, _handle: string) {
+  assert.ok(this.lastSubmission, "Expected a submission to exist");
+  await this.challengeService.withdrawSubmission(this.currentChallengeId, this.lastSubmission.id);
+});
+
+Then(
+  "the submission no longer appears in the challenge list",
+  async function (this: CslWorld) {
+    const submissions = await this.challengeService.getSubmissionsForChallenge(
+      this.currentChallengeId
+    );
+    const found = submissions.some((s) => s.id === this.lastSubmission?.id);
+    assert.equal(found, false, "Expected withdrawn submission to be absent from the list");
+  }
+);
