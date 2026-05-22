@@ -1,21 +1,27 @@
+import { z } from "zod";
 import { getRouteServices } from "@/lib/api/route-services.js";
 import { jsonCreated, jsonError, readJsonBody } from "@/lib/api/http.js";
-import type { ScoringCriteria } from "@/challenge-intelligence/types.js";
 
-type Body = {
-  leagueId: string;
-  title: string;
-  prompt: string;
-  deadline: string;
-  scoringCriteria?: ScoringCriteria[];
-  sponsorId?: string;
-};
+const ScoringCriteriaSchema = z.object({
+  name: z.string().min(1),
+  weight: z.number(),
+  description: z.string().optional(),
+});
+
+const Body = z.object({
+  leagueId: z.string().min(1),
+  title: z.string().min(1),
+  prompt: z.string().min(1),
+  deadline: z.string().min(1),
+  scoringCriteria: z.array(ScoringCriteriaSchema).optional(),
+  sponsorId: z.string().min(1).optional(),
+});
 
 export async function POST(request: Request) {
-  const body = await readJsonBody<Body>(request);
-  if (!body?.leagueId?.trim() || !body.title?.trim() || !body.prompt?.trim() || !body.deadline) {
-    return jsonError("leagueId, title, prompt, and deadline are required");
-  }
+  const raw = await readJsonBody(request);
+  const result = Body.safeParse(raw);
+  if (!result.success) return jsonError(result.error.issues[0].message, 422);
+  const body = result.data;
   try {
     const { challenge } = getRouteServices();
     const row = await challenge.createChallenge({

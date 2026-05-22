@@ -1,19 +1,25 @@
+import { z } from "zod";
 import { getRouteServices } from "@/lib/api/route-services.js";
 import { jsonCreated, jsonError, readJsonBody } from "@/lib/api/http.js";
-import type { ChallengeBrief } from "@/sponsor-intelligence/types.js";
+
+const Body = z.object({
+  challengeId: z.string().min(1),
+  brief: z.object({
+    headline: z.string().min(1),
+    description: z.string().min(1),
+    deliverables: z.array(z.string()),
+    prize: z.string().optional(),
+  }),
+});
 
 type Params = { sponsorId: string };
-type Body = { challengeId: string; brief: ChallengeBrief };
 
 export async function POST(request: Request, context: { params: Promise<Params> }) {
   const { sponsorId } = await context.params;
-  const body = await readJsonBody<Body>(request);
-  if (!body?.challengeId?.trim() || !body.brief?.headline || !body.brief?.description) {
-    return jsonError("challengeId and brief (headline, description, deliverables) are required");
-  }
-  if (!Array.isArray(body.brief.deliverables)) {
-    return jsonError("brief.deliverables must be an array");
-  }
+  const raw = await readJsonBody(request);
+  const result = Body.safeParse(raw);
+  if (!result.success) return jsonError(result.error.issues[0].message, 422);
+  const body = result.data;
   try {
     const { sponsor } = getRouteServices();
     const attachment = await sponsor.attachToChallenge(

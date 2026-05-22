@@ -7,8 +7,9 @@ export async function GET(request: Request, context: { params: Promise<Params> }
   const { leagueId } = await context.params;
   try {
     const url = new URL(request.url);
-    const limit = Number(url.searchParams.get("limit") ?? 20);
-    const cursor = url.searchParams.get("cursor") ?? undefined;
+    const limitRaw = Number(url.searchParams.get("limit") ?? 20);
+    const limit = Math.min(100, Math.max(1, Number.isFinite(limitRaw) ? limitRaw : 20));
+    const cursor = url.searchParams.get("after") ?? url.searchParams.get("cursor") ?? undefined;
     const { showcase } = getRouteServices();
     const result = await showcase.getShowcaseFeed(leagueId, { limit, cursor });
     return jsonOk(result);

@@ -1,13 +1,18 @@
+import { z } from "zod";
 import { getRouteServices } from "@/lib/api/route-services.js";
 import { jsonCreated, jsonError, readJsonBody } from "@/lib/api/http.js";
 
-type Body = { name: string; startDate: string; endDate: string };
+const Body = z.object({
+  name: z.string().min(1),
+  startDate: z.string().min(1),
+  endDate: z.string().min(1),
+});
 
 export async function POST(request: Request) {
-  const body = await readJsonBody<Body>(request);
-  if (!body?.name?.trim() || !body.startDate || !body.endDate) {
-    return jsonError("name, startDate, and endDate are required");
-  }
+  const raw = await readJsonBody(request);
+  const result = Body.safeParse(raw);
+  if (!result.success) return jsonError(result.error.issues[0].message, 422);
+  const body = result.data;
   try {
     const { league } = getRouteServices();
     const season = await league.createSeason({

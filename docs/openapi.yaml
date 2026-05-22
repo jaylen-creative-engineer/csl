@@ -1,0 +1,916 @@
+openapi: "3.1.0"
+info:
+  title: Creative Sports League API
+  version: "1.0.0"
+  description: REST API for the Creative Sports League platform — leagues, challenges, submissions, scoring, and sponsor management.
+servers:
+  - url: /api/v1
+
+paths:
+  # ── Hosts ──────────────────────────────────────────────────────────────────
+  /hosts:
+    post:
+      summary: Create a league host
+      operationId: createHost
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, organization]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                organization:
+                  type: string
+                  minLength: 1
+      responses:
+        "201":
+          description: Host created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ── Seasons ────────────────────────────────────────────────────────────────
+  /seasons:
+    post:
+      summary: Create a season
+      operationId: createSeason
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, startDate, endDate]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                startDate:
+                  type: string
+                  description: ISO 8601 date string
+                endDate:
+                  type: string
+                  description: ISO 8601 date string
+      responses:
+        "201":
+          description: Season created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ── Leagues ────────────────────────────────────────────────────────────────
+  /leagues:
+    post:
+      summary: Create a league
+      operationId: createLeague
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, hostId]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                hostId:
+                  type: string
+                  minLength: 1
+                seasonId:
+                  type: string
+                  minLength: 1
+                  nullable: true
+      responses:
+        "201":
+          description: League created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /leagues/{leagueId}:
+    get:
+      summary: Get a league by ID
+      operationId: getLeague
+      parameters:
+        - $ref: "#/components/parameters/leagueId"
+      responses:
+        "200":
+          description: League found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /leagues/{leagueId}/activate:
+    post:
+      summary: Activate a league
+      operationId: activateLeague
+      parameters:
+        - $ref: "#/components/parameters/leagueId"
+      responses:
+        "200":
+          description: League activated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /leagues/{leagueId}/close:
+    post:
+      summary: Close a league
+      operationId: closeLeague
+      parameters:
+        - $ref: "#/components/parameters/leagueId"
+      responses:
+        "200":
+          description: League closed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /leagues/{leagueId}/enrollments:
+    post:
+      summary: Enroll a participant in a league
+      operationId: enrollParticipant
+      parameters:
+        - $ref: "#/components/parameters/leagueId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [participantId]
+              properties:
+                participantId:
+                  type: string
+                  minLength: 1
+      responses:
+        "200":
+          description: Participant enrolled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /leagues/{leagueId}/participants:
+    get:
+      summary: List participants in a league
+      operationId: listLeagueParticipants
+      parameters:
+        - $ref: "#/components/parameters/leagueId"
+      responses:
+        "200":
+          description: Participant list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /leagues/{leagueId}/showcase/feed:
+    get:
+      summary: Paginated showcase feed for a league
+      operationId: getShowcaseFeed
+      parameters:
+        - $ref: "#/components/parameters/leagueId"
+        - name: after
+          in: query
+          description: Cursor for next page (alias for cursor)
+          schema:
+            type: string
+        - name: cursor
+          in: query
+          description: Cursor for next page
+          schema:
+            type: string
+        - name: limit
+          in: query
+          description: Items per page (1–100, default 20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated feed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: object
+                    description: Feed result with items and optional nextCursor
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /leagues/{leagueId}/showcase/top:
+    get:
+      summary: Top performers in a league showcase
+      operationId: getTopPerformers
+      parameters:
+        - $ref: "#/components/parameters/leagueId"
+        - name: limit
+          in: query
+          description: Number of top performers to return (1–100, default 10)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+      responses:
+        "200":
+          description: Top performers list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ── Participants ───────────────────────────────────────────────────────────
+  /participants:
+    post:
+      summary: Create a participant
+      operationId: createParticipant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [handle, discipline]
+              properties:
+                handle:
+                  type: string
+                  minLength: 1
+                discipline:
+                  type: string
+                  enum: [design, writing, code, video, strategy, photography, illustration, other]
+                userId:
+                  type: string
+                  nullable: true
+      responses:
+        "201":
+          description: Participant created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /participants/{participantId}:
+    get:
+      summary: Get a participant by ID
+      operationId: getParticipant
+      parameters:
+        - $ref: "#/components/parameters/participantId"
+      responses:
+        "200":
+          description: Participant found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /participants/{participantId}/portfolio:
+    get:
+      summary: Get a participant's portfolio
+      operationId: getPortfolio
+      parameters:
+        - $ref: "#/components/parameters/participantId"
+      responses:
+        "200":
+          description: Portfolio data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  # ── Challenges ─────────────────────────────────────────────────────────────
+  /challenges:
+    post:
+      summary: Create a challenge
+      operationId: createChallenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [leagueId, title, prompt, deadline]
+              properties:
+                leagueId:
+                  type: string
+                  minLength: 1
+                title:
+                  type: string
+                  minLength: 1
+                prompt:
+                  type: string
+                  minLength: 1
+                deadline:
+                  type: string
+                  description: ISO 8601 datetime string
+                scoringCriteria:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/ScoringCriteria"
+                sponsorId:
+                  type: string
+      responses:
+        "201":
+          description: Challenge created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /challenges/{challengeId}:
+    get:
+      summary: Get a challenge by ID
+      operationId: getChallenge
+      parameters:
+        - $ref: "#/components/parameters/challengeId"
+      responses:
+        "200":
+          description: Challenge found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /challenges/{challengeId}/open:
+    post:
+      summary: Open a challenge for submissions
+      operationId: openChallenge
+      parameters:
+        - $ref: "#/components/parameters/challengeId"
+      responses:
+        "200":
+          description: Challenge opened
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /challenges/{challengeId}/judging:
+    post:
+      summary: Move a challenge into judging phase
+      operationId: startJudging
+      parameters:
+        - $ref: "#/components/parameters/challengeId"
+      responses:
+        "200":
+          description: Challenge moved to judging
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /challenges/{challengeId}/complete:
+    post:
+      summary: Complete a challenge
+      operationId: completeChallenge
+      parameters:
+        - $ref: "#/components/parameters/challengeId"
+      responses:
+        "200":
+          description: Challenge completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /challenges/{challengeId}/submissions:
+    get:
+      summary: List submissions for a challenge (paginated)
+      operationId: listSubmissions
+      parameters:
+        - $ref: "#/components/parameters/challengeId"
+        - name: page
+          in: query
+          description: Page number (≥ 1, default 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page (1–100, default 20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated submissions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: "#/components/schemas/OffsetMeta"
+        "500":
+          $ref: "#/components/responses/ServerError"
+    post:
+      summary: Submit an entry to a challenge
+      operationId: submitEntry
+      parameters:
+        - $ref: "#/components/parameters/challengeId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [participantId, artifact]
+              properties:
+                participantId:
+                  type: string
+                  minLength: 1
+                artifact:
+                  $ref: "#/components/schemas/SubmissionArtifact"
+                isPublic:
+                  type: boolean
+      responses:
+        "201":
+          description: Submission created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /challenges/{challengeId}/leaderboard:
+    get:
+      summary: Leaderboard for a challenge (paginated)
+      operationId: getLeaderboard
+      parameters:
+        - $ref: "#/components/parameters/challengeId"
+        - name: page
+          in: query
+          description: Page number (≥ 1, default 1)
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Items per page (1–100, default 20)
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Paginated leaderboard
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                    enum: [true]
+                  data:
+                    type: array
+                    items:
+                      type: object
+                  meta:
+                    $ref: "#/components/schemas/OffsetMeta"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /challenges/diff:
+    post:
+      summary: Diff two challenges
+      operationId: diffChallenges
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeAId, challengeBId]
+              properties:
+                challengeAId:
+                  type: string
+                  minLength: 1
+                challengeBId:
+                  type: string
+                  minLength: 1
+      responses:
+        "200":
+          description: Challenge diff result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ── Submissions ────────────────────────────────────────────────────────────
+  /submissions/{submissionId}/score:
+    post:
+      summary: Score a submission
+      operationId: scoreSubmission
+      parameters:
+        - name: submissionId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [judgeId, criteriaScores, rationale]
+              properties:
+                judgeId:
+                  type: string
+                  minLength: 1
+                criteriaScores:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/CriteriaScore"
+                rationale:
+                  type: string
+                  minLength: 1
+      responses:
+        "200":
+          description: Submission scored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ── Sponsors ───────────────────────────────────────────────────────────────
+  /sponsors:
+    post:
+      summary: Create a sponsor
+      operationId: createSponsor
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, organization, contactEmail]
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                organization:
+                  type: string
+                  minLength: 1
+                contactEmail:
+                  type: string
+                  format: email
+      responses:
+        "201":
+          description: Sponsor created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /sponsors/{sponsorId}:
+    get:
+      summary: Get a sponsor by ID
+      operationId: getSponsor
+      parameters:
+        - $ref: "#/components/parameters/sponsorId"
+      responses:
+        "200":
+          description: Sponsor found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/ServerError"
+
+  /sponsors/{sponsorId}/summary:
+    get:
+      summary: Get sponsor summary with attached challenges
+      operationId: getSponsorSummary
+      parameters:
+        - $ref: "#/components/parameters/sponsorId"
+      responses:
+        "200":
+          description: Sponsor summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /sponsors/{sponsorId}/attachments:
+    post:
+      summary: Attach a sponsor to a challenge with a brief
+      operationId: attachSponsor
+      parameters:
+        - $ref: "#/components/parameters/sponsorId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challengeId, brief]
+              properties:
+                challengeId:
+                  type: string
+                  minLength: 1
+                brief:
+                  $ref: "#/components/schemas/ChallengeBrief"
+      responses:
+        "201":
+          description: Attachment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkCreated"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  # ── Sponsor Attachments ────────────────────────────────────────────────────
+  /sponsor-attachments/{attachmentId}/outcome:
+    patch:
+      summary: Record outcome for a sponsor attachment
+      operationId: recordSponsorOutcome
+      parameters:
+        - name: attachmentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [pending, delivered, cancelled]
+                prizeDeliveredAt:
+                  type: string
+                  description: ISO 8601 datetime
+                opportunityExtendedTo:
+                  type: string
+                  description: participantId
+                notes:
+                  type: string
+      responses:
+        "200":
+          description: Outcome recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OkResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+components:
+  parameters:
+    leagueId:
+      name: leagueId
+      in: path
+      required: true
+      schema:
+        type: string
+    challengeId:
+      name: challengeId
+      in: path
+      required: true
+      schema:
+        type: string
+    participantId:
+      name: participantId
+      in: path
+      required: true
+      schema:
+        type: string
+    sponsorId:
+      name: sponsorId
+      in: path
+      required: true
+      schema:
+        type: string
+
+  schemas:
+    OkResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+
+    OkCreated:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          enum: [true]
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        ok:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+
+    OffsetMeta:
+      type: object
+      properties:
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    ScoringCriteria:
+      type: object
+      required: [name, weight]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        weight:
+          type: number
+        description:
+          type: string
+
+    CriteriaScore:
+      type: object
+      required: [criteriaName, score]
+      properties:
+        criteriaName:
+          type: string
+          minLength: 1
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    SubmissionArtifact:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          minLength: 1
+        mimeType:
+          type: string
+        description:
+          type: string
+
+    ChallengeBrief:
+      type: object
+      required: [headline, description, deliverables]
+      properties:
+        headline:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        deliverables:
+          type: array
+          items:
+            type: string
+        prize:
+          type: string
+
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Unprocessable entity — validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
