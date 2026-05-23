@@ -23,7 +23,7 @@ export async function POST(request: Request, context: { params: Promise<Params> 
   if (!auth.ok) return auth.response;
 
   const idempKey = request.headers.get("Idempotency-Key");
-  const cached = checkIdempotency(idempKey);
+  const cached = await checkIdempotency(idempKey);
   if (cached) return NextResponse.json(cached.body, { status: cached.status });
 
   const { submissionId } = await context.params;
@@ -39,7 +39,7 @@ export async function POST(request: Request, context: { params: Promise<Params> 
       rationale: body.rationale.trim(),
     });
     const responseBody = { ok: true as const, data: submission };
-    if (idempKey) storeIdempotency(idempKey, responseBody, 200);
+    if (idempKey) await storeIdempotency(idempKey, responseBody, 200);
     return jsonOk(submission);
   } catch (e) {
     return jsonError(e instanceof Error ? e.message : String(e), 400);

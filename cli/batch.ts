@@ -43,7 +43,7 @@ export async function runSmoke(): Promise<number> {
     step: "system-check",
     nodeVersion,
     nodeOk,
-    mode: rt.mode,
+    mode: "supabase",
     anthropicKeyPresent: hasAnthropicKey,
     anthropicKeyWarning: hasAnthropicKey ? null : "ANTHROPIC_API_KEY is not set — AI features will be unavailable",
   })));

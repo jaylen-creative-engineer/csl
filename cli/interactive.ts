@@ -11,12 +11,6 @@ import {
   listDisciplines,
   ok,
 } from "./shared.js";
-import {
-  listSkillGoals,
-  listMilestones,
-  saveMilestone,
-  saveSkillGoal,
-} from "../src/lib/local-store/index.js";
 
 function avgScore(s: Submission): number {
   const scores = s.scores ?? [];
@@ -33,7 +27,7 @@ export async function startInteractive(): Promise<void> {
 
   while (running) {
     const action = await select({
-      message: `CSL — ${rt.mode === "local" ? "local-store mode" : "Supabase mode"} — choose an action`,
+      message: "CSL — choose an action",
       choices: [
         { name: "Guided demo (domain happy path)", value: "guided" },
         new Separator("── Learner journey ──"),
@@ -50,7 +44,7 @@ export async function startInteractive(): Promise<void> {
         { name: "Sponsors: create/attach/outcome/summary", value: "sponsors" },
         { name: "Reputation: score + events", value: "reputation" },
         { name: "Session: actor/roles", value: "session" },
-        { name: "Reset runtime (new session + ID counters)", value: "reset" },
+        { name: "Reset runtime (new session)", value: "reset" },
         new Separator(),
         { name: "Tools: run typecheck/tests", value: "tools" },
         { name: "Exit", value: "exit" },
@@ -78,17 +72,17 @@ export async function startInteractive(): Promise<void> {
     }
 
     if (action === "recommend") {
-      await recommendFlow();
+      await recommendFlow(rt);
       continue;
     }
 
     if (action === "milestone-set") {
-      await milestoneSetFlow();
+      await milestoneSetFlow(rt);
       continue;
     }
 
     if (action === "milestone-due") {
-      await milestoneDueFlow();
+      await milestoneDueFlow(rt);
       continue;
     }
 
@@ -573,16 +567,28 @@ async function toolsMenu(): Promise<void> {
 
 // ── Learner journey flows ────────────────────────────────────
 
+function requireParticipant(rt: RuntimeLike): { id: string; handle: string } | null {
+  const participant = rt.state.participants[0];
+  if (!participant) {
+    console.log(j(fail("Create a participant first via Listings or Guided demo")));
+    return null;
+  }
+  return participant;
+}
+
 async function skillGoalFlow(rt: RuntimeLike): Promise<void> {
   try {
+    const participant = requireParticipant(rt);
+    if (!participant) return;
+
     const label = await input({ message: "Skill goal label", default: "Visual storytelling" });
     const disciplines = await checkbox({
       message: "Disciplines (space to select, enter to confirm)",
       choices: listDisciplines().map((d) => ({ name: d, value: d })),
     });
 
-    const goal = saveSkillGoal({ label, disciplines });
-    console.log(j(ok({ action: "skill-goal", goal })));
+    const intent = await rt.skillIntentService.createSkillIntent(participant.id, label, disciplines);
+    console.log(j(ok({ action: "skill-goal", intent })));
   } catch (error) {
     console.error(j(fail(error)));
   }
@@ -591,13 +597,11 @@ async function skillGoalFlow(rt: RuntimeLike): Promise<void> {
 async function progressFlow(rt: RuntimeLike): Promise<void> {
   try {
     const participant = rt.state.participants[0];
-    const goals = listSkillGoals();
-
-    if (!participant && goals.length === 0) {
+    if (!participant) {
       console.log(
         j(ok({
           action: "progress",
-          message: "No participant in session and no skill goals saved yet.",
+          message: "No participant in session.",
           hint: "Create a participant via Listings, or set a skill goal first.",
         }))
       );
@@ -606,23 +610,27 @@ async function progressFlow(rt: RuntimeLike): Promise<void> {
 
     const result: Record<string, unknown> = { action: "progress" };
 
-    if (goals.length > 0) {
-      result.skillGoals = goals;
+    const intent = await rt.skillIntentService.getSkillIntent(participant.id);
+    if (intent) {
+      result.skillIntent = intent;
     }
 
-    if (participant) {
-      const subs = await rt.challengeService.getSubmissionsForParticipant(participant.id);
-      const scored = subs.filter((s: Submission) => (s.scores?.length ?? 0) > 0);
-      result.participant = { id: participant.id, handle: participant.handle };
-      result.submissions = subs.length;
-      result.scoredSubmissions = scored.length;
-      if (scored.length > 0) {
-        const avgScore = scored.reduce((sum: number, s: Submission) => sum + avgScore_(s), 0) / scored.length;
-        result.averageScore = Math.round(avgScore * 10) / 10;
-      } else {
-        result.averageScore = null;
-        result.hint = "Complete a scored challenge to see your score here.";
-      }
+    const mastery = await rt.skillIntentService.getMasteryMap(participant.id);
+    if (mastery.length > 0) {
+      result.mastery = mastery;
+    }
+
+    const subs = await rt.challengeService.getSubmissionsForParticipant(participant.id);
+    const scored = subs.filter((s: Submission) => (s.scores?.length ?? 0) > 0);
+    result.participant = { id: participant.id, handle: participant.handle };
+    result.submissions = subs.length;
+    result.scoredSubmissions = scored.length;
+    if (scored.length > 0) {
+      const avg = scored.reduce((sum: number, s: Submission) => sum + avgScore(s), 0) / scored.length;
+      result.averageScore = Math.round(avg * 10) / 10;
+    } else {
+      result.averageScore = null;
+      result.hint = "Complete a scored challenge to see your score here.";
     }
 
     console.log(j(ok(result)));
@@ -631,12 +639,7 @@ async function progressFlow(rt: RuntimeLike): Promise<void> {
   }
 }
 
-function avgScore_(s: Submission): number {
-  const scores = s.scores ?? [];
-  return scores.length === 0 ? 0 : scores.reduce((sum, x) => sum + x.totalScore, 0) / scores.length;
-}
-
-async function recommendFlow(): Promise<void> {
+async function recommendFlow(rt: RuntimeLike): Promise<void> {
   const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
   if (!apiKey) {
     console.log(
@@ -655,10 +658,14 @@ async function recommendFlow(): Promise<void> {
     return;
   }
 
-  const goals = listSkillGoals();
-  const goalSummary = goals.length > 0
-    ? goals.map((g) => `${g.label} (${g.disciplines.join(", ")})`).join("; ")
-    : "no specific goals set yet";
+  const participant = rt.state.participants[0];
+  let goalSummary = "no specific goals set yet";
+  if (participant) {
+    const intent = await rt.skillIntentService.getSkillIntent(participant.id);
+    if (intent) {
+      goalSummary = `${intent.skillLabel} (${intent.targetDisciplines.join(", ")})`;
+    }
+  }
 
   console.log("[CSL] Calling AI for a personalized recommendation...");
 
@@ -685,39 +692,46 @@ async function recommendFlow(): Promise<void> {
   }
 }
 
-async function milestoneSetFlow(): Promise<void> {
+async function milestoneSetFlow(rt: RuntimeLike): Promise<void> {
   try {
+    const participant = requireParticipant(rt);
+    if (!participant) return;
+
+    const plans = await rt.learningService.listPlansForParticipant(participant.id);
+    let planId: string;
+
+    if (plans.length === 0) {
+      const plan = await rt.learningService.createPlan(participant.id, undefined, undefined, undefined);
+      planId = plan.id;
+      console.log(j(ok({ action: "plan-created", plan })));
+    } else {
+      planId = plans[0]!.id;
+    }
+
     const description = await input({ message: "Milestone description", default: "Finish challenge draft" });
     const dueDate = await input({
       message: "Due date (YYYY-MM-DD)",
       default: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     });
-    const milestone = saveMilestone({ description, dueDate });
+    const milestone = await rt.learningService.addMilestone(planId, description, dueDate);
     console.log(j(ok({ action: "milestone-set", milestone })));
   } catch (error) {
     console.error(j(fail(error)));
   }
 }
 
-async function milestoneDueFlow(): Promise<void> {
+async function milestoneDueFlow(rt: RuntimeLike): Promise<void> {
   try {
-    const all = listMilestones();
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const in7 = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const participant = requireParticipant(rt);
+    if (!participant) return;
 
-    const overdue = all.filter((m) => new Date(m.dueDate) < today);
-    const upcoming = all.filter((m) => {
-      const d = new Date(m.dueDate);
-      return d >= today && d <= in7;
-    });
+    const { overdue, upcoming } = await rt.learningService.checkMilestonesDue(participant.id);
 
     console.log(
       j(ok({
         action: "milestone-due",
         overdue: overdue.map((m) => ({ id: m.id, description: m.description, dueDate: m.dueDate })),
         upcomingNext7Days: upcoming.map((m) => ({ id: m.id, description: m.description, dueDate: m.dueDate })),
-        total: all.length,
       }))
     );
   } catch (error) {

@@ -5,7 +5,6 @@ import { ChallengeService } from "../../src/challenge-intelligence/challenge.ser
 import { ShowcaseService } from "../../src/showcase-intelligence/showcase.service.js";
 import { SponsorService } from "../../src/sponsor-intelligence/sponsor.service.js";
 import { createSupabaseAdminClient } from "../../src/lib/supabase/admin.js";
-import { resetIdCounters } from "../../src/lib/supabase/ids.js";
 import type { Submission } from "../../src/challenge-intelligence/types.js";
 import type { EnrollmentResult } from "../../src/league-model/types.js";
 import type { SponsorAttachment } from "../../src/sponsor-intelligence/types.js";
@@ -36,7 +35,6 @@ export class CslWorld extends World {
   }
 
   reset() {
-    resetIdCounters();
     const client = createSupabaseAdminClient();
     this.leagueModel = new LeagueModelService(client);
     this.challengeService = new ChallengeService(client);
