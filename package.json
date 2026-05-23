@@ -19,6 +19,7 @@
     "bdd:showcase": "npm run bdd -- --tags '@showcase'",
     "csl:cli": "node ./node_modules/tsx/dist/cli.mjs ./cli/entry.ts",
     "cli": "npm run csl:cli",
+    "cli:smoke": "node ./node_modules/tsx/dist/cli.mjs ./cli/entry.ts --smoke",
     "db:push": "npx supabase db push",
     "db:diff": "npx supabase db diff",
     "db:types": "npx supabase gen types typescript --linked --schema public > src/lib/supabase/database.types.ts",
@@ -38,6 +39,7 @@
     "vitest": "^3.0.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.98.0",
     "@inquirer/prompts": "^8.4.2",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.3",

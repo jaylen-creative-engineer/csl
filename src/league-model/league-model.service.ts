@@ -187,4 +187,20 @@ export class LeagueModelService {
     if (!leagueOk) return [];
     return listParticipantsForLeague(this.client, leagueId);
   }
+
+  /**
+   * Returns the role a user holds in a given league, or null if they have no
+   * role assignment. Reads from the league_roles table created in Phase 4.
+   */
+  async getUserRoleInLeague(leagueId: string, userId: string): Promise<string | null> {
+    const { data, error } = await this.client
+      .from("league_roles" as Parameters<typeof this.client.from>[0])
+      .select("role")
+      .eq("league_id", leagueId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (error || !data) return null;
+    return (data as { role: string }).role;
+  }
 }

@@ -1,6 +1,8 @@
 import { createSupabaseAdminClient } from "../src/lib/supabase/admin.js";
+import { isSupabaseConfigured } from "../src/lib/supabase/env.js";
 import { resetIdCounters } from "../src/lib/supabase/ids.js";
 import { createCslServices, type CslServices } from "../src/lib/csl-services.js";
+import { createLocalServices, type LocalServices } from "../src/lib/local-store/index.js";
 import { Discipline } from "../src/league-model/types.js";
 import type { LeagueHost, League, Participant } from "../src/league-model/types.js";
 import type { Challenge, Submission } from "../src/challenge-intelligence/types.js";
@@ -25,13 +27,16 @@ export type RuntimeState = {
   attachments: SponsorAttachment[];
 };
 
+export type AnyServices = CslServices | LocalServices;
+
 export type Runtime = {
-  leagueService: CslServices["league"];
-  challengeService: CslServices["challenge"];
-  showcaseService: CslServices["showcase"];
-  sponsorService: CslServices["sponsor"];
+  leagueService: CslServices["league"] | LocalServices["league"];
+  challengeService: CslServices["challenge"] | LocalServices["challenge"];
+  showcaseService: CslServices["showcase"] | LocalServices["showcase"];
+  sponsorService: CslServices["sponsor"] | LocalServices["sponsor"];
   state: RuntimeState;
   session: CliSession;
+  mode: "supabase" | "local";
   reset: () => void;
 };
 
@@ -45,12 +50,16 @@ const defaultState = (): RuntimeState => ({
   attachments: [],
 });
 
-function createServicesFromEnv(): CslServices {
-  return createCslServices(createSupabaseAdminClient());
+function createServicesFromEnv(): { services: AnyServices; mode: "supabase" | "local" } {
+  if (isSupabaseConfigured()) {
+    return { services: createCslServices(createSupabaseAdminClient()), mode: "supabase" };
+  }
+  console.log("[CSL] Running in local-store mode (no Supabase configured)");
+  return { services: createLocalServices(), mode: "local" };
 }
 
 export function createRuntime(): Runtime {
-  let services = createServicesFromEnv();
+  let { services, mode } = createServicesFromEnv();
   let state = defaultState();
 
   const session: CliSession = {
@@ -60,7 +69,8 @@ export function createRuntime(): Runtime {
 
   const reset = () => {
     resetIdCounters();
-    services = createServicesFromEnv();
+    const next = createServicesFromEnv();
+    services = next.services;
     state = defaultState();
   };
 
@@ -80,6 +90,7 @@ export function createRuntime(): Runtime {
     get state() {
       return state;
     },
+    mode,
     session,
     reset,
   };

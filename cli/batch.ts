@@ -20,7 +20,9 @@ Modes:
 
 Notes:
   - In non-TTY contexts (CI, IDE Run without terminal), use --smoke or --demo.
-  - Requires NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env.local
+  - Supabase is optional. Without it the CLI runs in local-store mode (.csl-data.json).
+  - Set ANTHROPIC_API_KEY in .env.local for AI features (Recommend a path).
+  - For Supabase mode: set NEXT_PUBLIC_SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY.
   - Avoid NODE_OPTIONS=--import tsx for this CLI; run via:
       node ./node_modules/tsx/dist/cli.mjs ./cli/entry.ts
     Double tsx registration can trigger loader/load-export errors.
@@ -30,6 +32,26 @@ Notes:
 
 export async function runSmoke(): Promise<number> {
   const rt = createRuntime();
+
+  // ── System info ──────────────────────────────────────────
+  const nodeVersion = process.version;
+  const nodeMajor = parseInt(nodeVersion.replace("v", "").split(".")[0] ?? "0", 10);
+  const nodeOk = nodeMajor >= 18;
+  const hasAnthropicKey = Boolean(process.env.ANTHROPIC_API_KEY?.trim());
+
+  console.log(j(ok({
+    step: "system-check",
+    nodeVersion,
+    nodeOk,
+    mode: rt.mode,
+    anthropicKeyPresent: hasAnthropicKey,
+    anthropicKeyWarning: hasAnthropicKey ? null : "ANTHROPIC_API_KEY is not set — AI features will be unavailable",
+  })));
+
+  if (!nodeOk) {
+    console.error(j({ ok: false, error: `Node.js >= 18 required, found ${nodeVersion}` }));
+  }
+
   try {
     const host = await rt.leagueService.createLeagueHost({
       name: "Smoke Host",

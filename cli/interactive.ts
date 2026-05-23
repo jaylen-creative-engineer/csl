@@ -1,10 +1,22 @@
 import process from "node:process";
-import { confirm, input, select, Separator } from "@inquirer/prompts";
+import { confirm, input, select, checkbox, Separator } from "@inquirer/prompts";
 import { $ } from "zx";
 import { Discipline } from "../src/league-model/types.js";
 import type { Submission } from "../src/challenge-intelligence/types.js";
 import { SponsorOutcomeStatus } from "../src/sponsor-intelligence/types.js";
-import { createRuntime, fail, j, listDisciplines, ok } from "./shared.js";
+import {
+  createRuntime,
+  fail,
+  j,
+  listDisciplines,
+  ok,
+} from "./shared.js";
+import {
+  listSkillGoals,
+  listMilestones,
+  saveMilestone,
+  saveSkillGoal,
+} from "../src/lib/local-store/index.js";
 
 function avgScore(s: Submission): number {
   const scores = s.scores ?? [];
@@ -21,10 +33,16 @@ export async function startInteractive(): Promise<void> {
 
   while (running) {
     const action = await select({
-      message: "CSL validation CLI — choose an action",
+      message: `CSL — ${rt.mode === "local" ? "local-store mode" : "Supabase mode"} — choose an action`,
       choices: [
         { name: "Guided demo (domain happy path)", value: "guided" },
-        new Separator(),
+        new Separator("── Learner journey ──"),
+        { name: "Set my skill goal", value: "skill-goal" },
+        { name: "View my progress", value: "progress" },
+        { name: "Recommend a path (AI)", value: "recommend" },
+        { name: "Set a milestone", value: "milestone-set" },
+        { name: "What's due?", value: "milestone-due" },
+        new Separator("── Platform ──"),
         { name: "Discovery: browse hosts, leagues, challenges", value: "discovery" },
         { name: "Listings: create/list", value: "listings" },
         { name: "Matching: run/list/accept/reject", value: "matching" },
@@ -32,7 +50,7 @@ export async function startInteractive(): Promise<void> {
         { name: "Sponsors: create/attach/outcome/summary", value: "sponsors" },
         { name: "Reputation: score + events", value: "reputation" },
         { name: "Session: actor/roles", value: "session" },
-        { name: "Reset runtime (new Supabase session + ID counters)", value: "reset" },
+        { name: "Reset runtime (new session + ID counters)", value: "reset" },
         new Separator(),
         { name: "Tools: run typecheck/tests", value: "tools" },
         { name: "Exit", value: "exit" },
@@ -46,6 +64,31 @@ export async function startInteractive(): Promise<void> {
 
     if (action === "guided") {
       await guidedFlow(rt);
+      continue;
+    }
+
+    if (action === "skill-goal") {
+      await skillGoalFlow(rt);
+      continue;
+    }
+
+    if (action === "progress") {
+      await progressFlow(rt);
+      continue;
+    }
+
+    if (action === "recommend") {
+      await recommendFlow();
+      continue;
+    }
+
+    if (action === "milestone-set") {
+      await milestoneSetFlow();
+      continue;
+    }
+
+    if (action === "milestone-due") {
+      await milestoneDueFlow();
       continue;
     }
 
@@ -523,6 +566,160 @@ async function toolsMenu(): Promise<void> {
       await $`npm test`;
       console.log(j(ok({ action, status: "completed" })));
     }
+  } catch (error) {
+    console.error(j(fail(error)));
+  }
+}
+
+// ── Learner journey flows ────────────────────────────────────
+
+async function skillGoalFlow(rt: RuntimeLike): Promise<void> {
+  try {
+    const label = await input({ message: "Skill goal label", default: "Visual storytelling" });
+    const disciplines = await checkbox({
+      message: "Disciplines (space to select, enter to confirm)",
+      choices: listDisciplines().map((d) => ({ name: d, value: d })),
+    });
+
+    const goal = saveSkillGoal({ label, disciplines });
+    console.log(j(ok({ action: "skill-goal", goal })));
+  } catch (error) {
+    console.error(j(fail(error)));
+  }
+}
+
+async function progressFlow(rt: RuntimeLike): Promise<void> {
+  try {
+    const participant = rt.state.participants[0];
+    const goals = listSkillGoals();
+
+    if (!participant && goals.length === 0) {
+      console.log(
+        j(ok({
+          action: "progress",
+          message: "No participant in session and no skill goals saved yet.",
+          hint: "Create a participant via Listings, or set a skill goal first.",
+        }))
+      );
+      return;
+    }
+
+    const result: Record<string, unknown> = { action: "progress" };
+
+    if (goals.length > 0) {
+      result.skillGoals = goals;
+    }
+
+    if (participant) {
+      const subs = await rt.challengeService.getSubmissionsForParticipant(participant.id);
+      const scored = subs.filter((s: Submission) => (s.scores?.length ?? 0) > 0);
+      result.participant = { id: participant.id, handle: participant.handle };
+      result.submissions = subs.length;
+      result.scoredSubmissions = scored.length;
+      if (scored.length > 0) {
+        const avgScore = scored.reduce((sum: number, s: Submission) => sum + avgScore_(s), 0) / scored.length;
+        result.averageScore = Math.round(avgScore * 10) / 10;
+      } else {
+        result.averageScore = null;
+        result.hint = "Complete a scored challenge to see your score here.";
+      }
+    }
+
+    console.log(j(ok(result)));
+  } catch (error) {
+    console.error(j(fail(error)));
+  }
+}
+
+function avgScore_(s: Submission): number {
+  const scores = s.scores ?? [];
+  return scores.length === 0 ? 0 : scores.reduce((sum, x) => sum + x.totalScore, 0) / scores.length;
+}
+
+async function recommendFlow(): Promise<void> {
+  const apiKey = process.env.ANTHROPIC_API_KEY?.trim();
+  if (!apiKey) {
+    console.log(
+      j(ok({
+        action: "recommend",
+        message: "ANTHROPIC_API_KEY is not set — AI recommendations are unavailable.",
+        hint: "Add ANTHROPIC_API_KEY to .env.local and restart the CLI.",
+        fallback: [
+          "1. Set a concrete skill goal with a deadline.",
+          "2. Find an open challenge that exercises that skill.",
+          "3. Submit an entry and request scored feedback.",
+          "4. Repeat: each sprint adds a public artifact to your portfolio.",
+        ],
+      }))
+    );
+    return;
+  }
+
+  const goals = listSkillGoals();
+  const goalSummary = goals.length > 0
+    ? goals.map((g) => `${g.label} (${g.disciplines.join(", ")})`).join("; ")
+    : "no specific goals set yet";
+
+  console.log("[CSL] Calling AI for a personalized recommendation...");
+
+  try {
+    const { default: Anthropic } = await import("@anthropic-ai/sdk");
+    const client = new Anthropic({ apiKey });
+    const msg = await client.messages.create({
+      model: "claude-opus-4-5",
+      max_tokens: 512,
+      messages: [
+        {
+          role: "user",
+          content: `You are a creative-skills coach. The user's current skill goals: ${goalSummary}. Give a concrete 3-step learning path in under 150 words — actionable, specific, no fluff.`,
+        },
+      ],
+    });
+    const textBlock = msg.content.find((c) => c.type === "text" && "text" in c) as
+      | { type: "text"; text: string }
+      | undefined;
+    const text = textBlock?.text ?? "(no response)";
+    console.log(j(ok({ action: "recommend", recommendation: text })));
+  } catch (error) {
+    console.error(j(fail(error)));
+  }
+}
+
+async function milestoneSetFlow(): Promise<void> {
+  try {
+    const description = await input({ message: "Milestone description", default: "Finish challenge draft" });
+    const dueDate = await input({
+      message: "Due date (YYYY-MM-DD)",
+      default: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    });
+    const milestone = saveMilestone({ description, dueDate });
+    console.log(j(ok({ action: "milestone-set", milestone })));
+  } catch (error) {
+    console.error(j(fail(error)));
+  }
+}
+
+async function milestoneDueFlow(): Promise<void> {
+  try {
+    const all = listMilestones();
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const in7 = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const overdue = all.filter((m) => new Date(m.dueDate) < today);
+    const upcoming = all.filter((m) => {
+      const d = new Date(m.dueDate);
+      return d >= today && d <= in7;
+    });
+
+    console.log(
+      j(ok({
+        action: "milestone-due",
+        overdue: overdue.map((m) => ({ id: m.id, description: m.description, dueDate: m.dueDate })),
+        upcomingNext7Days: upcoming.map((m) => ({ id: m.id, description: m.description, dueDate: m.dueDate })),
+        total: all.length,
+      }))
+    );
   } catch (error) {
     console.error(j(fail(error)));
   }

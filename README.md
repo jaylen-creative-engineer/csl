@@ -1,206 +1,103 @@
 # Creative Sports League (CSL)
 
-The hero tool for creatives, technologists, analysts, and synthesizers — built to define long-range creative vision, establish strategy, and execute through structured challenge sprints that prove skill publicly, surface talent signals, and remove the gatekeeping that keeps hidden genius hidden.
+CSL is an open-source platform for structured creative challenge sprints — giving emerging creatives a meritocratic path to prove skill publicly, build portfolio, and surface talent without needing insider access or warm introductions.
 
 ---
 
-## What is CSL?
+## Quick start
 
-CSL operates at two levels:
+```bash
+git clone https://github.com/your-org/csl.git
+cd csl
+bash scripts/setup-local.sh
+# Open .env.local and set ANTHROPIC_API_KEY
+npm run cli
+```
 
-- **Single-player mode** — download the open-source tool, add your API key, and you have a personal environment for long-range creative goals, strategic execution, and balancing vision with daily work.
-- **Network mode** — join a Creative Sports League community to demonstrate capability, get feedback, find moments to execute, and build meritocratic reputation without needing insider access or warm introductions.
-
-The platform serves four archetypes: the **creative** proving skill through public artifacts, the **technologist** managing long-range technical goals, the **analyst** working with signal-rich scored data, and the **synthesizer** balancing vision, strategy, wellness, relationships, and execution.
-
----
-
-## Features Completed
-
-| Domain | Feature | Status |
-|---|---|---|
-| League Model | Create leagues with a named host and season | Done |
-| League Model | Participant enrollment with duplicate prevention | Done |
-| League Model | List participants per league | Done |
-| Challenge Intelligence | Challenge sprint lifecycle: draft → open → judging → complete | Done |
-| Challenge Intelligence | Submit entries to open challenges | Done |
-| Challenge Intelligence | Score submissions with per-criteria breakdown | Done |
-| Challenge Intelligence | Deterministic leaderboard sorted by score | Done |
-| Challenge Intelligence | Structural diff between two challenges | Done |
-| Showcase Intelligence | Build participant portfolio from public submissions | Done |
-| Showcase Intelligence | Derive skill signals from scoring criteria domains | Done |
-| Showcase Intelligence | Surface top performers per league by aggregate score | Done |
-| Showcase Intelligence | Public showcase feed (most recent first) | Done |
-| Sponsor Intelligence | Create sponsors and attach to challenges | Done |
-| Sponsor Intelligence | Brief delivery tied to challenge prompt | Done |
-| Sponsor Intelligence | Record sponsor outcomes post-challenge | Done |
-| Sponsor Intelligence | Sponsor summary with top submission references | Done |
+That's it. No database required for single-player mode.
 
 ---
 
-## Project Description
+## Single-player mode
 
-The Creative Sports League is built on one core insight: **emerging creatives need a structured, public way to prove their skill** — and once that supply exists, everything else follows.
+Single-player mode works with only `ANTHROPIC_API_KEY` and stores all data locally in `.csl-data.json`.
 
-The platform operates at three levels simultaneously:
+1. **Set a skill goal** — pick a label and disciplines
+2. **Create a challenge** — define a prompt, deadline, and scoring criteria
+3. **Submit an entry** — link a public artifact (URL or file)
+4. **Score and reflect** — criteria-based scoring builds your portfolio
+5. **Recommend a path** — AI suggests next steps based on your goals
 
-- **Rep layer for creatives** — each challenge sprint produces a public artifact that lives in a participant's portfolio. Skill signals are derived from scored criteria, not self-reported claims.
-- **Talent signal for organizations** — sponsors embed real briefs into challenges. Hiring orgs get a ranked, credentialed pool without a sourcing process.
-- **Content engine for communities** — league hosts publish challenge results as a feed. Every sprint is a content event with a leaderboard, a story, and real stakes.
-
-The anti-gatekeeping thesis: talent should surface through demonstrated work, not through who you know. CSL gives capable people who lack access to traditional networks a meritocratic path to visibility.
+The learner journey menu gives you access to all five steps in under 10 keystrokes each.
 
 ---
 
-## Architecture
+## Network mode
 
-CSL mirrors the `future-org-design` project architecture: intelligence-first domain services, tested independently of delivery interfaces, with a thin Next.js layer consuming them via API.
+Network mode connects to a Supabase backend, unlocking multi-participant leagues, sponsor briefs, live leaderboards, and community feeds.
+
+See [docs/network-mode.md](docs/network-mode.md) for setup and deployment details.
+
+---
+
+## Environment variables
+
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `ANTHROPIC_API_KEY` | For AI features | — | API key from [console.anthropic.com](https://console.anthropic.com/) |
+| `NEXT_PUBLIC_SUPABASE_URL` | For network mode | — | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | For network mode | — | Supabase anon/publishable key |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Alias for above | — | Accepted as an alias for the publishable key |
+| `SUPABASE_SERVICE_ROLE_KEY` | For admin/BDD | — | Server-only; never expose to the browser |
+| `DATABASE_URL` | For migrations | — | Direct Postgres connection string (port 5432) |
+
+Copy `.env.example` to `.env.local` to get started:
+
+```bash
+cp .env.example .env.local
+```
+
+---
+
+## Development
+
+```bash
+npm run typecheck     # TypeScript type check
+npm test              # Vitest unit tests
+npm run bdd           # Cucumber BDD scenarios (requires Supabase env vars)
+npm run verify        # typecheck + tests + BDD (full integration gate)
+npm run dev           # Start Next.js dev server
+npm run cli           # Start interactive CLI (requires TTY)
+npm run cli:smoke     # Non-interactive wiring check (CI-safe)
+```
+
+**Architecture:**
 
 ```
 csl/
 ├── src/
-│   ├── league-model/          # Core entities: League, Season, LeagueHost, Participant
+│   ├── league-model/           # Core entities: League, Season, LeagueHost, Participant
 │   ├── challenge-intelligence/ # Sprint lifecycle, scoring, leaderboard, diff
 │   ├── showcase-intelligence/  # Portfolio, skill signals, top performers feed
 │   ├── sponsor-intelligence/   # Sponsor attachment, brief, outcome tracking
-│   └── lib/supabase/          # Supabase browser/server/admin clients (@supabase/ssr + supabase-js)
-├── features/
-│   ├── challenge.feature
-│   ├── league.feature
-│   ├── showcase.feature
-│   └── step_definitions/       # Cucumber BDD steps using real service instances
-│       └── support/world.ts    # Shared Cucumber World — all services wired here
-├── app/                        # Next.js App Router (`app/api/v1/*` REST → domain services)
-└── lat.md/                     # Knowledge graph (lat.md) — vision, domain, rollout, work backlog
+│   └── lib/
+│       ├── supabase/           # Supabase clients, repositories, ID generation
+│       └── local-store/        # JSON file store for single-player mode
+├── cli/                        # Interactive + CI-safe CLI (tsx entry point)
+├── app/                        # Next.js App Router (REST API under /api/v1/*)
+├── features/                   # Cucumber BDD scenarios
+└── lat.md/                     # Knowledge graph — vision, domain model, backlog
 ```
 
 **Guiding principles:**
-- Domain logic lives in services — repositories encapsulate Supabase table access
-- Services take `SupabaseClient<Database>` (typically admin on server/tests until RLS policies exist)
-- BDD step definitions use real implementations against Postgres (requires `.env.local`)
-- Scoring is deterministic — same inputs, same leaderboard order, every time
 
-### Supabase
-
-| Supabase product | Role in CSL |
-|---|---|
-| **Postgres** | Hosted database; repositories in `src/lib/supabase/repositories/` |
-| **Auth** | User sessions via `src/lib/supabase/*` (see roadmap Phase 4) |
-| **Storage** | Public or signed URLs for challenge submission artifacts (`SubmissionArtifact.url`) |
-| **Realtime** | Optional live feed or leaderboard updates |
-
-Copy `.env.local.example` to `.env.local` and fill values from the Supabase dashboard.
-
-**HTTP API:** `GET/POST` (and `PATCH` for sponsor outcomes) under `/api/v1/…` — see `lat.md/api-architecture.md`. Responses use `{ ok, data }` / `{ ok, error }`.
+- Domain logic lives in services — repositories encapsulate data access
+- Services take either a Supabase client or a local file store — same interface
+- BDD step definitions use real implementations against Postgres
+- Scoring is deterministic — same inputs produce the same leaderboard every time
 
 ---
 
-## Tech Stack
+## Contributing
 
-| Tool | Role |
-|---|---|
-| Next.js 16 + TypeScript | App framework |
-| Supabase (`@supabase/supabase-js`, `@supabase/ssr`) | Auth session, Storage, and other platform APIs |
-| Vitest | Unit tests |
-| Cucumber.js | BDD acceptance scenarios |
-| lat.md | Knowledge graph (`lat.md/` vault — wiki-linked concepts and backlog) |
-| tsx | TypeScript execution for scripts and BDD |
-
----
-
-## Knowledge graph
-
-Interlinked markdown under `lat.md/` documents product vision, the domain model, rollout strategy, what is implemented, and a **work graph** (phases, themes, known gaps). Entry: `lat.md/README.md`. Validate links and `@lat` anchors with `npm run lat:check` (runs `npx lat check`). Use `npx lat refs "<section-id>"` to find code that references a vault section.
-
----
-
-## Getting Started
-
-```bash
-npm install
-cp .env.local.example .env.local   # Fill Supabase URL + service role key for DB-backed tests/BDD
-npm run dev        # Start Next.js dev server
-npm test           # Vitest (integration specs skip if Supabase env vars are missing)
-npm run bdd        # Cucumber BDD — requires `.env.local` with Supabase credentials
-npm run verify     # typecheck + tests + BDD
-```
-
-Tag-scoped BDD runs:
-
-```bash
-npm run bdd:challenge   # @challenge scenarios only
-npm run bdd:league      # @league scenarios only
-npm run bdd:showcase    # @showcase scenarios only
-```
-
-### Validation CLI (interactive + CI-safe modes)
-
-```bash
-npm run csl:cli                 # interactive menus (requires TTY)
-npm run csl:cli -- --smoke      # fast non-interactive wiring check
-npm run csl:cli -- --demo       # non-interactive guided workflow with JSON output
-npm run csl:cli -- --help       # usage + troubleshooting notes
-```
-
-Notes:
-- Interactive mode is intentionally disabled when stdin is not a TTY (common in CI and some IDE Run configs). Use `--smoke` or `--demo` there.
-- The CLI uses `node ./node_modules/tsx/dist/cli.mjs ./cli/entry.ts` to avoid double-loading `tsx`.
-- Do not set `NODE_OPTIONS=--import tsx` for this command path.
-
----
-
-## Test Coverage
-
-```
-Unit tests:   53 passing
-BDD scenarios: 12 passing
-BDD steps:    ~50 passing
-```
-
-**Unit test breakdown:**
-
-| Service | Tests |
-|---|---|
-| LeagueModelService | 17 |
-| ChallengeService | 14 |
-| ShowcaseService | 7 |
-| SponsorService | 9 |
-
-**Note:** New tests cover `listHosts()`, `listLeagues()`, and `getChallengesForLeague()` discovery APIs.
-
-**BDD scenario breakdown:**
-
-| Feature | Scenarios |
-|---|---|
-| Challenge sprint lifecycle | 4 |
-| League model and enrollment | 4 |
-| Showcase and talent signals | 2 |
-| Sponsor intelligence | 3 |
-
----
-
-## Strategic Sequencing
-
-The partnership and growth sequencing from the product design:
-
-1. **Founder as hero user** — first-person proof that the tool works for long-range creative vision and strategic execution
-2. **Single-player early adopters** — open-source users who download, configure, and use independently
-3. **Community anchors** — Meetup groups, design schools, local orgs seed the talent supply
-4. **Challenge sponsors** — real stakes and briefs give output legitimacy
-5. **Distribution and hiring partners** — they're a reward for density, not a way to create it
-
-The biggest near-term unlock: one well-run challenge sprint with one real sponsor, one community host, and public outputs.
-
----
-
-## Roadmap
-
-| Phase | Goal | Status |
-|---|---|---|
-| 0 | Domain services + in-memory core | Done |
-| 1 | Repository layer + database migrations | Done |
-| 2 | API routes (REST, validation, idempotency) | Partial |
-| 3 | UX workflows (challenge editor, leaderboard view, portfolio page) | Planned |
-| 4 | Auth, RBAC, audit log, observability | Planned |
-
-See `lat.md/rollout-strategy.md` for Q3/Q4 announcement plan and `lat.md/work-graph.md` for detailed backlog.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for issue filing, branch conventions, and the PR checklist.

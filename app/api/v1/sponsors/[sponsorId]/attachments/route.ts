@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getRouteServices } from "@/lib/api/route-services.js";
 import { jsonCreated, jsonError, readJsonBody } from "@/lib/api/http.js";
+import { requireAuth } from "@/lib/api/require-auth.js";
 
 const Body = z.object({
   challengeId: z.string().min(1),
@@ -15,6 +16,9 @@ const Body = z.object({
 type Params = { sponsorId: string };
 
 export async function POST(request: Request, context: { params: Promise<Params> }) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   const { sponsorId } = await context.params;
   const raw = await readJsonBody(request);
   const result = Body.safeParse(raw);

@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getRouteServices } from "@/lib/api/route-services.js";
 import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http.js";
 import { SponsorOutcomeStatus } from "@/sponsor-intelligence/types.js";
+import { requireAuth } from "@/lib/api/require-auth.js";
 
 const Body = z.object({
   status: z.nativeEnum(SponsorOutcomeStatus),
@@ -13,6 +14,9 @@ const Body = z.object({
 type Params = { attachmentId: string };
 
 export async function PATCH(request: Request, context: { params: Promise<Params> }) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   const { attachmentId } = await context.params;
   const raw = await readJsonBody(request);
   const result = Body.safeParse(raw);

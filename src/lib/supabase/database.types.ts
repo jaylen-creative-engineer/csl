@@ -478,6 +478,251 @@ export type Database = {
           },
         ]
       }
+      skill_intents: {
+        Row: {
+          id: string
+          participant_id: string
+          skill_label: string
+          target_disciplines: string[]
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          participant_id: string
+          skill_label: string
+          target_disciplines?: string[]
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          participant_id?: string
+          skill_label?: string
+          target_disciplines?: string[]
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "skill_intents_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      frameworks: {
+        Row: {
+          id: string
+          name: string
+          skill_label: string
+          description: string | null
+          steps: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          skill_label: string
+          description?: string | null
+          steps?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          skill_label?: string
+          description?: string | null
+          steps?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+      learning_plans: {
+        Row: {
+          id: string
+          participant_id: string
+          framework_id: string | null
+          milestones: Json
+          start_date: string | null
+          target_date: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          participant_id: string
+          framework_id?: string | null
+          milestones?: Json
+          start_date?: string | null
+          target_date?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          participant_id?: string
+          framework_id?: string | null
+          milestones?: Json
+          start_date?: string | null
+          target_date?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_plans_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "learning_plans_framework_id_fkey"
+            columns: ["framework_id"]
+            isOneToOne: false
+            referencedRelation: "frameworks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      paths: {
+        Row: {
+          id: string
+          plan_id: string
+          variant: string
+          steps: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          variant: string
+          steps?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          variant?: string
+          steps?: Json
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "paths_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "learning_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      resources: {
+        Row: {
+          id: string
+          title: string
+          url: string | null
+          type: string
+          step_id: string | null
+          challenge_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          url?: string | null
+          type: string
+          step_id?: string | null
+          challenge_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          url?: string | null
+          type?: string
+          step_id?: string | null
+          challenge_id?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "resources_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      milestones: {
+        Row: {
+          id: string
+          plan_id: string
+          description: string
+          due_date: string | null
+          completed_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          plan_id: string
+          description: string
+          due_date?: string | null
+          completed_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          plan_id?: string
+          description?: string
+          due_date?: string | null
+          completed_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "milestones_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "learning_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      commitments: {
+        Row: {
+          id: string
+          participant_id: string
+          milestone_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          participant_id: string
+          milestone_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          participant_id?: string
+          milestone_id?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "commitments_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "commitments_milestone_id_fkey"
+            columns: ["milestone_id"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

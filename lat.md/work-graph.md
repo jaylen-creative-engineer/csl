@@ -74,16 +74,16 @@ Cross-cutting capabilities after foundations ship; optional ordering within a th
 
 Implements the [[lat.md/individual-learner-journey#Individual learner journey#Behavior vision]]: skill intent, mastery framing, AI-coordinated paths, resources, accountability — still individualized even when social features engage ([[lat.md/product-vision#Product vision#Individual learner journey]]). This theme is the backbone of single-player mode ([[lat.md/rollout-strategy#Rollout strategy#Interaction patterns#Single-player mode (open source)]]).
 
-| Work item | Enables |
-|-----------|---------|
-| Accounts & learner identity | Skill profile and longitudinal evidence |
-| Skill intent & mastery surfaces | Maps rubric/criteria to "skill X" progress ([[lat.md/individual-learner-journey#Individual learner journey#Skill intent & mastery framing]]) |
-| AI-coordinated paths | Recommend frameworks, plans, next actions ([[lat.md/individual-learner-journey#Individual learner journey#AI-coordinated guidance]]) |
-| Plans, frameworks, path library | Executable sequences tied to challenges and resources ([[lat.md/individual-learner-journey#Individual learner journey#Frameworks, plans, and paths]]) |
-| Resources & brief linking | Step-level materials and sponsor/host briefs as learning substrate ([[lat.md/individual-learner-journey#Individual learner journey#Resources]]) |
-| Accountability | Milestones, commitments, drift-aware prompts ([[lat.md/individual-learner-journey#Individual learner journey#Accountability]]) |
-| Feedback beyond aggregate score | Rubric comments, critique — feeds mastery model |
-| Personal dashboard | Progress, upcoming steps, artifacts |
+| Work item | Status | Enables |
+|-----------|--------|---------|
+| Accounts & learner identity | Pending | Skill profile and longitudinal evidence |
+| Skill intent & mastery surfaces | Done — [[src/skill-journey/skill-intent.service.ts#SkillIntentService]] + migration `20260522010001_skill_intent.sql` | Maps rubric/criteria to "skill X" progress ([[lat.md/individual-learner-journey#Individual learner journey#Skill intent & mastery framing]]) |
+| AI-coordinated paths | Done — `app/api/v1/learners/[participantId]/{recommend-path,synthesize-plan,next-actions}` with prompt caching ([[src/skill-journey/ai-client.ts]]) | Recommend frameworks, plans, next actions ([[lat.md/individual-learner-journey#Individual learner journey#AI-coordinated guidance]]) |
+| Plans, frameworks, path library | Done — [[src/skill-journey/learning.service.ts#LearningService]] + migration `20260522010002_learning_plans.sql` | Executable sequences tied to challenges and resources ([[lat.md/individual-learner-journey#Individual learner journey#Frameworks, plans, and paths]]) |
+| Resources & brief linking | Done — `LearningService.addResource` + migration `20260522010003_resources.sql` | Step-level materials and sponsor/host briefs as learning substrate ([[lat.md/individual-learner-journey#Individual learner journey#Resources]]) |
+| Accountability | Done — milestones / commitments / `checkMilestonesDue` + migration `20260522010004_accountability.sql` | Milestones, commitments, drift-aware prompts ([[lat.md/individual-learner-journey#Individual learner journey#Accountability]]) |
+| Feedback beyond aggregate score | Pending | Rubric comments, critique — feeds mastery model |
+| Personal dashboard | Pending | Progress, upcoming steps, artifacts |
 
 Also grounded in [[lat.md/domain-model#Domain model#Entities#Showcase Intelligence]].
 

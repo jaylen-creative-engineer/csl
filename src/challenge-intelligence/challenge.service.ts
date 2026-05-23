@@ -6,6 +6,7 @@ import {
   newScoreId,
   newSubmissionId,
 } from "../lib/supabase/ids.js";
+import { writeAuditLog } from "../lib/audit-log.js";
 import {
   insertChallenge,
   fetchChallenge,
@@ -120,6 +121,15 @@ export class ChallengeService {
     const totalScore = this.computeTotalScore(input, challenge);
     const scoreId = newScoreId();
     await insertScore(this.client, scoreId, submissionId, input, totalScore);
+
+    // Audit: record the scoring action for compliance tracking
+    await writeAuditLog({
+      action: "score_submission",
+      entityType: "submission",
+      entityId: submissionId,
+      diff: { judgeId: input.judgeId, totalScore, criteriaScores: input.criteriaScores },
+    });
+
     return (await fetchSubmission(this.client, submissionId))!;
   }
 

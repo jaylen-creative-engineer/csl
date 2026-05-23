@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { getRouteServices } from "@/lib/api/route-services.js";
 import { jsonCreated, jsonError, readJsonBody } from "@/lib/api/http.js";
+import { requireAuth } from "@/lib/api/require-auth.js";
 
 const Body = z.object({
   name: z.string().min(1),
@@ -8,6 +9,9 @@ const Body = z.object({
 });
 
 export async function POST(request: Request) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   const raw = await readJsonBody(request);
   const result = Body.safeParse(raw);
   if (!result.success) return jsonError(result.error.issues[0].message, 422);

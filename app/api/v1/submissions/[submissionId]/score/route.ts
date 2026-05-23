@@ -3,6 +3,7 @@ import { NextResponse } from "next/server.js";
 import { getRouteServices } from "@/lib/api/route-services.js";
 import { jsonError, jsonOk, readJsonBody } from "@/lib/api/http.js";
 import { checkIdempotency, storeIdempotency } from "@/lib/api/idempotency.js";
+import { requireAuth } from "@/lib/api/require-auth.js";
 
 const Body = z.object({
   judgeId: z.string().min(1),
@@ -18,6 +19,9 @@ const Body = z.object({
 type Params = { submissionId: string };
 
 export async function POST(request: Request, context: { params: Promise<Params> }) {
+  const auth = await requireAuth(request);
+  if (!auth.ok) return auth.response;
+
   const idempKey = request.headers.get("Idempotency-Key");
   const cached = checkIdempotency(idempKey);
   if (cached) return NextResponse.json(cached.body, { status: cached.status });
