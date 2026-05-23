@@ -46,17 +46,17 @@ BDD scenarios require `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`
 npm run bdd
 ```
 
-## What network mode unlocks
+## Features
 
-| Feature | Single-player | Network |
-|---|---|---|
-| Skill goals and milestones | Yes | Yes |
-| Challenge sprints | Yes (local) | Yes (shared) |
-| Portfolio and scoring | Yes (local) | Yes (shared) |
-| Multi-participant leagues | No | Yes |
-| Sponsor briefs | No | Yes |
-| Live leaderboards | No | Yes |
-| Community showcase feed | No | Yes |
+| Feature | Description |
+|---|---|
+| Multi-participant leagues | Hosts create leagues, participants enroll and compete |
+| Challenge sprints | Time-boxed creative challenges with scoring criteria |
+| Portfolio and scoring | Multi-judge scoring with leaderboards |
+| Sponsor briefs | Sponsors attach briefs and track outcomes |
+| Live leaderboards | Real-time ranked submissions |
+| Community showcase feed | Public feed of scored submissions |
+| Skill journey | Skill intents, learning plans, milestones |
 
 ## Deployment
 

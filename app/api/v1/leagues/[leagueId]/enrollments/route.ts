@@ -16,7 +16,7 @@ export async function POST(request: Request, context: { params: Promise<Params> 
   if (!auth.ok) return auth.response;
 
   const idempKey = request.headers.get("Idempotency-Key");
-  const cached = checkIdempotency(idempKey);
+  const cached = await checkIdempotency(idempKey);
   if (cached) return NextResponse.json(cached.body, { status: cached.status });
 
   const { leagueId } = await context.params;
@@ -28,7 +28,7 @@ export async function POST(request: Request, context: { params: Promise<Params> 
     const { league } = getRouteServices();
     const enrollment = await league.enrollParticipant(leagueId, body.participantId.trim());
     const responseBody = { ok: true as const, data: enrollment };
-    if (idempKey) storeIdempotency(idempKey, responseBody, 200);
+    if (idempKey) await storeIdempotency(idempKey, responseBody, 200);
     return jsonOk(enrollment);
   } catch (e) {
     return jsonError(e instanceof Error ? e.message : String(e), 500);
