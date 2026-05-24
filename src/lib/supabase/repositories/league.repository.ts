@@ -283,6 +283,21 @@ export async function listAllLeagueHosts(client: SupabaseClient<Database>): Prom
   return hosts;
 }
 
+export async function listAllSeasons(client: SupabaseClient<Database>): Promise<Season[]> {
+  const { data: rows, error } = await client
+    .from("seasons")
+    .select("id, name, start_date, end_date, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (rows ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    startDate: row.start_date,
+    endDate: row.end_date,
+    createdAt: row.created_at,
+  }));
+}
+
 export async function listAllLeagues(client: SupabaseClient<Database>): Promise<League[]> {
   const { data: rows, error } = await client
     .from("leagues")

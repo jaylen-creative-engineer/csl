@@ -15,6 +15,7 @@ import {
   listParticipantsForLeague,
   listAllLeagueHosts,
   listAllLeagues,
+  listAllSeasons,
   leagueExists,
 } from "../lib/supabase/repositories/league.repository.js";
 import { NotFoundError, ConflictError, InvalidStateError } from "../lib/errors.js";
@@ -138,6 +139,10 @@ export class LeagueModelService {
 
   async listLeagues(): Promise<League[]> {
     return listAllLeagues(this.client);
+  }
+
+  async listSeasons(): Promise<Season[]> {
+    return listAllSeasons(this.client);
   }
 
   async enrollParticipant(leagueId: LeagueId, participantId: ParticipantId): Promise<EnrollmentResult> {
