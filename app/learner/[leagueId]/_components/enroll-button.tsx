@@ -40,8 +40,8 @@ export function EnrollButton({ leagueId }: Props) {
 
   if (success) {
     return (
-      <div style={{ padding: "0.75rem 1rem", background: "#dcfce7", borderRadius: "0.5rem", color: "#15803d", fontWeight: 500 }}>
-        Enrolled successfully!
+      <div className="flex items-center gap-2 px-4 py-2 bg-[var(--success)] text-[var(--primary-foreground)] rounded-full">
+        <span className="text-sm font-medium">Enrolled successfully!</span>
       </div>
     );
   }
@@ -50,7 +50,7 @@ export function EnrollButton({ leagueId }: Props) {
     return (
       <button
         onClick={() => setShowInput(true)}
-        style={btnStyle}
+        className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
       >
         Enroll in League
       </button>
@@ -58,46 +58,32 @@ export function EnrollButton({ leagueId }: Props) {
   }
 
   return (
-    <div style={{ display: "flex", gap: "0.75rem", alignItems: "flex-start", flexWrap: "wrap" }}>
-      <div style={{ flex: 1, minWidth: "200px" }}>
+    <div className="flex flex-wrap items-start gap-3">
+      <div className="flex-1 min-w-[200px]">
         <input
           value={participantId}
           onChange={(e) => setParticipantId(e.target.value)}
           placeholder="Your participant UUID"
-          style={inputStyle}
           autoFocus
+          className="w-full px-4 py-2.5 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] text-sm focus:outline-none focus:border-[var(--foreground)] transition-colors"
         />
-        {error && <p style={{ color: "#dc2626", fontSize: "0.8rem", marginTop: "0.25rem" }}>{error}</p>}
+        {error && (
+          <p className="text-xs text-[var(--destructive)] mt-1">{error}</p>
+        )}
       </div>
-      <button onClick={handleEnroll} disabled={loading} style={btnStyle}>
-        {loading ? "Enrolling..." : "Confirm Enroll"}
+      <button
+        onClick={handleEnroll}
+        disabled={loading}
+        className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
+      >
+        {loading ? "Enrolling..." : "Confirm"}
       </button>
       <button
         onClick={() => { setShowInput(false); setError(null); }}
-        style={{ ...btnStyle, background: "#f3f4f6", color: "#374151" }}
+        className="inline-flex items-center px-4 py-2.5 text-sm font-medium text-[var(--foreground)] bg-[var(--secondary)] rounded-full hover:bg-[var(--border-soft)] transition-colors"
       >
         Cancel
       </button>
     </div>
   );
 }
-
-const btnStyle: React.CSSProperties = {
-  padding: "0.6rem 1.25rem",
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: "0.5rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  fontSize: "0.875rem",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "0.5rem 0.75rem",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  fontSize: "0.95rem",
-  boxSizing: "border-box",
-};
