@@ -28,25 +28,35 @@ export function SupabaseIntegrationStatus() {
 
   if (state === null) {
     return (
-      <p className="text-sm text-gray-500" data-testid="supabase-status-loading">
-        Checking Supabase connection…
+      <p className="text-sm text-[var(--muted-foreground)]" data-testid="supabase-status-loading">
+        Checking Supabase connection...
       </p>
     );
   }
 
   if (state.ok) {
     return (
-      <p className="text-sm text-green-700" data-testid="supabase-status-ok">
-        {state.message ?? "Supabase integration OK."}
-      </p>
+      <div className="flex items-center gap-2" data-testid="supabase-status-ok">
+        <span className="inline-block w-2 h-2 bg-[var(--success)] rounded-full" />
+        <p className="text-sm text-[var(--success)]">
+          {state.message ?? "Supabase integration OK"}
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="text-sm text-red-700" data-testid="supabase-status-error">
-      <p className="font-medium">Supabase check failed</p>
-      {state.step ? <p className="mt-1">Step: {state.step}</p> : null}
-      <p className="mt-1 font-mono text-xs">{state.error ?? "Unknown error"}</p>
+    <div data-testid="supabase-status-error">
+      <div className="flex items-center gap-2">
+        <span className="inline-block w-2 h-2 bg-[var(--destructive)] rounded-full" />
+        <p className="text-sm font-medium text-[var(--destructive)]">Supabase check failed</p>
+      </div>
+      {state.step && (
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">Step: {state.step}</p>
+      )}
+      <p className="mt-1 text-xs font-mono text-[var(--muted-foreground)]">
+        {state.error ?? "Unknown error"}
+      </p>
     </div>
   );
 }

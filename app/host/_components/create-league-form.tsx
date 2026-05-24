@@ -37,61 +37,56 @@ export function CreateLeagueForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem", maxWidth: "480px" }}>
+    <form onSubmit={handleSubmit} className="grid gap-6 max-w-md">
       <div>
-        <label style={labelStyle} htmlFor="league-name">League Name</label>
+        <label 
+          htmlFor="league-name" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          League Name
+        </label>
         <input
           id="league-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
           placeholder="e.g. Spring Design Cohort"
-          style={inputStyle}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
         />
       </div>
+      
       <div>
-        <label style={labelStyle} htmlFor="host-id">Host ID</label>
+        <label 
+          htmlFor="host-id" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          Host ID
+        </label>
         <input
           id="host-id"
           value={hostId}
           onChange={(e) => setHostId(e.target.value)}
           required
           placeholder="Your host UUID"
-          style={inputStyle}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
         />
       </div>
-      {error && <p style={{ color: "#dc2626", fontSize: "0.875rem" }}>{error}</p>}
-      {success && <p style={{ color: "#16a34a", fontSize: "0.875rem" }}>League created!</p>}
-      <button type="submit" disabled={loading} style={btnStyle}>
+
+      {error && (
+        <p className="text-sm text-[var(--destructive)]">{error}</p>
+      )}
+      
+      {success && (
+        <p className="text-sm text-[var(--success)]">League created!</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         {loading ? "Creating..." : "Create League"}
       </button>
     </form>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.875rem",
-  fontWeight: 500,
-  marginBottom: "0.25rem",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "0.5rem 0.75rem",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  fontSize: "0.95rem",
-  boxSizing: "border-box",
-};
-
-const btnStyle: React.CSSProperties = {
-  padding: "0.6rem 1.25rem",
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: "0.5rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  fontSize: "0.95rem",
-};

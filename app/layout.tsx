@@ -1,10 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Nav } from "./_components/nav.js";
+import { Inter } from "next/font/google";
+import { Nav } from "./_components/nav";
+import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "Creative Sports League",
-  description: "Structured challenge sprints for emerging creatives"
+  description: "Structured challenge sprints for emerging creatives",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#111111",
+  width: "device-width",
+  initialScale: 1,
 };
 
 type RootLayoutProps = {
@@ -13,8 +27,8 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en">
-      <body style={{ margin: 0, fontFamily: "system-ui, sans-serif" }}>
+    <html lang="en" className={`${inter.variable} bg-[var(--background)]`}>
+      <body className="min-h-screen font-sans antialiased">
         <Nav />
         {children}
       </body>

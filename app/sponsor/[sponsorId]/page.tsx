@@ -48,116 +48,115 @@ export default async function SponsorDashboardPage({ params }: Props) {
 
   if (!sponsor) {
     return (
-      <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-        <p style={{ color: "#dc2626" }}>Sponsor not found.</p>
-        <Link href="/sponsor" style={{ color: "#2563eb" }}>Back to Sponsor Portal</Link>
+      <main className="min-h-screen px-6 py-12">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-[var(--destructive)]">Sponsor not found.</p>
+          <Link href="/sponsor" className="text-[var(--accent)] hover:underline mt-4 inline-block">
+            Back to Sponsor Portal
+          </Link>
+        </div>
       </main>
     );
   }
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "1rem" }}>
-        <Link href="/sponsor" style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
-          ← Sponsor Portal
-        </Link>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
-        <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>{sponsor.name}</h1>
-          <p style={{ color: "#6b7280", marginTop: "0.25rem", fontSize: "0.875rem" }}>
-            {sponsor.organization} &nbsp;&bull;&nbsp; {sponsor.contactEmail}
-          </p>
-        </div>
-        <Link
-          href={`/sponsor/${sponsorId}/attach`}
-          style={{
-            padding: "0.5rem 1rem",
-            background: "#2563eb",
-            color: "#fff",
-            borderRadius: "0.5rem",
-            textDecoration: "none",
-            fontWeight: 600,
-            fontSize: "0.875rem",
-          }}
+    <main className="min-h-screen px-6 py-12">
+      <div className="max-w-4xl mx-auto">
+        {/* Back Link */}
+        <Link 
+          href="/sponsor"
+          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
         >
-          + Attach Brief to Challenge
+          <span className="mr-2">←</span> Sponsor Portal
         </Link>
-      </div>
 
-      {summary && (
-        <>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "1rem", marginBottom: "2rem" }}>
-            <div style={statCard}>
-              <div style={{ fontSize: "2rem", fontWeight: 700, color: "#2563eb" }}>{summary.challenges}</div>
-              <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>Challenges Attached</div>
-            </div>
-            <div style={statCard}>
-              <div style={{ fontSize: "2rem", fontWeight: 700, color: "#16a34a" }}>{summary.topSubmissions.length}</div>
-              <div style={{ fontSize: "0.875rem", color: "#6b7280" }}>Top Submissions</div>
-            </div>
+        {/* Header */}
+        <header className="flex flex-wrap items-start justify-between gap-4 mb-12">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
+              {sponsor.name}
+            </h1>
+            <p className="mt-2 text-[var(--muted-foreground)]">
+              {sponsor.organization} &bull; {sponsor.contactEmail}
+            </p>
           </div>
+          <Link
+            href={`/sponsor/${sponsorId}/attach`}
+            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
+          >
+            + Attach Brief to Challenge
+          </Link>
+        </header>
 
-          <section>
-            <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1rem" }}>
-              Top Submissions by Challenge
-            </h2>
-            {summary.topSubmissions.length === 0 ? (
-              <p style={{ color: "#9ca3af" }}>No scored submissions yet across your challenges.</p>
-            ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
-                    <th style={thStyle}>Submission ID</th>
-                    <th style={thStyle}>Challenge</th>
-                    <th style={thStyle}>Participant</th>
-                    <th style={thStyle}>Top Score</th>
-                    <th style={thStyle}>Submitted</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {summary.topSubmissions.map((s) => {
-                    const topScore = s.scores?.[0]?.totalScore;
-                    return (
-                      <tr key={s.id} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                        <td style={{ ...tdStyle, fontFamily: "monospace", fontSize: "0.8rem" }}>{s.id.slice(0, 10)}…</td>
-                        <td style={{ ...tdStyle, fontFamily: "monospace", fontSize: "0.8rem" }}>{s.challengeId.slice(0, 10)}…</td>
-                        <td style={{ ...tdStyle, fontFamily: "monospace", fontSize: "0.8rem" }}>{s.participantId.slice(0, 10)}…</td>
-                        <td style={{ ...tdStyle, fontWeight: 600, color: "#2563eb" }}>
-                          {topScore !== undefined ? topScore.toFixed(1) : "—"}
-                        </td>
-                        <td style={tdStyle}>{new Date(s.submittedAt).toLocaleDateString()}</td>
+        {summary && (
+          <>
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+              <div className="p-6 bg-[var(--secondary)] text-center">
+                <div className="text-3xl font-bold text-[var(--foreground)]">{summary.challenges}</div>
+                <div className="text-sm text-[var(--muted-foreground)] mt-1">Challenges Attached</div>
+              </div>
+              <div className="p-6 bg-[var(--secondary)] text-center">
+                <div className="text-3xl font-bold text-[var(--success)]">{summary.topSubmissions.length}</div>
+                <div className="text-sm text-[var(--muted-foreground)] mt-1">Top Submissions</div>
+              </div>
+            </div>
+
+            {/* Top Submissions */}
+            <section>
+              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
+                Top Submissions by Challenge
+              </h2>
+              
+              {summary.topSubmissions.length === 0 ? (
+                <div className="p-8 bg-[var(--secondary)]">
+                  <p className="text-[var(--muted-foreground)]">
+                    No scored submissions yet across your challenges.
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b-2 border-[var(--border)]">
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Submission ID</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Challenge</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Participant</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Top Score</th>
+                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Submitted</th>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-          </section>
-        </>
-      )}
+                    </thead>
+                    <tbody>
+                      {summary.topSubmissions.map((s) => {
+                        const topScore = s.scores?.[0]?.totalScore;
+                        return (
+                          <tr key={s.id} className="border-b border-[var(--border-soft)]">
+                            <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
+                              {s.id.slice(0, 10)}...
+                            </td>
+                            <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
+                              {s.challengeId.slice(0, 10)}...
+                            </td>
+                            <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
+                              {s.participantId.slice(0, 10)}...
+                            </td>
+                            <td className="py-4 px-4 font-semibold text-[var(--foreground)]">
+                              {topScore !== undefined ? topScore.toFixed(1) : "—"}
+                            </td>
+                            <td className="py-4 px-4 text-[var(--foreground)]">
+                              {new Date(s.submittedAt).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
     </main>
   );
 }
-
-const statCard: React.CSSProperties = {
-  padding: "1rem",
-  border: "1px solid #e5e7eb",
-  borderRadius: "0.75rem",
-  background: "#fafafa",
-  textAlign: "center",
-};
-
-const thStyle: React.CSSProperties = {
-  padding: "0.5rem 0.75rem",
-  fontWeight: 600,
-  fontSize: "0.875rem",
-  color: "#374151",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "0.75rem",
-  fontSize: "0.9rem",
-  color: "#111",
-};

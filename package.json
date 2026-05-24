@@ -43,10 +43,13 @@
     "@inquirer/prompts": "^8.4.2",
     "@supabase/ssr": "^0.10.2",
     "@supabase/supabase-js": "^2.103.3",
+    "@tailwindcss/postcss": "^4.3.0",
     "dotenv": "^17.4.2",
     "next": "^16.2.3",
+    "postcss": "^8.5.15",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "tailwindcss": "^4.3.0",
     "zod": "^4.4.3",
     "zx": "^8.8.5"
   },

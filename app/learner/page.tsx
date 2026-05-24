@@ -9,8 +9,6 @@ interface League {
 
 async function getLeagues(): Promise<League[]> {
   const baseUrl = process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000";
-  // GET /api/v1/leagues only supports POST (create). No list endpoint exists yet.
-  // See missing routes in build report.
   const res = await fetch(`${baseUrl}/api/v1/leagues`, { cache: "no-store" }).catch(() => null);
   if (!res || !res.ok) return [];
   const data = await res.json() as { ok?: boolean; data?: League[] } | League[];
@@ -22,62 +20,68 @@ export default async function LearnerDiscoveryPage() {
   const leagues = await getLeagues();
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-      <h1 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "0.5rem" }}>
-        Discover Leagues &amp; Challenges
-      </h1>
-      <p style={{ color: "#6b7280", marginBottom: "2rem" }}>
-        Browse active leagues and join a challenge sprint.
-      </p>
-
-      <div style={{ display: "flex", gap: "1rem", marginBottom: "2rem", flexWrap: "wrap" }}>
-        <Link
-          href="/learner/portfolio"
-          style={{
-            padding: "0.5rem 1rem",
-            background: "#f3f4f6",
-            borderRadius: "0.5rem",
-            textDecoration: "none",
-            color: "#374151",
-            fontWeight: 500,
-            fontSize: "0.875rem",
-          }}
-        >
-          My Portfolio
-        </Link>
-      </div>
-
-      {leagues.length === 0 ? (
-        <div style={{ padding: "2rem", background: "#f9fafb", borderRadius: "0.75rem", color: "#6b7280" }}>
-          <p style={{ margin: 0, fontWeight: 500 }}>No leagues available right now.</p>
-          <p style={{ margin: "0.5rem 0 0", fontSize: "0.875rem" }}>
-            Note: A <code>GET /api/v1/leagues</code> listing endpoint is needed to populate this page. Currently only POST (create) is available.
+    <main className="min-h-screen px-6 py-12">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
+        <header className="mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
+            Discover Leagues
+          </h1>
+          <p className="mt-3 text-[var(--muted-foreground)]">
+            Browse active leagues and join a challenge sprint.
           </p>
+        </header>
+
+        {/* Quick Actions */}
+        <div className="flex flex-wrap gap-3 mb-12">
+          <Link
+            href="/learner/portfolio"
+            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--foreground)] bg-[var(--secondary)] rounded-full hover:bg-[var(--border-soft)] transition-colors"
+          >
+            My Portfolio
+          </Link>
         </div>
-      ) : (
-        <div style={{ display: "grid", gap: "1rem" }}>
-          {leagues.map((league) => (
-            <Link
-              key={league.id}
-              href={`/learner/${league.id}`}
-              style={{
-                display: "block",
-                padding: "1rem 1.25rem",
-                border: "1px solid #e5e7eb",
-                borderRadius: "0.75rem",
-                textDecoration: "none",
-                color: "#111",
-                background: "#fafafa",
-              }}
-            >
-              <div style={{ fontWeight: 600 }}>{league.name}</div>
-              <div style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.25rem" }}>
-                Status: {league.status} &nbsp;&bull;&nbsp; Challenges: {league.challengeIds?.length ?? 0}
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
+
+        {/* Leagues List */}
+        {leagues.length === 0 ? (
+          <div className="p-8 bg-[var(--secondary)]">
+            <p className="font-medium text-[var(--foreground)]">No leagues available right now.</p>
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Check back soon or contact a league host to get started.
+            </p>
+          </div>
+        ) : (
+          <div className="grid gap-3">
+            {leagues.map((league) => (
+              <Link
+                key={league.id}
+                href={`/learner/${league.id}`}
+                className="block p-6 bg-[var(--secondary)] hover:bg-[var(--border-soft)] transition-colors group"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-[var(--foreground)] group-hover:underline">
+                      {league.name}
+                    </h2>
+                    <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                      {league.challengeIds?.length ?? 0} challenges
+                    </p>
+                  </div>
+                  <span className={`
+                    inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-wide
+                    ${league.status === "active" 
+                      ? "bg-[var(--success)] text-[var(--primary-foreground)]" 
+                      : "bg-[var(--border)] text-[var(--foreground)]"
+                    }
+                  `}>
+                    {league.status}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

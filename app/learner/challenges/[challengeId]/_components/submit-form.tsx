@@ -51,28 +51,38 @@ export function SubmitForm({ challengeId }: Props) {
 
   if (success) {
     return (
-      <div style={{ padding: "1rem", background: "#dcfce7", borderRadius: "0.75rem", color: "#15803d", fontWeight: 500 }}>
-        Submission received! Good luck.
+      <div className="flex items-center gap-3 p-4 bg-[var(--success)] text-[var(--primary-foreground)]">
+        <span className="font-medium">Submission received! Good luck.</span>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1rem" }}>
+    <form onSubmit={handleSubmit} className="grid gap-6">
       <div>
-        <label style={labelStyle} htmlFor="participant-id">Your Participant ID</label>
+        <label 
+          htmlFor="participant-id" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          Your Participant ID
+        </label>
         <input
           id="participant-id"
           value={participantId}
           onChange={(e) => setParticipantId(e.target.value)}
           required
           placeholder="Your participant UUID"
-          style={inputStyle}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
         />
       </div>
 
       <div>
-        <label style={labelStyle} htmlFor="artifact-url">Artifact URL</label>
+        <label 
+          htmlFor="artifact-url" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          Artifact URL
+        </label>
         <input
           id="artifact-url"
           type="url"
@@ -80,79 +90,67 @@ export function SubmitForm({ challengeId }: Props) {
           onChange={(e) => setArtifactUrl(e.target.value)}
           required
           placeholder="https://..."
-          style={inputStyle}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
         />
       </div>
 
       <div>
-        <label style={labelStyle} htmlFor="mime-type">MIME Type (optional)</label>
+        <label 
+          htmlFor="mime-type" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          MIME Type (optional)
+        </label>
         <input
           id="mime-type"
           value={mimeType}
           onChange={(e) => setMimeType(e.target.value)}
           placeholder="e.g. application/pdf, image/png"
-          style={inputStyle}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
         />
       </div>
 
       <div>
-        <label style={labelStyle} htmlFor="description">Description (optional)</label>
+        <label 
+          htmlFor="description" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          Description (optional)
+        </label>
         <textarea
           id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={3}
           placeholder="Brief description of your submission..."
-          style={{ ...inputStyle, resize: "vertical" }}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors resize-y"
         />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+      <div className="flex items-center gap-3">
         <input
           id="is-public"
           type="checkbox"
           checked={isPublic}
           onChange={(e) => setIsPublic(e.target.checked)}
-          style={{ width: "1rem", height: "1rem" }}
+          className="w-5 h-5 accent-[var(--primary)]"
         />
-        <label htmlFor="is-public" style={{ fontSize: "0.875rem", color: "#374151" }}>
+        <label htmlFor="is-public" className="text-sm text-[var(--muted-foreground)]">
           Make submission public (visible in leaderboard)
         </label>
       </div>
 
-      {error && <p style={{ color: "#dc2626", fontSize: "0.875rem" }}>{error}</p>}
+      {error && (
+        <p className="text-sm text-[var(--destructive)]">{error}</p>
+      )}
 
-      <button type="submit" disabled={loading} style={btnStyle}>
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         {loading ? "Submitting..." : "Submit Entry"}
       </button>
     </form>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.875rem",
-  fontWeight: 500,
-  marginBottom: "0.35rem",
-  color: "#374151",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "0.5rem 0.75rem",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  fontSize: "0.95rem",
-  boxSizing: "border-box",
-};
-
-const btnStyle: React.CSSProperties = {
-  padding: "0.6rem 1.25rem",
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: "0.5rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  fontSize: "0.95rem",
-};

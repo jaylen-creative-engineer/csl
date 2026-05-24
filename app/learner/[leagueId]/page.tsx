@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { EnrollButton } from "./_components/enroll-button.js";
+import { EnrollButton } from "./_components/enroll-button";
 
 interface Challenge {
   id: string;
@@ -45,92 +45,112 @@ export default async function LearnerLeagueDetailPage({ params }: Props) {
 
   if (!league) {
     return (
-      <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-        <p style={{ color: "#dc2626" }}>League not found.</p>
-        <Link href="/learner" style={{ color: "#2563eb" }}>Back to Discovery</Link>
+      <main className="min-h-screen px-6 py-12">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-[var(--destructive)]">League not found.</p>
+          <Link href="/learner" className="text-[var(--accent)] hover:underline mt-4 inline-block">
+            Back to Discovery
+          </Link>
+        </div>
       </main>
     );
   }
 
   const challenges = await getChallenges(league.challengeIds ?? []);
   const openChallenges = challenges.filter((c) => c.status === "open");
+  const otherChallenges = challenges.filter((c) => c.status !== "open");
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "1rem" }}>
-        <Link href="/learner" style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
-          ← Discovery
+    <main className="min-h-screen px-6 py-12">
+      <div className="max-w-4xl mx-auto">
+        {/* Back Link */}
+        <Link 
+          href="/learner" 
+          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
+        >
+          <span className="mr-2">←</span> Discovery
         </Link>
-      </div>
 
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "2rem" }}>
-        <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>{league.name}</h1>
-          <p style={{ color: "#6b7280", marginTop: "0.25rem", fontSize: "0.875rem" }}>
-            Status: <strong>{league.status}</strong>
-          </p>
-        </div>
-        <EnrollButton leagueId={leagueId} />
-      </div>
-
-      <section>
-        <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1rem" }}>
-          Open Challenges ({openChallenges.length})
-        </h2>
-
-        {openChallenges.length === 0 ? (
-          <p style={{ color: "#9ca3af" }}>No open challenges right now. Check back soon.</p>
-        ) : (
-          <div style={{ display: "grid", gap: "1rem" }}>
-            {openChallenges.map((c) => (
-              <Link
-                key={c.id}
-                href={`/learner/challenges/${c.id}`}
-                style={{
-                  display: "block",
-                  padding: "1rem 1.25rem",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "0.75rem",
-                  textDecoration: "none",
-                  color: "#111",
-                  background: "#fafafa",
-                }}
-              >
-                <div style={{ fontWeight: 600 }}>{c.title}</div>
-                <div style={{ fontSize: "0.875rem", color: "#6b7280", marginTop: "0.25rem" }}>
-                  Deadline: {new Date(c.deadline).toLocaleDateString()}
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-
-        {challenges.length > openChallenges.length && (
-          <div style={{ marginTop: "1.5rem" }}>
-            <h3 style={{ fontSize: "1rem", fontWeight: 600, color: "#9ca3af", marginBottom: "0.5rem" }}>
-              Other Challenges
-            </h3>
-            <div style={{ display: "grid", gap: "0.5rem" }}>
-              {challenges
-                .filter((c) => c.status !== "open")
-                .map((c) => (
-                  <div
-                    key={c.id}
-                    style={{
-                      padding: "0.75rem 1rem",
-                      border: "1px solid #f3f4f6",
-                      borderRadius: "0.5rem",
-                      color: "#9ca3af",
-                      fontSize: "0.875rem",
-                    }}
-                  >
-                    {c.title} — <em>{c.status}</em>
-                  </div>
-                ))}
+        {/* Header */}
+        <header className="flex flex-wrap items-start justify-between gap-4 mb-12">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
+              {league.name}
+            </h1>
+            <div className="flex items-center gap-3 mt-3">
+              <span className={`
+                inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-wide
+                ${league.status === "active" 
+                  ? "bg-[var(--success)] text-[var(--primary-foreground)]" 
+                  : "bg-[var(--border)] text-[var(--foreground)]"
+                }
+              `}>
+                {league.status}
+              </span>
             </div>
           </div>
+          <EnrollButton leagueId={leagueId} />
+        </header>
+
+        {/* Open Challenges */}
+        <section className="mb-12">
+          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
+            Open Challenges ({openChallenges.length})
+          </h2>
+
+          {openChallenges.length === 0 ? (
+            <div className="p-8 bg-[var(--secondary)]">
+              <p className="text-[var(--muted-foreground)]">
+                No open challenges right now. Check back soon.
+              </p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {openChallenges.map((c) => (
+                <Link
+                  key={c.id}
+                  href={`/learner/challenges/${c.id}`}
+                  className="block p-6 bg-[var(--secondary)] hover:bg-[var(--border-soft)] transition-colors group"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-semibold text-[var(--foreground)] group-hover:underline">
+                        {c.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                        Deadline: {new Date(c.deadline).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="inline-flex px-3 py-1 text-xs font-medium bg-[var(--success)] text-[var(--primary-foreground)] rounded-full uppercase tracking-wide">
+                      {c.status}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Other Challenges */}
+        {otherChallenges.length > 0 && (
+          <section>
+            <h2 className="text-lg font-semibold text-[var(--muted-foreground)] mb-4">
+              Other Challenges
+            </h2>
+            <div className="grid gap-2">
+              {otherChallenges.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-4 bg-[var(--secondary)] text-[var(--muted-foreground)]"
+                >
+                  <span className="font-medium">{c.title}</span>
+                  <span className="ml-2 text-sm">— {c.status}</span>
+                </div>
+              ))}
+            </div>
+          </section>
         )}
-      </section>
+      </div>
     </main>
   );
 }
