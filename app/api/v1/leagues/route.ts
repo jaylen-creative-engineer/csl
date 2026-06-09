@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { getRouteServices } from "@/lib/api/route-services.js";
-import { jsonCreated, jsonError, readJsonBody } from "@/lib/api/http.js";
+import { jsonCreated, jsonError, jsonOk, readJsonBody } from "@/lib/api/http.js";
 import { requireAuth } from "@/lib/api/require-auth.js";
 
 const Body = z.object({
@@ -8,6 +8,16 @@ const Body = z.object({
   hostId: z.string().min(1),
   seasonId: z.string().min(1).nullable().optional(),
 });
+
+export async function GET() {
+  try {
+    const { league } = getRouteServices();
+    const leagues = await league.listLeagues();
+    return jsonOk(leagues);
+  } catch (e) {
+    return jsonError(e instanceof Error ? e.message : String(e), 500);
+  }
+}
 
 export async function POST(request: Request) {
   const auth = await requireAuth(request);

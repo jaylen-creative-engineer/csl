@@ -9,6 +9,11 @@ interface MeData {
   participant: { id: string; handle: string };
 }
 
+interface ApiEnvelope<T> {
+  ok: boolean;
+  data?: T;
+}
+
 const navLinks = [
   { href: "/learner", label: "Learner" },
   { href: "/host", label: "Host" },
@@ -24,8 +29,8 @@ export function Nav() {
   useEffect(() => {
     fetch("/api/v1/me", { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: MeData | null) => {
-        setMe(data);
+      .then((data: ApiEnvelope<MeData> | null) => {
+        setMe(data?.ok ? data.data ?? null : null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -68,9 +73,19 @@ export function Nav() {
         {loading ? (
           <span className="text-sm text-[var(--muted-foreground)]">Loading...</span>
         ) : me ? (
-          <span className="text-sm text-[var(--muted-foreground)]">
-            {me.participant.handle}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-[var(--muted-foreground)]">
+              {me.participant.handle}
+            </span>
+            <form action="/auth/signout" method="post">
+              <button
+                type="submit"
+                className="text-sm font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)]"
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         ) : (
           <Link
             href="/login"

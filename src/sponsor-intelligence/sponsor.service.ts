@@ -9,6 +9,7 @@ import {
   fetchSponsorAttachment,
   updateAttachmentOutcome,
   listAttachmentsForSponsor,
+  listAllSponsors,
 } from "../lib/supabase/repositories/sponsor.repository.js";
 import { updateChallengeSponsorId } from "../lib/supabase/repositories/challenge.repository.js";
 import { newSponsorAttachmentId, newSponsorId } from "../lib/supabase/ids.js";
@@ -41,6 +42,10 @@ export class SponsorService {
     } catch {
       return undefined;
     }
+  }
+
+  async listSponsors(): Promise<Sponsor[]> {
+    return listAllSponsors(this.client);
   }
 
   async attachToChallenge(
