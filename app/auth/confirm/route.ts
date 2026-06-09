@@ -1,1 +1,1 @@
-export { GET } from "../callback/route";
+export { GET } from "../callback/route.js";

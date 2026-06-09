@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { sendMagicLink, signInWithPassword, signUpWithPassword } from "./actions";
+import { sendMagicLink, signInWithPassword, signUpWithPassword } from "./actions.js";
 import { DEFAULT_AUTH_NEXT_PATH, safeNextPath } from "@/lib/auth/redirect.js";
 
 type SearchParams = {
