@@ -40,6 +40,22 @@ export async function fetchSponsor(client: SupabaseClient<Database>, id: string)
   };
 }
 
+export async function listAllSponsors(client: SupabaseClient<Database>): Promise<Sponsor[]> {
+  const { data: rows, error } = await client
+    .from("sponsors")
+    .select("id, name, organization, contact_email, created_at")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+
+  return (rows ?? []).map((row) => ({
+    id: row.id,
+    name: row.name,
+    organization: row.organization,
+    contactEmail: row.contact_email,
+    createdAt: row.created_at,
+  }));
+}
+
 export async function insertSponsorAttachment(
   client: SupabaseClient<Database>,
   id: string,
