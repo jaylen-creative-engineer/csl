@@ -65,39 +65,49 @@ export function ScoreForm({ submissionId, challengeId, criteria }: Props) {
 
   if (success) {
     return (
-      <div style={{ padding: "1rem", background: "#dcfce7", borderRadius: "0.75rem", color: "#15803d" }}>
-        Score submitted successfully! Redirecting...
+      <div className="flex items-center gap-3 p-4 bg-[var(--success)] text-[var(--primary-foreground)]">
+        <span className="font-medium">Score submitted successfully! Redirecting...</span>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: "grid", gap: "1.25rem" }}>
+    <form onSubmit={handleSubmit} className="grid gap-6">
       <div>
-        <label style={labelStyle} htmlFor="judge-id">Your Judge ID</label>
+        <label 
+          htmlFor="judge-id" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          Your Judge ID
+        </label>
         <input
           id="judge-id"
           value={judgeId}
           onChange={(e) => setJudgeId(e.target.value)}
           required
           placeholder="Your participant UUID"
-          style={inputStyle}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
         />
       </div>
 
       {criteria.length > 0 ? (
         <div>
-          <p style={{ fontWeight: 600, fontSize: "0.875rem", marginBottom: "0.75rem", color: "#374151" }}>
-            Criterion Scores (0–100)
+          <p className="text-sm font-semibold text-[var(--foreground)] mb-4">
+            Criterion Scores (0-100)
           </p>
-          <div style={{ display: "grid", gap: "1rem" }}>
+          <div className="grid gap-4">
             {criteria.map((c) => (
-              <div key={c.name}>
-                <label style={labelStyle} htmlFor={`score-${c.name}`}>
-                  {c.name} (weight: {c.weight})
-                  {c.description && <span style={{ fontWeight: 400, color: "#9ca3af" }}> — {c.description}</span>}
+              <div key={c.name} className="p-4 bg-[var(--background)]">
+                <label 
+                  htmlFor={`score-${c.name}`}
+                  className="block text-sm font-medium text-[var(--foreground)] mb-1"
+                >
+                  {c.name} <span className="text-[var(--muted-foreground)]">(weight: {c.weight})</span>
                 </label>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                {c.description && (
+                  <p className="text-xs text-[var(--muted-foreground)] mb-3">{c.description}</p>
+                )}
+                <div className="flex items-center gap-4">
                   <input
                     id={`score-${c.name}`}
                     type="range"
@@ -105,9 +115,9 @@ export function ScoreForm({ submissionId, challengeId, criteria }: Props) {
                     max={100}
                     value={scores[c.name] ?? 50}
                     onChange={(e) => updateScore(c.name, Number(e.target.value))}
-                    style={{ flex: 1 }}
+                    className="flex-1 h-2 bg-[var(--border)] appearance-none cursor-pointer accent-[var(--primary)]"
                   />
-                  <span style={{ minWidth: "2.5rem", textAlign: "right", fontWeight: 600 }}>
+                  <span className="min-w-[3rem] text-right font-bold text-[var(--foreground)]">
                     {scores[c.name] ?? 50}
                   </span>
                 </div>
@@ -116,13 +126,18 @@ export function ScoreForm({ submissionId, challengeId, criteria }: Props) {
           </div>
         </div>
       ) : (
-        <div style={{ padding: "0.75rem", background: "#fef9c3", borderRadius: "0.5rem", fontSize: "0.875rem", color: "#92400e" }}>
+        <div className="p-4 bg-[var(--background)] text-sm text-[var(--muted-foreground)]">
           No scoring criteria defined for this challenge. You can still provide a rationale.
         </div>
       )}
 
       <div>
-        <label style={labelStyle} htmlFor="rationale">Rationale</label>
+        <label 
+          htmlFor="rationale" 
+          className="block text-sm font-medium text-[var(--foreground)] mb-2"
+        >
+          Rationale
+        </label>
         <textarea
           id="rationale"
           value={rationale}
@@ -130,43 +145,21 @@ export function ScoreForm({ submissionId, challengeId, criteria }: Props) {
           required
           rows={4}
           placeholder="Explain your scoring decision..."
-          style={{ ...inputStyle, resize: "vertical" }}
+          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors resize-y"
         />
       </div>
 
-      {error && <p style={{ color: "#dc2626", fontSize: "0.875rem" }}>{error}</p>}
+      {error && (
+        <p className="text-sm text-[var(--destructive)]">{error}</p>
+      )}
 
-      <button type="submit" disabled={loading} style={btnStyle}>
+      <button
+        type="submit"
+        disabled={loading}
+        className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         {loading ? "Submitting..." : "Submit Score"}
       </button>
     </form>
   );
 }
-
-const labelStyle: React.CSSProperties = {
-  display: "block",
-  fontSize: "0.875rem",
-  fontWeight: 500,
-  marginBottom: "0.35rem",
-  color: "#374151",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "0.5rem 0.75rem",
-  border: "1px solid #d1d5db",
-  borderRadius: "0.5rem",
-  fontSize: "0.95rem",
-  boxSizing: "border-box",
-};
-
-const btnStyle: React.CSSProperties = {
-  padding: "0.6rem 1.25rem",
-  background: "#2563eb",
-  color: "#fff",
-  border: "none",
-  borderRadius: "0.5rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  fontSize: "0.95rem",
-};

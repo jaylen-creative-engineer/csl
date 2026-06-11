@@ -10,33 +10,26 @@ CSL is an open-source platform for structured creative challenge sprints — giv
 git clone https://github.com/your-org/csl.git
 cd csl
 bash scripts/setup-local.sh
-# Open .env.local and set ANTHROPIC_API_KEY
+# Open .env.local and fill in Supabase + Anthropic credentials
+npm run db:push
 npm run cli
 ```
 
-That's it. No database required for single-player mode.
-
 ---
 
-## Single-player mode
+## Setup
 
-Single-player mode works with only `ANTHROPIC_API_KEY` and stores all data locally in `.csl-data.json`.
+CSL requires a [Supabase](https://supabase.com/) project for data storage. All domain data — leagues, challenges, submissions, sponsors, and learner journeys — is persisted in Postgres via Supabase.
 
-1. **Set a skill goal** — pick a label and disciplines
-2. **Create a challenge** — define a prompt, deadline, and scoring criteria
-3. **Submit an entry** — link a public artifact (URL or file)
-4. **Score and reflect** — criteria-based scoring builds your portfolio
-5. **Recommend a path** — AI suggests next steps based on your goals
-
-The learner journey menu gives you access to all five steps in under 10 keystrokes each.
-
----
-
-## Network mode
-
-Network mode connects to a Supabase backend, unlocking multi-participant leagues, sponsor briefs, live leaderboards, and community feeds.
-
-See [docs/network-mode.md](docs/network-mode.md) for setup and deployment details.
+1. Create a Supabase project at [supabase.com](https://supabase.com/) (free tier works).
+2. Copy `.env.example` to `.env.local` and fill in your credentials.
+3. Apply database migrations: `npm run db:push`
+4. (Optional) Seed sample data: `npm run db:seed:linked`
+5. Run the CLI or dev server:
+   ```bash
+   npm run cli          # Interactive CLI
+   npm run dev          # Next.js dev server
+   ```
 
 ---
 
@@ -45,10 +38,10 @@ See [docs/network-mode.md](docs/network-mode.md) for setup and deployment detail
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | For AI features | — | API key from [console.anthropic.com](https://console.anthropic.com/) |
-| `NEXT_PUBLIC_SUPABASE_URL` | For network mode | — | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | For network mode | — | Supabase anon/publishable key |
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | — | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | — | Supabase anon/publishable key |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Alias for above | — | Accepted as an alias for the publishable key |
-| `SUPABASE_SERVICE_ROLE_KEY` | For admin/BDD | — | Server-only; never expose to the browser |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes (server) | — | Server-only; never expose to the browser |
 | `DATABASE_URL` | For migrations | — | Direct Postgres connection string (port 5432) |
 
 Copy `.env.example` to `.env.local` to get started:
@@ -80,9 +73,9 @@ csl/
 │   ├── challenge-intelligence/ # Sprint lifecycle, scoring, leaderboard, diff
 │   ├── showcase-intelligence/  # Portfolio, skill signals, top performers feed
 │   ├── sponsor-intelligence/   # Sponsor attachment, brief, outcome tracking
+│   ├── skill-journey/          # Skill intent, learning plans, milestones
 │   └── lib/
-│       ├── supabase/           # Supabase clients, repositories, ID generation
-│       └── local-store/        # JSON file store for single-player mode
+│       └── supabase/           # Supabase clients, repositories, ID generation
 ├── cli/                        # Interactive + CI-safe CLI (tsx entry point)
 ├── app/                        # Next.js App Router (REST API under /api/v1/*)
 ├── features/                   # Cucumber BDD scenarios
@@ -92,7 +85,7 @@ csl/
 **Guiding principles:**
 
 - Domain logic lives in services — repositories encapsulate data access
-- Services take either a Supabase client or a local file store — same interface
+- All data is persisted in Supabase Postgres
 - BDD step definitions use real implementations against Postgres
 - Scoring is deterministic — same inputs produce the same leaderboard every time
 

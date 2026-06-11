@@ -11,7 +11,6 @@ export function getSupabasePublishableKey(): string | undefined {
 /**
  * Returns true when the minimum Supabase environment variables are present for
  * the admin (service-role) client used by the CLI and server-side services.
- * When false, the CLI falls back to local-store mode (no network calls required).
  */
 export function isSupabaseConfigured(): boolean {
   return Boolean(

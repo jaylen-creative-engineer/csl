@@ -19,7 +19,7 @@ Use [GitHub Issues](https://github.com/your-org/csl/issues) to report bugs, prop
 | `fix/` | Bug fixes |
 | `chore/` | Tooling, dependencies, docs, formatting |
 
-Examples: `feat/ai-path-recommendation`, `fix/local-store-upsert`, `chore/update-readme`
+Examples: `feat/ai-path-recommendation`, `fix/enrollment-conflict`, `chore/update-readme`
 
 ## Development setup
 
@@ -27,11 +27,10 @@ Examples: `feat/ai-path-recommendation`, `fix/local-store-upsert`, `chore/update
 git clone https://github.com/your-org/csl.git
 cd csl
 bash scripts/setup-local.sh
-# Set ANTHROPIC_API_KEY in .env.local
-npm run cli    # Verify local-store mode works
+# Set Supabase credentials + ANTHROPIC_API_KEY in .env.local
+npm run db:push
+npm run cli    # Verify Supabase connectivity
 ```
-
-For Supabase-backed development, set all three Supabase vars in `.env.local` (see `.env.example`).
 
 ## Pull request checklist
 

@@ -65,8 +65,6 @@ async function getPortfolio(participantId: string): Promise<Portfolio | null> {
   return data.data ?? null;
 }
 
-// This page requires a participantId query param since we can't call Supabase from here
-// without a Server Component pattern. The learner provides their ID in the URL.
 type Props = { searchParams: Promise<{ id?: string }> };
 
 export default async function LearnerPortfolioPage({ searchParams }: Props) {
@@ -74,16 +72,25 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
 
   if (!participantId) {
     return (
-      <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "1rem" }}>
-          <Link href="/learner" style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
-            ← Discovery
+      <main className="min-h-screen px-6 py-12">
+        <div className="max-w-4xl mx-auto">
+          <Link 
+            href="/learner" 
+            className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
+          >
+            <span className="mr-2">←</span> Discovery
           </Link>
-        </div>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "1rem" }}>My Portfolio</h1>
-        <div style={{ padding: "1.5rem", background: "#fef9c3", borderRadius: "0.75rem", color: "#92400e" }}>
-          <p style={{ margin: 0, fontWeight: 500 }}>Enter your participant ID to view your portfolio.</p>
-          <PortfolioIdForm />
+          
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase mb-8">
+            My Portfolio
+          </h1>
+          
+          <div className="p-8 bg-[var(--secondary)]">
+            <p className="font-medium text-[var(--foreground)] mb-4">
+              Enter your participant ID to view your portfolio.
+            </p>
+            <PortfolioIdForm />
+          </div>
         </div>
       </main>
     );
@@ -93,181 +100,166 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
 
   if (!portfolio) {
     return (
-      <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-        <div style={{ marginBottom: "1rem" }}>
-          <Link href="/learner" style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
-            ← Discovery
+      <main className="min-h-screen px-6 py-12">
+        <div className="max-w-4xl mx-auto">
+          <Link 
+            href="/learner" 
+            className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
+          >
+            <span className="mr-2">←</span> Discovery
           </Link>
+          
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase mb-8">
+            My Portfolio
+          </h1>
+          
+          <p className="text-[var(--destructive)] mb-6">
+            Portfolio not found for participant ID: {participantId}
+          </p>
+          <PortfolioIdForm />
         </div>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, marginBottom: "1rem" }}>My Portfolio</h1>
-        <p style={{ color: "#dc2626" }}>Portfolio not found for participant ID: {participantId}</p>
-        <PortfolioIdForm />
       </main>
     );
   }
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "1rem" }}>
-        <Link href="/learner" style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
-          ← Discovery
+    <main className="min-h-screen px-6 py-12">
+      <div className="max-w-4xl mx-auto">
+        <Link 
+          href="/learner" 
+          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
+        >
+          <span className="mr-2">←</span> Discovery
         </Link>
-      </div>
 
-      <div style={{ marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>
-          {portfolio.handle}&apos;s Portfolio
-        </h1>
-        <p style={{ color: "#6b7280", marginTop: "0.25rem", fontSize: "0.875rem" }}>
-          Discipline: {portfolio.discipline} &nbsp;&bull;&nbsp;
-          Aggregate Score: <strong>{portfolio.aggregateScore.toFixed(1)}</strong> &nbsp;&bull;&nbsp;
-          Entries: {portfolio.entries.length}
-        </p>
-      </div>
-
-      {portfolio.skillSignals.length > 0 && (
-        <section style={{ marginBottom: "2rem" }}>
-          <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "0.75rem" }}>Skill Signals</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: "0.75rem" }}>
-            {portfolio.skillSignals.map((signal, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "0.75rem 1rem",
-                  border: "1px solid #e5e7eb",
-                  borderRadius: "0.75rem",
-                  background: "#fafafa",
-                }}
-              >
-                <div style={{ fontWeight: 600, fontSize: "0.875rem" }}>{signal.domain}</div>
-                <div style={{ fontSize: "1.25rem", fontWeight: 700, color: "#2563eb", marginTop: "0.25rem" }}>
-                  {signal.averageScore.toFixed(1)}
-                </div>
-                <div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>
-                  {signal.sampleCount} sample{signal.sampleCount !== 1 ? "s" : ""}
-                </div>
-              </div>
-            ))}
+        {/* Header */}
+        <header className="mb-12">
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
+            {portfolio.handle}&apos;s Portfolio
+          </h1>
+          <div className="flex flex-wrap items-center gap-4 mt-4">
+            <span className="text-sm text-[var(--muted-foreground)]">
+              Discipline: <span className="text-[var(--foreground)]">{portfolio.discipline}</span>
+            </span>
+            <span className="text-sm text-[var(--muted-foreground)]">
+              Score: <span className="font-semibold text-[var(--foreground)]">{portfolio.aggregateScore.toFixed(1)}</span>
+            </span>
+            <span className="text-sm text-[var(--muted-foreground)]">
+              Entries: <span className="text-[var(--foreground)]">{portfolio.entries.length}</span>
+            </span>
           </div>
-        </section>
-      )}
+        </header>
 
-      <section>
-        <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1rem" }}>
-          Submissions ({portfolio.entries.length})
-        </h2>
-        {portfolio.entries.length === 0 ? (
-          <p style={{ color: "#9ca3af" }}>No scored submissions yet.</p>
-        ) : (
-          <div style={{ display: "grid", gap: "1rem" }}>
-            {portfolio.entries.map((entry, i) => {
-              const scores = entry.submission.scores ?? [];
-              const latestScore = scores[scores.length - 1];
-              return (
-                <div
-                  key={entry.submission.id ?? i}
-                  style={{
-                    padding: "1rem 1.25rem",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "0.75rem",
-                    background: "#fafafa",
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem", flexWrap: "wrap" }}>
-                    <div>
-                      <div style={{ fontWeight: 600 }}>{entry.challengeTitle}</div>
-                      <div style={{ fontSize: "0.8rem", color: "#9ca3af", marginTop: "0.15rem" }}>
-                        Submitted: {new Date(entry.submission.submittedAt).toLocaleDateString()}
+        {/* Skill Signals */}
+        {portfolio.skillSignals.length > 0 && (
+          <section className="mb-12">
+            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">Skill Signals</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              {portfolio.skillSignals.map((signal, i) => (
+                <div key={i} className="p-4 bg-[var(--secondary)]">
+                  <div className="text-sm font-medium text-[var(--foreground)]">{signal.domain}</div>
+                  <div className="text-2xl font-bold text-[var(--foreground)] mt-1">
+                    {signal.averageScore.toFixed(1)}
+                  </div>
+                  <div className="text-xs text-[var(--muted-foreground)]">
+                    {signal.sampleCount} sample{signal.sampleCount !== 1 ? "s" : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Submissions */}
+        <section>
+          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
+            Submissions ({portfolio.entries.length})
+          </h2>
+          
+          {portfolio.entries.length === 0 ? (
+            <div className="p-8 bg-[var(--secondary)]">
+              <p className="text-[var(--muted-foreground)]">No scored submissions yet.</p>
+            </div>
+          ) : (
+            <div className="grid gap-3">
+              {portfolio.entries.map((entry, i) => {
+                const scores = entry.submission.scores ?? [];
+                const latestScore = scores[scores.length - 1];
+                return (
+                  <div key={entry.submission.id ?? i} className="p-6 bg-[var(--secondary)]">
+                    <div className="flex flex-wrap justify-between items-start gap-4">
+                      <div>
+                        <h3 className="font-semibold text-[var(--foreground)]">{entry.challengeTitle}</h3>
+                        <p className="text-xs text-[var(--muted-foreground)] mt-1">
+                          Submitted: {new Date(entry.submission.submittedAt).toLocaleDateString()}
+                        </p>
                       </div>
-                    </div>
-                    {entry.score !== undefined && (
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#2563eb" }}>
-                          {entry.score.toFixed(1)}
+                      {entry.score !== undefined && (
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-[var(--foreground)]">
+                            {entry.score.toFixed(1)}
+                          </div>
+                          <div className="text-xs text-[var(--muted-foreground)]">score</div>
                         </div>
-                        <div style={{ fontSize: "0.75rem", color: "#9ca3af" }}>score</div>
+                      )}
+                    </div>
+
+                    {entry.submission.artifact?.url && (
+                      <a
+                        href={entry.submission.artifact.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block mt-4 text-sm text-[var(--accent)] hover:underline"
+                      >
+                        View Artifact →
+                      </a>
+                    )}
+
+                    {latestScore && latestScore.criteriaScores.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-[var(--border-soft)]">
+                        <div className="text-xs font-medium text-[var(--muted-foreground)] mb-2 uppercase tracking-wide">
+                          Criterion Breakdown
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {latestScore.criteriaScores.map((cs, j) => (
+                            <span
+                              key={j}
+                              className="inline-flex px-3 py-1 text-xs font-medium bg-[var(--background)] text-[var(--foreground)] rounded-full"
+                            >
+                              {cs.criteriaName}: {cs.score}
+                            </span>
+                          ))}
+                        </div>
+                        {latestScore.rationale && (
+                          <p className="text-sm text-[var(--muted-foreground)] mt-3 italic">
+                            &ldquo;{latestScore.rationale}&rdquo;
+                          </p>
+                        )}
                       </div>
                     )}
                   </div>
-
-                  {entry.submission.artifact?.url && (
-                    <a
-                      href={entry.submission.artifact.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ display: "inline-block", marginTop: "0.5rem", color: "#2563eb", fontSize: "0.875rem" }}
-                    >
-                      View Artifact →
-                    </a>
-                  )}
-
-                  {latestScore && latestScore.criteriaScores.length > 0 && (
-                    <div style={{ marginTop: "0.75rem" }}>
-                      <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#6b7280", marginBottom: "0.35rem" }}>
-                        Criterion Breakdown
-                      </div>
-                      <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-                        {latestScore.criteriaScores.map((cs, j) => (
-                          <span
-                            key={j}
-                            style={{
-                              padding: "0.15rem 0.5rem",
-                              background: "#e0f2fe",
-                              color: "#0369a1",
-                              borderRadius: "9999px",
-                              fontSize: "0.75rem",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {cs.criteriaName}: {cs.score}
-                          </span>
-                        ))}
-                      </div>
-                      {latestScore.rationale && (
-                        <p style={{ fontSize: "0.8rem", color: "#6b7280", marginTop: "0.5rem", fontStyle: "italic" }}>
-                          "{latestScore.rationale}"
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }
 
 function PortfolioIdForm() {
   return (
-    <form method="GET" action="/learner/portfolio" style={{ marginTop: "1rem", display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+    <form method="GET" action="/learner/portfolio" className="flex flex-wrap gap-3">
       <input
         name="id"
         required
         placeholder="Your participant UUID"
-        style={{
-          flex: 1,
-          minWidth: "200px",
-          padding: "0.5rem 0.75rem",
-          border: "1px solid #d1d5db",
-          borderRadius: "0.5rem",
-          fontSize: "0.95rem",
-        }}
+        className="flex-1 min-w-[200px] px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
       />
       <button
         type="submit"
-        style={{
-          padding: "0.5rem 1rem",
-          background: "#2563eb",
-          color: "#fff",
-          border: "none",
-          borderRadius: "0.5rem",
-          fontWeight: 600,
-          cursor: "pointer",
-          fontSize: "0.875rem",
-        }}
+        className="inline-flex items-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
       >
         View Portfolio
       </button>

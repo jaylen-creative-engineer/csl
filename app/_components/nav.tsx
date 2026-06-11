@@ -2,13 +2,22 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface MeData {
   user: { id: string; email?: string };
   participant: { id: string; handle: string };
 }
 
+const navLinks = [
+  { href: "/learner", label: "Learner" },
+  { href: "/host", label: "Host" },
+  { href: "/judge", label: "Judge" },
+  { href: "/sponsor", label: "Sponsor" },
+];
+
 export function Nav() {
+  const pathname = usePathname();
   const [me, setMe] = useState<MeData | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -23,50 +32,54 @@ export function Nav() {
   }, []);
 
   return (
-    <nav
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "1.5rem",
-        padding: "0.75rem 1.5rem",
-        borderBottom: "1px solid #e5e7eb",
-        background: "#fff",
-        flexWrap: "wrap",
-      }}
-    >
+    <nav className="sticky top-0 z-50 flex items-center gap-6 px-6 py-4 bg-[var(--background)] border-b border-[var(--border-soft)]">
+      {/* Logo */}
       <Link
         href="/"
-        style={{ fontWeight: 700, fontSize: "1.1rem", textDecoration: "none", color: "#111" }}
+        className="text-lg font-bold tracking-tight text-[var(--foreground)] hover:opacity-70 transition-opacity"
       >
         CSL
       </Link>
 
-      <Link href="/learner" style={navLinkStyle}>
-        Learner
-      </Link>
-      <Link href="/host" style={navLinkStyle}>
-        Host
-      </Link>
-      <Link href="/judge" style={navLinkStyle}>
-        Judge
-      </Link>
-      <Link href="/sponsor" style={navLinkStyle}>
-        Sponsor
-      </Link>
+      {/* Nav Links */}
+      <div className="flex items-center gap-1">
+        {navLinks.map((link) => {
+          const isActive = pathname.startsWith(link.href);
+          return (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`
+                px-4 py-2 text-sm font-medium transition-colors rounded-full
+                ${isActive 
+                  ? "bg-[var(--primary)] text-[var(--primary-foreground)]" 
+                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]"
+                }
+              `}
+            >
+              {link.label}
+            </Link>
+          );
+        })}
+      </div>
 
-      <span style={{ marginLeft: "auto", fontSize: "0.875rem", color: "#6b7280" }}>
-        {loading
-          ? "Loading..."
-          : me
-          ? `${me.participant.handle} (${me.user.email ?? me.user.id})`
-          : <Link href="/login" style={{ color: "#2563eb" }}>Sign in</Link>}
-      </span>
+      {/* User Status */}
+      <div className="ml-auto">
+        {loading ? (
+          <span className="text-sm text-[var(--muted-foreground)]">Loading...</span>
+        ) : me ? (
+          <span className="text-sm text-[var(--muted-foreground)]">
+            {me.participant.handle}
+          </span>
+        ) : (
+          <Link
+            href="/login"
+            className="inline-flex items-center px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
+          >
+            Sign in
+          </Link>
+        )}
+      </div>
     </nav>
   );
 }
-
-const navLinkStyle: React.CSSProperties = {
-  textDecoration: "none",
-  color: "#374151",
-  fontSize: "0.9rem",
-};

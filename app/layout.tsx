@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Fraunces, Space_Grotesk } from "next/font/google";
 import { NavGate } from "./_components/nav-gate.js";

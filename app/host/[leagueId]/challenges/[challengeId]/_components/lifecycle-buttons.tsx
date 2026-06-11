@@ -30,12 +30,12 @@ export function LifecycleButtons({ challengeId, status }: Props) {
 
   return (
     <div>
-      <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+      <div className="flex flex-wrap gap-3">
         {status === "draft" && (
           <button
             onClick={() => transition("open")}
             disabled={loading}
-            style={{ ...btnStyle, background: "#16a34a" }}
+            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--success)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             Open for Submissions
           </button>
@@ -44,7 +44,7 @@ export function LifecycleButtons({ challengeId, status }: Props) {
           <button
             onClick={() => transition("judging")}
             disabled={loading}
-            style={{ ...btnStyle, background: "#d97706" }}
+            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             Move to Judging
           </button>
@@ -53,28 +53,20 @@ export function LifecycleButtons({ challengeId, status }: Props) {
           <button
             onClick={() => transition("complete")}
             disabled={loading}
-            style={{ ...btnStyle, background: "#6b7280" }}
+            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--foreground)] bg-[var(--border)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
           >
             Mark Complete
           </button>
         )}
         {status === "complete" && (
-          <span style={{ fontSize: "0.875rem", color: "#6b7280", fontStyle: "italic" }}>
+          <span className="text-sm text-[var(--muted-foreground)] italic">
             This challenge is complete.
           </span>
         )}
       </div>
-      {error && <p style={{ color: "#dc2626", fontSize: "0.875rem", marginTop: "0.5rem" }}>{error}</p>}
+      {error && (
+        <p className="text-sm text-[var(--destructive)] mt-3">{error}</p>
+      )}
     </div>
   );
 }
-
-const btnStyle: React.CSSProperties = {
-  padding: "0.6rem 1.25rem",
-  color: "#fff",
-  border: "none",
-  borderRadius: "0.5rem",
-  fontWeight: 600,
-  cursor: "pointer",
-  fontSize: "0.875rem",
-};

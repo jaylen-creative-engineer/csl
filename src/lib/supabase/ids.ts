@@ -1,57 +1,37 @@
-let hostCounter = 0;
-let seasonCounter = 0;
-let leagueCounter = 0;
-let participantCounter = 0;
-let challengeCounter = 0;
-let submissionCounter = 0;
-let scoreCounter = 0;
-let sponsorCounter = 0;
-let attachmentCounter = 0;
-
-export function resetIdCounters(): void {
-  hostCounter = 0;
-  seasonCounter = 0;
-  leagueCounter = 0;
-  participantCounter = 0;
-  challengeCounter = 0;
-  submissionCounter = 0;
-  scoreCounter = 0;
-  sponsorCounter = 0;
-  attachmentCounter = 0;
-}
+import { randomUUID } from "node:crypto";
 
 export function newHostId(): string {
-  return `host:${++hostCounter}`;
+  return `host:${randomUUID()}`;
 }
 
 export function newSeasonId(): string {
-  return `season:${++seasonCounter}`;
+  return `season:${randomUUID()}`;
 }
 
 export function newLeagueId(): string {
-  return `league:${++leagueCounter}`;
+  return `league:${randomUUID()}`;
 }
 
 export function newParticipantId(): string {
-  return `participant:${++participantCounter}`;
+  return `participant:${randomUUID()}`;
 }
 
 export function newChallengeId(): string {
-  return `challenge:${++challengeCounter}`;
+  return `challenge:${randomUUID()}`;
 }
 
 export function newSubmissionId(): string {
-  return `submission:${++submissionCounter}`;
+  return `submission:${randomUUID()}`;
 }
 
 export function newScoreId(): string {
-  return `score:${++scoreCounter}`;
+  return `score:${randomUUID()}`;
 }
 
 export function newSponsorId(): string {
-  return `sponsor:${++sponsorCounter}`;
+  return `sponsor:${randomUUID()}`;
 }
 
 export function newSponsorAttachmentId(): string {
-  return `attachment:${++attachmentCounter}`;
+  return `attachment:${randomUUID()}`;
 }

@@ -12,4 +12,4 @@ coverage/
 tsconfig.tsbuildinfo
 .claude/worktrees/
 skills-lock.json
-.csl-data.json
+node_modules

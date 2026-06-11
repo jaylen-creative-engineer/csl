@@ -1,0 +1,77 @@
+{
+  "hosts": [
+    {
+      "id": "host:1",
+      "name": "Smoke Host",
+      "organization": "CSL Smoke Org",
+      "leagueIds": [
+        "league:1"
+      ],
+      "createdAt": "2026-05-22T16:18:33.509Z"
+    }
+  ],
+  "leagues": [
+    {
+      "id": "league:1",
+      "name": "Smoke League",
+      "hostId": "host:1",
+      "seasonId": null,
+      "status": "draft",
+      "challengeIds": [],
+      "createdAt": "2026-05-22T16:18:33.511Z"
+    }
+  ],
+  "participants": [
+    {
+      "id": "participant:1",
+      "userId": null,
+      "handle": "@smoke-1779466713511",
+      "discipline": "design",
+      "leagueMemberships": [
+        {
+          "leagueId": "league:1",
+          "status": "enrolled",
+          "enrolledAt": "2026-05-22T16:18:33.511Z"
+        }
+      ],
+      "createdAt": "2026-05-22T16:18:33.511Z"
+    }
+  ],
+  "challenges": [
+    {
+      "id": "challenge:1",
+      "leagueId": "league:1",
+      "title": "Smoke Challenge",
+      "prompt": "Validate wiring",
+      "deadline": "2026-12-31",
+      "status": "draft",
+      "scoringCriteria": [],
+      "createdAt": "2026-05-22T16:18:33.511Z",
+      "sponsorId": "sponsor:1"
+    }
+  ],
+  "sponsors": [
+    {
+      "id": "sponsor:1",
+      "name": "Smoke Sponsor",
+      "organization": "Smoke Org",
+      "contactEmail": "smoke@example.com",
+      "createdAt": "2026-05-22T16:18:33.511Z"
+    }
+  ],
+  "sponsor_attachments": [
+    {
+      "id": "attachment:1",
+      "sponsorId": "sponsor:1",
+      "challengeId": "challenge:1",
+      "brief": {
+        "headline": "Smoke Brief",
+        "description": "Validate sponsor wiring",
+        "deliverables": [
+          "demo"
+        ]
+      },
+      "attachedAt": "2026-05-22T16:18:33.512Z"
+    }
+  ]
+}

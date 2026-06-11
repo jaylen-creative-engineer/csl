@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { SubmitForm } from "./_components/submit-form.js";
+import { SubmitForm } from "./_components/submit-form";
 
 interface ScoringCriterion {
   name: string;
@@ -33,9 +33,13 @@ export default async function LearnerChallengePage({ params }: Props) {
 
   if (!challenge) {
     return (
-      <main style={{ padding: "2rem", maxWidth: "900px", margin: "0 auto" }}>
-        <p style={{ color: "#dc2626" }}>Challenge not found.</p>
-        <Link href="/learner" style={{ color: "#2563eb" }}>Back to Discovery</Link>
+      <main className="min-h-screen px-6 py-12">
+        <div className="max-w-4xl mx-auto">
+          <p className="text-[var(--destructive)]">Challenge not found.</p>
+          <Link href="/learner" className="text-[var(--accent)] hover:underline mt-4 inline-block">
+            Back to Discovery
+          </Link>
+        </div>
       </main>
     );
   }
@@ -43,82 +47,103 @@ export default async function LearnerChallengePage({ params }: Props) {
   const isOpen = challenge.status === "open";
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "800px", margin: "0 auto" }}>
-      <div style={{ marginBottom: "1rem" }}>
-        <Link href={`/learner/${challenge.leagueId}`} style={{ color: "#6b7280", fontSize: "0.875rem", textDecoration: "none" }}>
-          ← Back to League
+    <main className="min-h-screen px-6 py-12">
+      <div className="max-w-4xl mx-auto">
+        {/* Back Link */}
+        <Link 
+          href={`/learner/${challenge.leagueId}`} 
+          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
+        >
+          <span className="mr-2">←</span> Back to League
         </Link>
-      </div>
 
-      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", flexWrap: "wrap", gap: "1rem", marginBottom: "1.5rem" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>{challenge.title}</h1>
-        <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
-          <Link
-            href={`/learner/challenges/${challengeId}/leaderboard`}
-            style={{ fontSize: "0.875rem", color: "#2563eb", textDecoration: "none" }}
-          >
-            View Leaderboard
-          </Link>
-        </div>
-      </div>
-
-      <p style={{ color: "#6b7280", fontSize: "0.875rem", marginBottom: "2rem" }}>
-        Status: <strong>{challenge.status}</strong> &nbsp;&bull;&nbsp;
-        Deadline: {new Date(challenge.deadline).toLocaleDateString()}
-      </p>
-
-      <section style={{ marginBottom: "2rem", padding: "1.25rem", background: "#f9fafb", borderRadius: "0.75rem" }}>
-        <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.75rem" }}>Challenge Brief</h2>
-        <p style={{ fontSize: "0.9rem", lineHeight: 1.7, color: "#374151", margin: 0 }}>{challenge.prompt}</p>
-      </section>
-
-      {challenge.scoringCriteria && challenge.scoringCriteria.length > 0 && (
-        <section style={{ marginBottom: "2rem" }}>
-          <h2 style={{ fontSize: "1rem", fontWeight: 600, marginBottom: "0.75rem" }}>Scoring Criteria</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ borderBottom: "2px solid #e5e7eb", textAlign: "left" }}>
-                <th style={thStyle}>Criterion</th>
-                <th style={thStyle}>Weight</th>
-                <th style={thStyle}>Description</th>
-              </tr>
-            </thead>
-            <tbody>
-              {challenge.scoringCriteria.map((c, i) => (
-                <tr key={i} style={{ borderBottom: "1px solid #f3f4f6" }}>
-                  <td style={tdStyle}>{c.name}</td>
-                  <td style={tdStyle}>{c.weight}</td>
-                  <td style={tdStyle}>{c.description ?? "—"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
-      )}
-
-      <section>
-        <h2 style={{ fontSize: "1.25rem", fontWeight: 600, marginBottom: "1rem" }}>Submit Your Entry</h2>
-        {isOpen ? (
-          <SubmitForm challengeId={challengeId} />
-        ) : (
-          <div style={{ padding: "1rem", background: "#f3f4f6", borderRadius: "0.75rem", color: "#6b7280" }}>
-            This challenge is not currently accepting submissions. Status: <strong>{challenge.status}</strong>
+        {/* Header */}
+        <header className="mb-8">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
+              {challenge.title}
+            </h1>
+            <Link
+              href={`/learner/challenges/${challengeId}/leaderboard`}
+              className="inline-flex items-center px-4 py-2 text-sm font-medium text-[var(--foreground)] bg-[var(--secondary)] rounded-full hover:bg-[var(--border-soft)] transition-colors"
+            >
+              View Leaderboard
+            </Link>
           </div>
+          
+          <div className="flex flex-wrap items-center gap-4 mt-4">
+            <span className={`
+              inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-wide
+              ${challenge.status === "open" 
+                ? "bg-[var(--success)] text-[var(--primary-foreground)]" 
+                : "bg-[var(--border)] text-[var(--foreground)]"
+              }
+            `}>
+              {challenge.status}
+            </span>
+            <span className="text-sm text-[var(--muted-foreground)]">
+              Deadline: {new Date(challenge.deadline).toLocaleDateString()}
+            </span>
+          </div>
+        </header>
+
+        {/* Challenge Brief */}
+        <section className="p-8 bg-[var(--secondary)] mb-8">
+          <h2 className="text-sm font-semibold text-[var(--foreground)] uppercase tracking-wide mb-4">
+            Challenge Brief
+          </h2>
+          <p className="text-[var(--foreground)] leading-relaxed">
+            {challenge.prompt}
+          </p>
+        </section>
+
+        {/* Scoring Criteria */}
+        {challenge.scoringCriteria && challenge.scoringCriteria.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">
+              Scoring Criteria
+            </h2>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b-2 border-[var(--border)]">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Criterion</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Weight</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {challenge.scoringCriteria.map((c, i) => (
+                    <tr key={i} className="border-b border-[var(--border-soft)]">
+                      <td className="py-4 px-4 text-[var(--foreground)]">{c.name}</td>
+                      <td className="py-4 px-4 text-[var(--foreground)]">{c.weight}</td>
+                      <td className="py-4 px-4 text-[var(--muted-foreground)]">{c.description ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
         )}
-      </section>
+
+        {/* Submission Section */}
+        <section>
+          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
+            Submit Your Entry
+          </h2>
+          {isOpen ? (
+            <div className="p-8 bg-[var(--secondary)]">
+              <SubmitForm challengeId={challengeId} />
+            </div>
+          ) : (
+            <div className="p-8 bg-[var(--secondary)]">
+              <p className="text-[var(--muted-foreground)]">
+                This challenge is not currently accepting submissions.
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
     </main>
   );
 }
-
-const thStyle: React.CSSProperties = {
-  padding: "0.5rem 0.75rem",
-  fontWeight: 600,
-  fontSize: "0.875rem",
-  color: "#374151",
-};
-
-const tdStyle: React.CSSProperties = {
-  padding: "0.75rem",
-  fontSize: "0.9rem",
-  color: "#111",
-};
