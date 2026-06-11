@@ -1,0 +1,63 @@
+/* ─────────────────────────────────────────────
+   Creative Sports League — global base styles
+   ───────────────────────────────────────────── */
+
+:root {
+  --csl-bg: #060608;
+  --csl-bg-soft: #0c0c10;
+  --csl-ink: #f2f1ed;
+  --csl-muted: rgba(242, 241, 237, 0.55);
+  --csl-faint: rgba(242, 241, 237, 0.28);
+  --csl-line: rgba(242, 241, 237, 0.14);
+  --csl-accent: #d8ff3d;
+  --csl-accent-dim: rgba(216, 255, 61, 0.18);
+  --csl-ease: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans, system-ui), system-ui, sans-serif;
+}
+
+img,
+canvas,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--csl-accent);
+  color: #0a0a0c;
+}
+
+:focus-visible {
+  outline: 2px solid var(--csl-accent);
+  outline-offset: 3px;
+}
+
+/* Landing route paints the document dark (toggled from the landing page) */
+html.csl-dark {
+  background: var(--csl-bg);
+  color-scheme: dark;
+}

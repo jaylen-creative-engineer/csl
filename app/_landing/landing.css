@@ -1,0 +1,747 @@
+/* ═══════════════════════════════════════════════════════
+   Creative Sports League — landing page
+   Dark cinematic editorial. Serif display + grotesque UI.
+   ═══════════════════════════════════════════════════════ */
+
+.lp {
+  position: relative;
+  background: var(--csl-bg);
+  color: var(--csl-ink);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  overflow-x: clip;
+  min-height: 100svh;
+}
+
+.lp em {
+  font-style: italic;
+  color: var(--csl-accent);
+}
+
+/* ── Backdrop & canvas ──────────────────────────────── */
+
+.lp-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 118%, rgba(216, 255, 61, 0.07), transparent 60%),
+    radial-gradient(ellipse 65% 45% at 80% -10%, rgba(143, 123, 255, 0.08), transparent 65%),
+    var(--csl-bg);
+}
+
+.lp-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.lp-main {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Preloader ──────────────────────────────────────── */
+
+.lp-preloader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: var(--csl-bg);
+  transition: transform 0.9s var(--csl-ease), visibility 0s 0.9s;
+}
+
+.lp-preloader.done {
+  transform: translateY(-100%);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lp-preloader-brand {
+  position: absolute;
+  top: clamp(1.2rem, 3vw, 2rem);
+  left: clamp(1.2rem, 4vw, 3rem);
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+}
+
+.lp-preloader-word {
+  position: absolute;
+  top: clamp(1.2rem, 3vw, 2rem);
+  right: clamp(1.2rem, 4vw, 3rem);
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
+  color: var(--csl-accent);
+}
+
+.lp-preloader-count {
+  position: absolute;
+  bottom: clamp(0.6rem, 2vw, 1.4rem);
+  left: clamp(1.2rem, 4vw, 3rem);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(5rem, 18vw, 14rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--csl-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.lp-preloader-count i {
+  font-style: normal;
+  font-size: 0.35em;
+  color: var(--csl-muted);
+}
+
+/* ── Scroll progress ────────────────────────────────── */
+
+.lp-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 60;
+}
+
+.lp-progress-bar {
+  height: 100%;
+  background: var(--csl-accent);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+/* ── Navigation ─────────────────────────────────────── */
+
+.lp-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: clamp(1rem, 2.5vw, 1.6rem) clamp(1.2rem, 4vw, 3rem);
+  background: linear-gradient(rgba(6, 6, 8, 0.75), transparent);
+  opacity: 0;
+  transform: translateY(-12px);
+  transition: opacity 0.8s var(--csl-ease) 0.5s, transform 0.8s var(--csl-ease) 0.5s;
+}
+
+.lp.ready .lp-nav {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-wordmark {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+}
+
+.lp-wordmark span {
+  font-size: 0.55em;
+  vertical-align: super;
+  color: var(--csl-accent);
+}
+
+.lp-nav-tag {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+}
+
+.lp-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: clamp(1rem, 2.5vw, 2rem);
+}
+
+.lp-nav-link {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--csl-muted);
+  transition: color 0.3s;
+}
+
+.lp-nav-link:hover {
+  color: var(--csl-ink);
+}
+
+.lp-menu-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  background: none;
+  border: 0;
+  padding: 0.4rem 0;
+  cursor: pointer;
+}
+
+.lp-menu-label {
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.lp-menu-icon {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 26px;
+}
+
+.lp-menu-icon i {
+  height: 1.5px;
+  background: var(--csl-ink);
+  transition: transform 0.4s var(--csl-ease);
+}
+
+.lp-menu-btn.open .lp-menu-icon i:first-child {
+  transform: translateY(3.25px) rotate(45deg);
+}
+
+.lp-menu-btn.open .lp-menu-icon i:last-child {
+  transform: translateY(-3.25px) rotate(-45deg);
+}
+
+/* ── Overlay menu ───────────────────────────────────── */
+
+.lp-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(5rem, 12vh, 8rem) clamp(1.2rem, 6vw, 5rem) clamp(2rem, 6vh, 4rem);
+  background: rgba(8, 8, 11, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s var(--csl-ease), visibility 0s 0.5s;
+}
+
+.lp-menu.open {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.5s var(--csl-ease);
+}
+
+.lp-menu-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lp-menu-list li {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.6s var(--csl-ease), transform 0.6s var(--csl-ease);
+}
+
+.lp-menu.open .lp-menu-list li {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-menu-list a {
+  display: flex;
+  align-items: baseline;
+  gap: clamp(1rem, 3vw, 2rem);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(2.4rem, 7.5vw, 5.5rem);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  color: var(--csl-ink);
+  transition: color 0.3s;
+}
+
+.lp-menu-list a:hover {
+  color: var(--csl-accent);
+}
+
+.lp-menu-index {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
+  color: var(--csl-muted);
+}
+
+.lp-menu-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  margin-top: clamp(2rem, 6vh, 4rem);
+  padding-top: 1.4rem;
+  border-top: 1px solid var(--csl-line);
+  font-size: 0.78rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+}
+
+.lp-menu-foot a {
+  color: var(--csl-ink);
+  text-decoration: none;
+}
+
+/* ── Shared type ────────────────────────────────────── */
+
+.lp-kicker {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  font-size: 0.74rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+}
+
+.lp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--csl-accent);
+  box-shadow: 0 0 12px var(--csl-accent);
+}
+
+.mask {
+  display: block;
+  overflow: hidden;
+}
+
+.mask .line {
+  display: block;
+  transform: translateY(112%);
+  transition: transform 1.1s var(--csl-ease);
+}
+
+/* Hero lines play on load; everything else on reveal */
+.lp.ready .lp-hero .line,
+[data-reveal].in .line {
+  transform: translateY(0);
+}
+
+.mask:nth-child(1) .line { transition-delay: 0.05s; }
+.mask:nth-child(2) .line { transition-delay: 0.15s; }
+.mask:nth-child(3) .line { transition-delay: 0.25s; }
+
+[data-reveal] .lp-chapter-body,
+[data-reveal] .lp-arrow-link,
+[data-reveal] .lp-chapter-meta,
+[data-reveal] .lp-stat,
+[data-reveal] .lp-cta-actions,
+[data-reveal] .lp-kicker {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.9s var(--csl-ease) 0.35s, transform 0.9s var(--csl-ease) 0.35s;
+}
+
+[data-reveal].in .lp-chapter-body,
+[data-reveal].in .lp-arrow-link,
+[data-reveal].in .lp-chapter-meta,
+[data-reveal].in .lp-stat,
+[data-reveal].in .lp-cta-actions,
+[data-reveal].in .lp-kicker {
+  opacity: 1;
+  transform: none;
+}
+
+[data-reveal].in .lp-stat:nth-child(2) { transition-delay: 0.45s; }
+[data-reveal].in .lp-stat:nth-child(3) { transition-delay: 0.55s; }
+[data-reveal].in .lp-stat:nth-child(4) { transition-delay: 0.65s; }
+
+/* ── Buttons & links ────────────────────────────────── */
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.95rem 1.9rem;
+  border-radius: 999px;
+  background: var(--csl-accent);
+  color: #0a0a0c;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  border: 1px solid var(--csl-accent);
+  transition: transform 0.35s var(--csl-ease), box-shadow 0.35s var(--csl-ease),
+    background 0.35s, color 0.35s;
+}
+
+.lp-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 40px rgba(216, 255, 61, 0.25);
+}
+
+.lp-btn.ghost {
+  background: transparent;
+  color: var(--csl-ink);
+  border-color: var(--csl-line);
+}
+
+.lp-btn.ghost:hover {
+  border-color: var(--csl-accent);
+  color: var(--csl-accent);
+  box-shadow: none;
+}
+
+.lp-arrow-link {
+  display: inline-block;
+  margin-top: clamp(1.6rem, 3vw, 2.4rem);
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--csl-ink);
+  padding-bottom: 0.45rem;
+  background-image: linear-gradient(var(--csl-accent), var(--csl-accent));
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  transition: background-size 0.5s var(--csl-ease), color 0.3s;
+}
+
+.lp-arrow-link:hover {
+  color: var(--csl-accent);
+  background-size: 100% 1px;
+}
+
+/* ── Hero ───────────────────────────────────────────── */
+
+.lp-hero {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(6rem, 14vh, 9rem) clamp(1.2rem, 5vw, 4rem) clamp(5rem, 10vh, 7rem);
+}
+
+.lp-hero-kicker {
+  margin-bottom: clamp(1.4rem, 3vh, 2.4rem);
+}
+
+.lp-hero-title {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 480;
+  font-size: clamp(3.2rem, 11.5vw, 10rem);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+
+.lp-hero-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-top: clamp(2.2rem, 5vh, 3.6rem);
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 1s var(--csl-ease) 0.55s, transform 1s var(--csl-ease) 0.55s;
+}
+
+.lp.ready .lp-hero-foot {
+  opacity: 1;
+  transform: none;
+}
+
+.lp-hero-sub {
+  margin: 0;
+  max-width: 42ch;
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  line-height: 1.65;
+  color: var(--csl-muted);
+}
+
+.lp-hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.lp-scroll-cue {
+  position: absolute;
+  right: clamp(1.2rem, 4vw, 3rem);
+  bottom: clamp(1.4rem, 4vh, 2.6rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.66rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--csl-faint);
+  writing-mode: vertical-rl;
+}
+
+.lp-scroll-cue i {
+  width: 1px;
+  height: 56px;
+  background: linear-gradient(var(--csl-accent), transparent);
+  animation: lp-cue 2.2s var(--csl-ease) infinite;
+}
+
+@keyframes lp-cue {
+  0% { transform: scaleY(0); transform-origin: top; }
+  45% { transform: scaleY(1); transform-origin: top; }
+  55% { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
+
+/* ── Chapters ───────────────────────────────────────── */
+
+.lp-chapter {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2.6fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  padding: clamp(7rem, 20vh, 12rem) clamp(1.2rem, 5vw, 4rem);
+  border-top: 1px solid var(--csl-line);
+}
+
+.lp-chapter-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  align-self: start;
+  position: sticky;
+  top: clamp(6rem, 16vh, 9rem);
+}
+
+.lp-chapter-index {
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  color: var(--csl-accent);
+}
+
+.lp-chapter-word {
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+}
+
+.lp-chapter-title {
+  margin: 0 0 clamp(1.6rem, 3.5vh, 2.6rem);
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 480;
+  font-size: clamp(2.6rem, 7.5vw, 6.8rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.lp-chapter-body {
+  margin: 0;
+  max-width: 44ch;
+  font-size: clamp(0.95rem, 1.35vw, 1.08rem);
+  line-height: 1.7;
+  color: var(--csl-muted);
+}
+
+/* ── Stats ──────────────────────────────────────────── */
+
+.lp-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--csl-line);
+  padding: clamp(4rem, 10vh, 7rem) clamp(1.2rem, 5vw, 4rem);
+  gap: clamp(2rem, 4vw, 3rem);
+}
+
+.lp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.lp-stat-value {
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(2.6rem, 6vw, 5rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.lp-stat-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+}
+
+/* ── Marquee ────────────────────────────────────────── */
+
+.lp-marquee {
+  overflow: hidden;
+  border-top: 1px solid var(--csl-line);
+  border-bottom: 1px solid var(--csl-line);
+  padding: clamp(1.6rem, 4vh, 2.8rem) 0;
+}
+
+.lp-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: lp-marquee 22s linear infinite;
+}
+
+.lp-marquee-copy {
+  flex: none;
+  white-space: nowrap;
+  padding-right: 0.5em;
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(2.6rem, 7vw, 6rem);
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--csl-faint);
+}
+
+.lp-marquee-copy i {
+  font-style: normal;
+  color: var(--csl-accent);
+  -webkit-text-stroke: 0;
+}
+
+@keyframes lp-marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* ── Final CTA ──────────────────────────────────────── */
+
+.lp-cta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: clamp(1.6rem, 4vh, 2.6rem);
+  padding: clamp(8rem, 22vh, 14rem) clamp(1.2rem, 5vw, 4rem);
+}
+
+.lp-cta-title {
+  margin: 0;
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 480;
+  font-size: clamp(3.4rem, 12vw, 11rem);
+  line-height: 0.98;
+  letter-spacing: -0.025em;
+}
+
+.lp-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.8rem;
+}
+
+/* ── Footer ─────────────────────────────────────────── */
+
+.lp-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.4rem;
+  border-top: 1px solid var(--csl-line);
+  padding: clamp(1.8rem, 4vh, 2.6rem) clamp(1.2rem, 5vw, 4rem);
+  font-size: 0.78rem;
+  letter-spacing: 0.1em;
+  color: var(--csl-muted);
+}
+
+.lp-footer-brand span {
+  font-size: 0.6em;
+  vertical-align: super;
+  color: var(--csl-accent);
+}
+
+.lp-footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.4rem;
+}
+
+.lp-footer-links a {
+  text-decoration: none;
+  color: var(--csl-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.72rem;
+  transition: color 0.3s;
+}
+
+.lp-footer-links a:hover {
+  color: var(--csl-accent);
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .lp-nav-tag {
+    display: none;
+  }
+
+  .lp-chapter {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+  }
+
+  .lp-chapter-meta {
+    position: static;
+    flex-direction: row;
+    align-items: baseline;
+    gap: 1.2rem;
+  }
+
+  .lp-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .lp-scroll-cue {
+    display: none;
+  }
+}
+
+/* ── Reduced motion ─────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .lp *,
+  .lp *::before,
+  .lp *::after {
+    animation-duration: 0.001s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001s !important;
+    transition-delay: 0s !important;
+  }
+
+  .mask .line,
+  .lp-hero-foot,
+  [data-reveal] .lp-chapter-body,
+  [data-reveal] .lp-arrow-link,
+  [data-reveal] .lp-chapter-meta,
+  [data-reveal] .lp-stat,
+  [data-reveal] .lp-cta-actions,
+  [data-reveal] .lp-kicker {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
