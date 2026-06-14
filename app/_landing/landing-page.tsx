@@ -107,21 +107,68 @@ export function LandingPage() {
     )
   ];
 
+  const HALFTONE_DOTS = 32;
+  const dotsFilled = Math.round((progress / 100) * HALFTONE_DOTS);
+
   return (
     <div className={`lp${ready ? " ready" : ""}`}>
-      {/* ── Preloader ─────────────────────────────── */}
+      {/* ── Blueprint welcome / boot sequence ─────── */}
       <div className={`lp-preloader${ready ? " done" : ""}`} aria-hidden={ready}>
-        <span className="lp-preloader-brand">Creative Sports League</span>
-        <span className="lp-preloader-word">{word}</span>
-        <span className="lp-preloader-count">
-          {progress}
-          <i>%</i>
-        </span>
+        <span className="lp-cross lp-cross--tl" aria-hidden="true" />
+        <span className="lp-cross lp-cross--tr" aria-hidden="true" />
+        <span className="lp-cross lp-cross--bl" aria-hidden="true" />
+        <span className="lp-cross lp-cross--br" aria-hidden="true" />
+
+        <div className="lp-pre-grid">
+          <div className="lp-pre-stamp">
+            <strong>Creative Sports League</strong>
+            <span>Obsess the craft — ©2026</span>
+            <span>EHQ / Field Manual · Season 01</span>
+          </div>
+          <div className="lp-pre-coords">
+            <span>40°49.281′N</span>
+            <span>73°55.764′W</span>
+            <span>FIG.00 — BOOT</span>
+          </div>
+        </div>
+
+        <div className="lp-pre-center">
+          <span className="lp-pre-word">{word}</span>
+          <div className="lp-pre-dots" aria-hidden="true">
+            {Array.from({ length: HALFTONE_DOTS }).map((_, i) => (
+              <i key={i} className={i < dotsFilled ? "on" : ""} />
+            ))}
+          </div>
+        </div>
+
+        <div className="lp-pre-meter" aria-hidden="true">
+          <span className="lp-pre-dim">{"|<"}</span>
+          <span className="lp-preloader-count">
+            {String(progress).padStart(3, "0")}
+            <i>%</i>
+          </span>
+          <span className="lp-pre-dim">{">|"}</span>
+        </div>
       </div>
 
       {/* ── Backdrop ──────────────────────────────── */}
       <div className="lp-backdrop" aria-hidden="true" />
+      <div className="lp-halftone" aria-hidden="true" />
       <HeroScene />
+
+      {/* ── Persistent blueprint frame ────────────── */}
+      <div className="lp-frame" aria-hidden="true">
+        <span className="lp-cross lp-cross--tl" />
+        <span className="lp-cross lp-cross--tr" />
+        <span className="lp-cross lp-cross--bl" />
+        <span className="lp-cross lp-cross--br" />
+        <span className="lp-frame-coord lp-frame-coord--l">
+          40°49.281′N · 73°55.764′W
+        </span>
+        <span className="lp-frame-coord lp-frame-coord--r">
+          CSL · SEASON 01 · FIG.01
+        </span>
+      </div>
 
       {/* ── Scroll progress ───────────────────────── */}
       <div className="lp-progress" aria-hidden="true">
@@ -177,6 +224,12 @@ export function LandingPage() {
       <main className="lp-main">
         {/* ── Hero ──────────────────────────────── */}
         <section className="lp-hero">
+          <span className="lp-annot lp-annot--hero-top" aria-hidden="true">
+            FIG.01 — THE FIELD
+          </span>
+          <span className="lp-annot lp-annot--hero-side" aria-hidden="true">
+            ↳ 06 disciplines / 72h sprint window
+          </span>
           <p className="lp-kicker lp-hero-kicker">
             <span className="lp-dot" aria-hidden="true" />
             Creative Sports League — Season 01
@@ -186,7 +239,7 @@ export function LandingPage() {
             <span className="mask"><span className="line">work becomes</span></span>
             <span className="mask">
               <span className="line">
-                <em>sport.</em>
+                <em className="lp-grad">sport.</em>
               </span>
             </span>
           </h1>
@@ -208,6 +261,35 @@ export function LandingPage() {
           <div className="lp-scroll-cue" aria-hidden="true">
             <span>Scroll</span>
             <i />
+          </div>
+        </section>
+
+        {/* ── Manifesto (editorial statement) ───── */}
+        <section className="lp-manifesto" data-reveal>
+          <div className="lp-manifesto-head">
+            <p className="lp-kicker">
+              <span className="lp-dot" aria-hidden="true" />
+              The thesis
+            </p>
+            <span className="lp-annot" aria-hidden="true">FIG.02 — DOCTRINE</span>
+          </div>
+          <h2 className="lp-manifesto-title">
+            <span className="mask"><span className="line">Discipline builds</span></span>
+            <span className="mask"><span className="line lp-stroke">craft.</span></span>
+            <span className="mask">
+              <span className="line lp-rainbow-text">Competition builds careers.</span>
+            </span>
+          </h2>
+          <div className="lp-manifesto-foot">
+            <p className="lp-manifesto-body">
+              No follower counts. No gatekeepers. Just real briefs, public
+              submissions, and scores that compound into a record of proof.
+            </p>
+            <div className="lp-chevrons" aria-hidden="true">
+              <span className="lp-chevron lp-chevron--blue" />
+              <span className="lp-chevron lp-chevron--red" />
+              <span className="lp-chevron lp-chevron--yellow" />
+            </div>
           </div>
         </section>
 
@@ -284,8 +366,11 @@ export function LandingPage() {
 
         {/* ── Stats ─────────────────────────────── */}
         <section className="lp-stats" data-reveal>
-          {STATS.map((stat) => (
+          {STATS.map((stat, i) => (
             <div key={stat.label} className="lp-stat">
+              <span className="lp-stat-index">
+                {String(i + 1).padStart(2, "0")} /
+              </span>
               <span className="lp-stat-value">{stat.value}</span>
               <span className="lp-stat-label">{stat.label}</span>
             </div>
@@ -328,6 +413,17 @@ export function LandingPage() {
         </section>
 
         {/* ── Footer ────────────────────────────── */}
+        <div className="lp-stamps" aria-hidden="true">
+          {[0, 1].map((copy) => (
+            <span key={copy} className="lp-stamps-row">
+              <i>Obsess the craft ©2026</i>
+              <i>40°49.281′N 73°55.764′W</i>
+              <i>CSL Field Office</i>
+              <i>EHQ / Season 01</i>
+              <i>Fig.01 — The Field</i>
+            </span>
+          ))}
+        </div>
         <footer className="lp-footer">
           <span className="lp-footer-brand">
             CSL<span>®</span> — Creative Sports League
