@@ -1,18 +1,12 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Fraunces, Space_Grotesk, Space_Mono } from "next/font/google";
+import { Space_Grotesk, Space_Mono } from "next/font/google";
 import { NavGate } from "./_components/nav-gate.js";
 import "./globals.css";
 
-const serif = Fraunces({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
-  display: "swap"
-});
-
 const sans = Space_Grotesk({
   subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
   variable: "--font-sans",
   display: "swap"
 });
@@ -36,7 +30,7 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
       <body>
         <NavGate />
         {children}
