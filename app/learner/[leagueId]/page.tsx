@@ -39,6 +39,12 @@ async function getChallenges(challengeIds: string[]): Promise<Challenge[]> {
 
 type Props = { params: Promise<{ leagueId: string }> };
 
+function statusTone(status: string): string {
+  if (status === "open") return "blue";
+  if (status === "complete") return "red";
+  return "yellow";
+}
+
 export default async function LearnerLeagueDetailPage({ params }: Props) {
   const { leagueId } = await params;
   const league = await getLeague(leagueId);
@@ -62,94 +68,141 @@ export default async function LearnerLeagueDetailPage({ params }: Props) {
 
   return (
     <main className="min-h-screen px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Link */}
-        <Link 
-          href="/learner" 
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Discovery
-        </Link>
+      <div className="csl-page">
+        <div className="csl-shell csl-shell--with-side">
+          <aside className="csl-rail" aria-label="League discovery context">
+            <Link href="/learner" className="csl-arrow">← Discovery</Link>
+            <span className="csl-rail__eyebrow">League // {league.id}</span>
+            <div className="csl-rail__title">{league.name}</div>
+            <p className="csl-rail__copy">Scan open briefs, enroll, and choose the next scored rep.</p>
+            <nav className="csl-rail__nav" aria-label="Learner league metrics">
+              <span>Status <strong>{league.status}</strong></span>
+              <span>Open <strong>{openChallenges.length}</strong></span>
+              <span>Archive <strong>{otherChallenges.length}</strong></span>
+            </nav>
+            <div className="csl-rail__glyph" aria-hidden="true" />
+          </aside>
 
-        {/* Header */}
-        <header className="flex flex-wrap items-start justify-between gap-4 mb-12">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-              {league.name}
-            </h1>
-            <div className="flex items-center gap-3 mt-3">
-              <span className={`
-                inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-wide
-                ${league.status === "active" 
-                  ? "bg-[var(--success)] text-[var(--primary-foreground)]" 
-                  : "bg-[var(--border)] text-[var(--foreground)]"
-                }
-              `}>
-                {league.status}
-              </span>
+          <div className="csl-main-stack">
+            <header>
+              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
+                {league.name}
+              </h1>
+              <div className="flex items-center gap-3 mt-3">
+                <span className={`csl-pill csl-pill--${league.status}`}>{league.status}</span>
+              </div>
+            </header>
+
+            <div className="csl-kpi-strip" aria-label="Learner league metrics">
+              <div className="csl-kpi csl-kpi--blue">
+                <div className="csl-kpi__label">Open</div>
+                <div className="csl-kpi__value">{openChallenges.length}</div>
+                <div className="csl-kpi__note">playable briefs</div>
+              </div>
+              <div className="csl-kpi csl-kpi--yellow">
+                <div className="csl-kpi__label">Total</div>
+                <div className="csl-kpi__value">{challenges.length}</div>
+                <div className="csl-kpi__note">league sprints</div>
+              </div>
+              <div className="csl-kpi csl-kpi--red">
+                <div className="csl-kpi__label">Closed</div>
+                <div className="csl-kpi__value">{otherChallenges.length}</div>
+                <div className="csl-kpi__note">archive track</div>
+              </div>
+              <div className="csl-kpi csl-kpi--yellow">
+                <div className="csl-kpi__label">Move</div>
+                <div className="csl-kpi__value">GO</div>
+                <div className="csl-kpi__note">enroll then submit</div>
+              </div>
             </div>
-          </div>
-          <EnrollButton leagueId={leagueId} />
-        </header>
 
-        {/* Open Challenges */}
-        <section className="mb-12">
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-            Open Challenges ({openChallenges.length})
-          </h2>
+            <section>
+              <div className="csl-section-row">
+                <h2 className="text-xl font-semibold text-[var(--foreground)]">
+                  Open challenges
+                </h2>
+                <span className="csl-mini">FIG. 05 // PLAYER BOARD</span>
+              </div>
 
-          {openChallenges.length === 0 ? (
-            <div className="p-8 bg-[var(--secondary)]">
-              <p className="text-[var(--muted-foreground)]">
-                No open challenges right now. Check back soon.
-              </p>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {openChallenges.map((c) => (
-                <Link
-                  key={c.id}
-                  href={`/learner/challenges/${c.id}`}
-                  className="block p-6 bg-[var(--secondary)] hover:bg-[var(--border-soft)] transition-colors group"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-[var(--foreground)] group-hover:underline">
-                        {c.title}
-                      </h3>
-                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                        Deadline: {new Date(c.deadline).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span className="inline-flex px-3 py-1 text-xs font-medium bg-[var(--success)] text-[var(--primary-foreground)] rounded-full uppercase tracking-wide">
-                      {c.status}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Other Challenges */}
-        {otherChallenges.length > 0 && (
-          <section>
-            <h2 className="text-lg font-semibold text-[var(--muted-foreground)] mb-4">
-              Other Challenges
-            </h2>
-            <div className="grid gap-2">
-              {otherChallenges.map((c) => (
-                <div
-                  key={c.id}
-                  className="p-4 bg-[var(--secondary)] text-[var(--muted-foreground)]"
-                >
-                  <span className="font-medium">{c.title}</span>
-                  <span className="ml-2 text-sm">— {c.status}</span>
+              {openChallenges.length === 0 ? (
+                <div className="csl-panel csl-panel--hero">
+                  <div className="csl-panel__title">No open briefs.</div>
+                  <p className="csl-panel__copy">Check back soon; archived challenges remain visible for context.</p>
                 </div>
-              ))}
+              ) : (
+                <div className="csl-card-grid">
+                  {openChallenges.map((c) => (
+                    <Link key={c.id} href={`/learner/challenges/${c.id}`} className="csl-card">
+                      <span className={`csl-card__block csl-card__block--${statusTone(c.status)}`} aria-hidden="true" />
+                      <div className="csl-card__top">
+                        <div>
+                          <h3 className="csl-card__title">{c.title}</h3>
+                          <p className="csl-card__meta">{c.id}</p>
+                        </div>
+                        <span className={`csl-pill csl-pill--${c.status}`}>{c.status}</span>
+                      </div>
+                      <div className="csl-card__stats">
+                        <div className="csl-card__stat">
+                          <strong>{new Date(c.deadline).toLocaleDateString()}</strong>
+                          <span>deadline</span>
+                        </div>
+                        <div className="csl-card__stat">
+                          <strong>LIVE</strong>
+                          <span>entry</span>
+                        </div>
+                      </div>
+                      <div className="csl-card__footer">
+                        <span className="csl-mini">Submission route ready</span>
+                        <span className="csl-arrow">Open →</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {otherChallenges.length > 0 && (
+              <section>
+                <div className="csl-section-row">
+                  <h2 className="text-xl font-semibold text-[var(--foreground)]">
+                    Archive track
+                  </h2>
+                  <span className="csl-mini">Completed / judging / draft</span>
+                </div>
+                <div className="csl-card-grid">
+                  {otherChallenges.map((c) => (
+                    <Link key={c.id} href={`/learner/challenges/${c.id}`} className="csl-card">
+                      <span className={`csl-card__block csl-card__block--${statusTone(c.status)}`} aria-hidden="true" />
+                      <div className="csl-card__top">
+                        <div>
+                          <h3 className="csl-card__title">{c.title}</h3>
+                          <p className="csl-card__meta">{c.id}</p>
+                        </div>
+                        <span className={`csl-pill csl-pill--${c.status}`}>{c.status}</span>
+                      </div>
+                      <div className="csl-card__footer">
+                        <span className="csl-mini">{new Date(c.deadline).toLocaleDateString()}</span>
+                        <span className="csl-arrow">View →</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+
+          <aside className="csl-side" aria-label="Enrollment">
+            <div>
+              <div className="csl-side__title">Entry control</div>
+              <p className="csl-rail__copy">Enroll with a participant ID before entering league sprints.</p>
             </div>
-          </section>
-        )}
+            <EnrollButton leagueId={leagueId} />
+            <div className="csl-side__item">
+              <strong>What counts</strong>
+              <span>Public scored submissions become part of the portfolio signal.</span>
+            </div>
+          </aside>
+        </div>
       </div>
     </main>
   );
