@@ -5,8 +5,12 @@ import { useEffect, useRef } from "react";
 /**
  * Full-viewport three.js backdrop for the landing page.
  *
- * A particle "stadium ring" floating in a star field. The camera dollies
- * and the ring untilts as you scroll; the camera drifts with the cursor.
+ * A slow, mechanical assembly of interlocking chevron blocks — the
+ * Foreigner "Agent Provocateur" geometry in the primary triad, framed
+ * with bone edge linework and floating over a halftone dot field for the
+ * Nike "Obsess The Creative" technical feel. The cluster rotates as you
+ * scroll and parallaxes with the cursor.
+ *
  * three.js is imported lazily inside the effect so it never touches the
  * server bundle and only loads on the client.
  */
@@ -33,7 +37,7 @@ export function HeroScene() {
           powerPreference: "high-performance"
         });
       } catch {
-        // No WebGL — the CSS gradient behind the canvas carries the page.
+        // No WebGL — the CSS grid + halftone behind the canvas carry the page.
         return;
       }
 
@@ -44,161 +48,144 @@ export function HeroScene() {
       renderer.setClearColor(0x000000, 0);
 
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x060608, 0.045);
+      scene.fog = new THREE.FogExp2(0x0a0a0b, 0.05);
 
       const camera = new THREE.PerspectiveCamera(
-        58,
+        52,
         window.innerWidth / window.innerHeight,
         0.1,
-        120
+        140
       );
-      camera.position.set(0, 0, 10);
+      camera.position.set(0, 0, 12);
 
-      const group = new THREE.Group();
-      group.rotation.x = 1.05;
-      scene.add(group);
+      const RED = new THREE.Color("#ff3b2f");
+      const BLUE = new THREE.Color("#2f6bff");
+      const YELLOW = new THREE.Color("#ffd11a");
+      const BONE = new THREE.Color("#f4f3ef");
 
-      const accent = new THREE.Color("#d8ff3d");
-      const bone = new THREE.Color("#f2f1ed");
-      const violet = new THREE.Color("#8f7bff");
+      /* ── Chevron geometry ──────────────────────────── */
+      const shape = new THREE.Shape();
+      shape.moveTo(-0.62, 0.5);
+      shape.lineTo(0.02, 0.5);
+      shape.lineTo(0.62, 0);
+      shape.lineTo(0.02, -0.5);
+      shape.lineTo(-0.62, -0.5);
+      shape.lineTo(-0.12, 0);
+      shape.closePath();
 
-      /* ── Particle ring ─────────────────────────────── */
-      const RING_COUNT = 6500;
-      const RADIUS = 4.3;
-      const ringPositions = new Float32Array(RING_COUNT * 3);
-      const ringColors = new Float32Array(RING_COUNT * 3);
-      const tmp = new THREE.Color();
-
-      for (let i = 0; i < RING_COUNT; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        // Cluster particles toward the ring's core with a soft falloff.
-        const spread =
-          (Math.random() + Math.random() + Math.random() - 1.5) * 0.62;
-        const r = RADIUS + spread;
-        const y = (Math.random() + Math.random() - 1) * 0.34;
-
-        ringPositions[i * 3] = Math.cos(angle) * r;
-        ringPositions[i * 3 + 1] = y;
-        ringPositions[i * 3 + 2] = Math.sin(angle) * r;
-
-        // Sweep of color around the ring: accent → bone → violet.
-        const sweep = (Math.sin(angle * 2) + 1) / 2;
-        tmp.copy(accent).lerp(sweep < 0.5 ? bone : violet, sweep);
-        const fade = 0.45 + Math.random() * 0.55;
-        ringColors[i * 3] = tmp.r * fade;
-        ringColors[i * 3 + 1] = tmp.g * fade;
-        ringColors[i * 3 + 2] = tmp.b * fade;
-      }
-
-      const ringGeometry = new THREE.BufferGeometry();
-      ringGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(ringPositions, 3)
-      );
-      ringGeometry.setAttribute(
-        "color",
-        new THREE.BufferAttribute(ringColors, 3)
-      );
-
-      const ringMaterial = new THREE.PointsMaterial({
-        size: 0.028,
-        vertexColors: true,
-        transparent: true,
-        opacity: 0.9,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-        sizeAttenuation: true
-      });
-
-      const ring = new THREE.Points(ringGeometry, ringMaterial);
-      group.add(ring);
-
-      /* ── Thin solid track line inside the ring ─────── */
-      const trackGeometry = new THREE.TorusGeometry(RADIUS, 0.008, 8, 220);
-      const trackMaterial = new THREE.MeshBasicMaterial({
-        color: accent,
-        transparent: true,
-        opacity: 0.35
-      });
-      const track = new THREE.Mesh(trackGeometry, trackMaterial);
-      track.rotation.x = Math.PI / 2;
-      group.add(track);
-
-      /* ── Ambient star field ────────────────────────── */
-      const STAR_COUNT = 1400;
-      const starPositions = new Float32Array(STAR_COUNT * 3);
-      for (let i = 0; i < STAR_COUNT; i++) {
-        const v = new THREE.Vector3(
-          Math.random() * 2 - 1,
-          Math.random() * 2 - 1,
-          Math.random() * 2 - 1
-        )
-          .normalize()
-          .multiplyScalar(14 + Math.random() * 26);
-        starPositions[i * 3] = v.x;
-        starPositions[i * 3 + 1] = v.y;
-        starPositions[i * 3 + 2] = v.z;
-      }
-      const starGeometry = new THREE.BufferGeometry();
-      starGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(starPositions, 3)
-      );
-      const starMaterial = new THREE.PointsMaterial({
-        color: bone,
-        size: 0.02,
-        transparent: true,
-        opacity: 0.45,
-        depthWrite: false,
-        sizeAttenuation: true
-      });
-      const stars = new THREE.Points(starGeometry, starMaterial);
-      scene.add(stars);
-
-      /* ── Geometric chevron shards (Foreigner) ──────── */
-      // A flat arrow/chevron profile extruded into a thin solid —
-      // the album's interlocking red/blue/yellow blocks, set adrift.
-      const chevronShape = new THREE.Shape();
-      chevronShape.moveTo(-0.62, 0.5);
-      chevronShape.lineTo(0.02, 0.5);
-      chevronShape.lineTo(0.62, 0);
-      chevronShape.lineTo(0.02, -0.5);
-      chevronShape.lineTo(-0.62, -0.5);
-      chevronShape.lineTo(-0.12, 0);
-      chevronShape.closePath();
-
-      const chevronGeometry = new THREE.ExtrudeGeometry(chevronShape, {
-        depth: 0.16,
+      const chevronGeometry = new THREE.ExtrudeGeometry(shape, {
+        depth: 0.22,
         bevelEnabled: false
       });
       chevronGeometry.center();
+      const edgeGeometry = new THREE.EdgesGeometry(chevronGeometry);
 
-      const shardSpecs: Array<{
-        color: string;
+      type ChevronSpec = {
+        color: InstanceType<typeof THREE.Color>;
         pos: [number, number, number];
         scale: number;
+        rotZ: number;
+        opacity: number;
         spin: number;
-      }> = [
-        { color: "#2f6bff", pos: [-7.4, 2.6, -3], scale: 1.5, spin: 0.18 },
-        { color: "#ff3b30", pos: [7.2, -1.4, -1.5], scale: 1.95, spin: -0.14 },
-        { color: "#ffc62b", pos: [5.1, 3.4, -6], scale: 1.15, spin: 0.22 }
+        drift: number;
+        outline: boolean;
+      };
+
+      const specs: ChevronSpec[] = [
+        { color: BONE, pos: [0, 0.1, 0], scale: 3.4, rotZ: 0, opacity: 0.08, spin: 0.04, drift: 0.35, outline: true },
+        { color: BLUE, pos: [-3.6, 1.5, -1.5], scale: 2.1, rotZ: 0.05, opacity: 0.85, spin: 0.05, drift: 0.5, outline: false },
+        { color: RED, pos: [-0.4, -1.1, 0.6], scale: 2.7, rotZ: -0.03, opacity: 0.9, spin: -0.04, drift: 0.4, outline: false },
+        { color: YELLOW, pos: [3.4, 1.0, -0.8], scale: 1.9, rotZ: 0.08, opacity: 0.9, spin: 0.06, drift: 0.55, outline: false },
+        { color: BONE, pos: [4.9, -1.8, -3], scale: 1.3, rotZ: -0.1, opacity: 0.16, spin: 0.09, drift: 0.7, outline: true },
+        { color: BONE, pos: [-4.8, -1.6, -2.4], scale: 1.1, rotZ: 0.12, opacity: 0.16, spin: -0.08, drift: 0.65, outline: true }
       ];
 
-      const shards = shardSpecs.map((spec) => {
-        const material = new THREE.MeshBasicMaterial({
-          color: new THREE.Color(spec.color),
-          transparent: true,
-          opacity: 0.62,
-          side: THREE.DoubleSide
+      const group = new THREE.Group();
+      scene.add(group);
+
+      const disposables: Array<{ dispose: () => void }> = [];
+      const animated: Array<{
+        obj: InstanceType<typeof THREE.Object3D>;
+        baseY: number;
+        spin: number;
+        drift: number;
+        phase: number;
+      }> = [];
+
+      specs.forEach((spec, i) => {
+        const node = new THREE.Group();
+        node.position.set(...spec.pos);
+        node.scale.setScalar(spec.scale);
+        node.rotation.z = spec.rotZ;
+
+        if (spec.outline) {
+          const lineMat = new THREE.LineBasicMaterial({
+            color: spec.color,
+            transparent: true,
+            opacity: spec.opacity * 4
+          });
+          const line = new THREE.LineSegments(edgeGeometry, lineMat);
+          node.add(line);
+          disposables.push(lineMat);
+        } else {
+          const faceMat = new THREE.MeshBasicMaterial({
+            color: spec.color,
+            transparent: true,
+            opacity: spec.opacity,
+            side: THREE.DoubleSide
+          });
+          const mesh = new THREE.Mesh(chevronGeometry, faceMat);
+          node.add(mesh);
+          const edgeMat = new THREE.LineBasicMaterial({
+            color: BONE,
+            transparent: true,
+            opacity: 0.25
+          });
+          node.add(new THREE.LineSegments(edgeGeometry, edgeMat));
+          disposables.push(faceMat, edgeMat);
+        }
+
+        group.add(node);
+        animated.push({
+          obj: node,
+          baseY: spec.pos[1],
+          spin: spec.spin,
+          drift: spec.drift,
+          phase: i * 1.5
         });
-        const mesh = new THREE.Mesh(chevronGeometry, material);
-        mesh.position.set(...spec.pos);
-        mesh.scale.setScalar(spec.scale);
-        mesh.userData.spin = spec.spin;
-        mesh.userData.baseY = spec.pos[1];
-        scene.add(mesh);
-        return mesh;
       });
+
+      /* ── Halftone dot field ────────────────────────── */
+      const COLS = 46;
+      const ROWS = 26;
+      const GAP = 0.7;
+      const fieldCount = COLS * ROWS;
+      const fieldPositions = new Float32Array(fieldCount * 3);
+      let p = 0;
+      for (let x = 0; x < COLS; x++) {
+        for (let y = 0; y < ROWS; y++) {
+          fieldPositions[p++] = (x - (COLS - 1) / 2) * GAP;
+          fieldPositions[p++] = (y - (ROWS - 1) / 2) * GAP;
+          fieldPositions[p++] = 0;
+        }
+      }
+      const fieldGeometry = new THREE.BufferGeometry();
+      fieldGeometry.setAttribute(
+        "position",
+        new THREE.BufferAttribute(fieldPositions, 3)
+      );
+      const fieldMaterial = new THREE.PointsMaterial({
+        color: BONE,
+        size: 0.035,
+        transparent: true,
+        opacity: 0.32,
+        depthWrite: false,
+        sizeAttenuation: true
+      });
+      const field = new THREE.Points(fieldGeometry, fieldMaterial);
+      field.position.z = -7;
+      scene.add(field);
+      const fieldBaseZ = fieldPositions.slice();
 
       /* ── State & handlers ──────────────────────────── */
       const mouse = { x: 0, y: 0 };
@@ -229,46 +216,50 @@ export function HeroScene() {
       window.addEventListener("resize", resize);
 
       if (prefersReduced) {
-        // Static composition for reduced-motion users.
-        group.rotation.x = 0.7;
-        camera.position.z = 9;
+        group.rotation.set(-0.15, -0.35, 0);
         renderer.render(scene, camera);
       } else {
-        window.addEventListener("pointermove", onPointerMove, {
-          passive: true
-        });
+        window.addEventListener("pointermove", onPointerMove, { passive: true });
 
         const clock = new THREE.Clock();
+        const fieldAttr = fieldGeometry.getAttribute("position") as InstanceType<
+          typeof THREE.BufferAttribute
+        >;
+
         const animate = () => {
           rafId = requestAnimationFrame(animate);
           const t = clock.getElapsedTime();
-          const p = scrollProgress();
+          const prog = scrollProgress();
 
-          // Ease everything for a weighty, cinematic feel.
-          smoothed.x += (mouse.x - smoothed.x) * 0.04;
-          smoothed.y += (mouse.y - smoothed.y) * 0.04;
-          smoothed.scroll += (p - smoothed.scroll) * 0.06;
+          smoothed.x += (mouse.x - smoothed.x) * 0.045;
+          smoothed.y += (mouse.y - smoothed.y) * 0.045;
+          smoothed.scroll += (prog - smoothed.scroll) * 0.06;
 
-          ring.rotation.y = t * 0.05;
-          track.rotation.z = -t * 0.02;
-          stars.rotation.y = t * 0.008;
-
-          for (let i = 0; i < shards.length; i++) {
-            const shard = shards[i];
-            shard.rotation.z = t * shard.userData.spin;
-            shard.rotation.x = Math.sin(t * 0.25 + i) * 0.4;
-            shard.position.y =
-              shard.userData.baseY + Math.sin(t * 0.45 + i * 1.7) * 0.5;
+          for (const a of animated) {
+            a.obj.rotation.z += a.spin * 0.01;
+            a.obj.rotation.y = Math.sin(t * 0.3 + a.phase) * 0.5;
+            a.obj.position.y =
+              a.baseY + Math.sin(t * 0.45 + a.phase) * a.drift;
           }
 
-          group.rotation.x = 1.05 - smoothed.scroll * 0.95;
-          group.rotation.z = smoothed.scroll * 0.4;
-          group.position.y = Math.sin(t * 0.4) * 0.12;
+          group.rotation.x = -0.12 + smoothed.y * 0.18 + smoothed.scroll * 0.5;
+          group.rotation.y = smoothed.x * 0.4 - smoothed.scroll * 0.8;
+          group.position.y = smoothed.scroll * 1.6;
 
-          camera.position.x = smoothed.x * 0.7;
-          camera.position.y = -smoothed.y * 0.45 - smoothed.scroll * 0.6;
-          camera.position.z = 10 - smoothed.scroll * 3.2;
-          camera.lookAt(0, 0, 0);
+          // Halftone field: a slow travelling wave on Z.
+          for (let i = 0; i < fieldCount; i++) {
+            const bx = fieldBaseZ[i * 3];
+            const by = fieldBaseZ[i * 3 + 1];
+            fieldAttr.array[i * 3 + 2] =
+              Math.sin(t * 0.5 + bx * 0.3 + by * 0.25) * 0.5;
+          }
+          fieldAttr.needsUpdate = true;
+          field.rotation.z = t * 0.01;
+
+          camera.position.x = smoothed.x * 0.8;
+          camera.position.y = -smoothed.y * 0.5;
+          camera.position.z = 12 - smoothed.scroll * 2.2;
+          camera.lookAt(0, group.position.y * 0.4, 0);
 
           renderer.render(scene, camera);
         };
@@ -279,16 +270,11 @@ export function HeroScene() {
         cancelAnimationFrame(rafId);
         window.removeEventListener("resize", resize);
         window.removeEventListener("pointermove", onPointerMove);
-        ringGeometry.dispose();
-        ringMaterial.dispose();
-        trackGeometry.dispose();
-        trackMaterial.dispose();
-        starGeometry.dispose();
-        starMaterial.dispose();
         chevronGeometry.dispose();
-        shards.forEach((shard) => {
-          (shard.material as InstanceType<typeof THREE.MeshBasicMaterial>).dispose();
-        });
+        edgeGeometry.dispose();
+        fieldGeometry.dispose();
+        fieldMaterial.dispose();
+        disposables.forEach((d) => d.dispose());
         renderer.dispose();
       };
     })();
