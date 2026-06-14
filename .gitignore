@@ -13,3 +13,7 @@ tsconfig.tsbuildinfo
 .claude/worktrees/
 skills-lock.json
 node_modules
+
+# Supabase CLI local artifacts
+supabase/.branches/
+supabase/.temp/
