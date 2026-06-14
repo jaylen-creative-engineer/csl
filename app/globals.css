@@ -579,14 +579,14 @@ body > main > div.csl-page {
 
 .csl-kpi-strip {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
   gap: 0.8rem;
 }
 
 .csl-kpi {
   position: relative;
   overflow: hidden;
-  min-height: 7rem;
+  min-height: 7.6rem;
   padding: 1rem;
   border-radius: 0.9rem;
 }
@@ -623,11 +623,15 @@ body > main > div.csl-page {
 }
 
 .csl-kpi__note {
+  position: relative;
+  z-index: 1;
+  max-width: calc(100% - 3.5rem);
   margin-top: 0.55rem;
   color: currentColor;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.67rem;
   letter-spacing: 0.08em;
+  line-height: 1.25;
 }
 
 .csl-section-row {
