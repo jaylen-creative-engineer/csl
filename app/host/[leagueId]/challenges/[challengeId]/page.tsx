@@ -21,7 +21,8 @@ interface Submission {
   id: string;
   participantId: string;
   status: string;
-  createdAt: string;
+  createdAt?: string;
+  submittedAt?: string;
   artifact?: { url: string };
 }
 
@@ -39,6 +40,13 @@ async function getSubmissions(challengeId: string): Promise<Submission[]> {
   if (!res.ok) return [];
   const data = await res.json() as { ok: boolean; data?: Submission[] };
   return data.data ?? [];
+}
+
+function formatSubmissionDate(submission: Submission): string {
+  const value = submission.submittedAt ?? submission.createdAt;
+  if (!value) return "—";
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
 }
 
 type Props = { params: Promise<{ leagueId: string; challengeId: string }> };
@@ -180,7 +188,7 @@ export default async function ChallengeSprintPage({ params }: Props) {
                       </td>
                       <td className="py-4 px-4 text-[var(--foreground)]">{s.status}</td>
                       <td className="py-4 px-4 text-[var(--foreground)]">
-                        {new Date(s.createdAt).toLocaleDateString()}
+                        {formatSubmissionDate(s)}
                       </td>
                       <td className="py-4 px-4">
                         {s.artifact?.url ? (

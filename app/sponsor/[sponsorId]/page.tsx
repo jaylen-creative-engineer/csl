@@ -36,6 +36,11 @@ async function getSponsorSummary(sponsorId: string): Promise<SponsorSummary | nu
   return data.data ?? null;
 }
 
+function formatDate(value: string): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? "—" : date.toLocaleDateString();
+}
+
 type Props = { params: Promise<{ sponsorId: string }> };
 
 export default async function SponsorDashboardPage({ params }: Props) {
@@ -61,101 +66,132 @@ export default async function SponsorDashboardPage({ params }: Props) {
 
   return (
     <main className="min-h-screen px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Link */}
-        <Link 
-          href="/sponsor"
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Sponsor Portal
-        </Link>
+      <div className="csl-page">
+        <div className="csl-shell csl-shell--with-side">
+          <aside className="csl-rail" aria-label="Sponsor profile">
+            <Link href="/sponsor" className="csl-arrow">← Portal</Link>
+            <span className="csl-rail__eyebrow">Sponsor // {sponsor.organization}</span>
+            <div className="csl-rail__title">{sponsor.name}</div>
+            <p className="csl-rail__copy">{sponsor.contactEmail}</p>
+            <nav className="csl-rail__nav" aria-label="Sponsor data">
+              <span>ID <strong>{sponsor.id}</strong></span>
+              <span>Challenges <strong>{summary?.challenges ?? 0}</strong></span>
+              <span>Top work <strong>{summary?.topSubmissions.length ?? 0}</strong></span>
+            </nav>
+            <div className="csl-rail__glyph" aria-hidden="true" />
+          </aside>
 
-        {/* Header */}
-        <header className="flex flex-wrap items-start justify-between gap-4 mb-12">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-              {sponsor.name}
-            </h1>
-            <p className="mt-2 text-[var(--muted-foreground)]">
-              {sponsor.organization} &bull; {sponsor.contactEmail}
-            </p>
-          </div>
-          <Link
-            href={`/sponsor/${sponsorId}/attach`}
-            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
-          >
-            + Attach Brief to Challenge
-          </Link>
-        </header>
-
-        {summary && (
-          <>
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-              <div className="p-6 bg-[var(--secondary)] text-center">
-                <div className="text-3xl font-bold text-[var(--foreground)]">{summary.challenges}</div>
-                <div className="text-sm text-[var(--muted-foreground)] mt-1">Challenges Attached</div>
+          <div className="csl-main-stack">
+            <header className="flex flex-wrap items-start justify-between gap-4 mb-12">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
+                  {sponsor.name}
+                </h1>
+                <p className="mt-2 text-[var(--muted-foreground)]">
+                  {sponsor.organization} &bull; {sponsor.contactEmail}
+                </p>
               </div>
-              <div className="p-6 bg-[var(--secondary)] text-center">
-                <div className="text-3xl font-bold text-[var(--success)]">{summary.topSubmissions.length}</div>
-                <div className="text-sm text-[var(--muted-foreground)] mt-1">Top Submissions</div>
-              </div>
-            </div>
+              <Link href={`/sponsor/${sponsorId}/attach`} className="csl-action">
+                Attach brief
+              </Link>
+            </header>
 
-            {/* Top Submissions */}
-            <section>
-              <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-                Top Submissions by Challenge
-              </h2>
-              
-              {summary.topSubmissions.length === 0 ? (
-                <div className="p-8 bg-[var(--secondary)]">
-                  <p className="text-[var(--muted-foreground)]">
-                    No scored submissions yet across your challenges.
-                  </p>
+            {summary && (
+              <>
+                <div className="csl-kpi-strip" aria-label="Sponsor metrics">
+                  <div className="csl-kpi csl-kpi--yellow">
+                    <div className="csl-kpi__label">Attached</div>
+                    <div className="csl-kpi__value">{summary.challenges}</div>
+                    <div className="csl-kpi__note">challenge briefs</div>
+                  </div>
+                  <div className="csl-kpi csl-kpi--blue">
+                    <div className="csl-kpi__label">Top work</div>
+                    <div className="csl-kpi__value">{summary.topSubmissions.length}</div>
+                    <div className="csl-kpi__note">ranked entries</div>
+                  </div>
+                  <div className="csl-kpi csl-kpi--red">
+                    <div className="csl-kpi__label">Outcomes</div>
+                    <div className="csl-kpi__value">—</div>
+                    <div className="csl-kpi__note">recorded later</div>
+                  </div>
+                  <div className="csl-kpi csl-kpi--yellow">
+                    <div className="csl-kpi__label">Signal</div>
+                    <div className="csl-kpi__value">LIVE</div>
+                    <div className="csl-kpi__note">talent board</div>
+                  </div>
                 </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b-2 border-[var(--border)]">
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Submission ID</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Challenge</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Participant</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Top Score</th>
-                        <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Submitted</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+
+                <section>
+                  <div className="csl-section-row">
+                    <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
+                      Top submissions
+                    </h2>
+                    <span className="csl-mini">Sponsor signal feed</span>
+                  </div>
+
+                  {summary.topSubmissions.length === 0 ? (
+                    <div className="csl-panel csl-panel--hero">
+                      <div className="csl-panel__title">No scored work yet.</div>
+                      <p className="csl-panel__copy">
+                        Top submissions will appear once sponsored challenges are scored.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="csl-card-grid">
                       {summary.topSubmissions.map((s) => {
                         const topScore = s.scores?.[0]?.totalScore;
                         return (
-                          <tr key={s.id} className="border-b border-[var(--border-soft)]">
-                            <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
-                              {s.id.slice(0, 10)}...
-                            </td>
-                            <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
-                              {s.challengeId.slice(0, 10)}...
-                            </td>
-                            <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
-                              {s.participantId.slice(0, 10)}...
-                            </td>
-                            <td className="py-4 px-4 font-semibold text-[var(--foreground)]">
-                              {topScore !== undefined ? topScore.toFixed(1) : "—"}
-                            </td>
-                            <td className="py-4 px-4 text-[var(--foreground)]">
-                              {new Date(s.submittedAt).toLocaleDateString()}
-                            </td>
-                          </tr>
+                          <article key={s.id} className="csl-card">
+                            <span className="csl-card__block csl-card__block--blue" aria-hidden="true" />
+                            <div className="csl-card__top">
+                              <div>
+                                <h3 className="csl-card__title">{s.id}</h3>
+                                <p className="csl-card__meta">Challenge {s.challengeId}</p>
+                              </div>
+                              <span className="csl-pill csl-pill--active">top</span>
+                            </div>
+                            <div className="csl-card__stats">
+                              <div className="csl-card__stat">
+                                <strong>{topScore !== undefined ? topScore.toFixed(1) : "—"}</strong>
+                                <span>score</span>
+                              </div>
+                              <div className="csl-card__stat">
+                                <strong>{formatDate(s.submittedAt)}</strong>
+                                <span>submitted</span>
+                              </div>
+                            </div>
+                            <div className="csl-card__footer">
+                              <span className="csl-mini">Participant {s.participantId}</span>
+                              <span className="csl-arrow">Signal →</span>
+                            </div>
+                          </article>
                         );
                       })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </section>
-          </>
-        )}
+                    </div>
+                  )}
+                </section>
+              </>
+            )}
+          </div>
+
+          <aside className="csl-side" aria-label="Sponsor activity">
+            <div>
+              <div className="csl-side__title">Outcome stack</div>
+              <p className="csl-rail__copy">A compact readout for active briefs and talent signals.</p>
+            </div>
+            <div className="csl-side__item">
+              <strong>Next action</strong>
+              <span>Attach a new sponsor brief to a challenge sprint.</span>
+            </div>
+            <div className="csl-side__item">
+              <strong>Talent pipeline</strong>
+              <span>Top submissions are grouped by challenge and score.</span>
+            </div>
+            <Link href={`/sponsor/${sponsorId}/attach`} className="csl-action csl-action--ghost">
+              Attach brief
+            </Link>
+          </aside>
+        </div>
       </div>
     </main>
   );

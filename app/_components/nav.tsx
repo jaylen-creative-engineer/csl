@@ -32,30 +32,20 @@ export function Nav() {
   }, []);
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center gap-6 px-6 py-4 bg-[var(--background)] border-b border-[var(--border-soft)]">
-      {/* Logo */}
-      <Link
-        href="/"
-        className="text-lg font-bold tracking-tight text-[var(--foreground)] hover:opacity-70 transition-opacity"
-      >
-        CSL
+    <nav className="csl-nav" aria-label="Primary">
+      <Link href="/" className="csl-nav__brand">
+        CSL<span className="csl-nav__mark">®</span>
       </Link>
 
-      {/* Nav Links */}
-      <div className="flex items-center gap-1">
+      <div className="csl-nav__links">
         {navLinks.map((link) => {
           const isActive = pathname.startsWith(link.href);
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`
-                px-4 py-2 text-sm font-medium transition-colors rounded-full
-                ${isActive 
-                  ? "bg-[var(--primary)] text-[var(--primary-foreground)]" 
-                  : "text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--secondary)]"
-                }
-              `}
+              className={`csl-nav__link${isActive ? " is-active" : ""}`}
+              aria-current={isActive ? "page" : undefined}
             >
               {link.label}
             </Link>
@@ -63,19 +53,15 @@ export function Nav() {
         })}
       </div>
 
-      {/* User Status */}
-      <div className="ml-auto">
+      <div className="csl-nav__user">
         {loading ? (
-          <span className="text-sm text-[var(--muted-foreground)]">Loading...</span>
+          <span className="csl-nav__status">Syncing...</span>
         ) : me ? (
-          <span className="text-sm text-[var(--muted-foreground)]">
+          <span className="csl-nav__status">
             {me.participant.handle}
           </span>
         ) : (
-          <Link
-            href="/login"
-            className="inline-flex items-center px-4 py-2 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
-          >
+          <Link href="/login" className="csl-nav__cta">
             Sign in
           </Link>
         )}

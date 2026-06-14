@@ -7,6 +7,19 @@ interface LeaderboardEntry {
   submissionId: string;
 }
 
+interface Score {
+  totalScore?: number;
+}
+
+interface LeaderboardApiRow {
+  id?: string;
+  rank?: number;
+  participantId?: string;
+  score?: number;
+  submissionId?: string;
+  scores?: Score[];
+}
+
 interface Challenge {
   id: string;
   title: string;
@@ -25,8 +38,31 @@ async function getLeaderboard(challengeId: string): Promise<LeaderboardEntry[]> 
   const baseUrl = process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000";
   const res = await fetch(`${baseUrl}/api/v1/challenges/${challengeId}/leaderboard`, { cache: "no-store" });
   if (!res.ok) return [];
-  const data = await res.json() as { ok: boolean; data?: LeaderboardEntry[] };
-  return data.data ?? [];
+  const data = await res.json() as { ok: boolean; data?: LeaderboardApiRow[] };
+  const rows = data.data ?? [];
+
+  return rows
+    .map((row) => {
+      const score =
+        typeof row.score === "number"
+          ? row.score
+          : row.scores?.reduce<number | null>((best, current) => {
+              if (typeof current.totalScore !== "number") return best;
+              return best === null ? current.totalScore : Math.max(best, current.totalScore);
+            }, null) ?? null;
+
+      if (score === null) return null;
+
+      return {
+        rank: 0,
+        participantId: row.participantId ?? "unknown",
+        score,
+        submissionId: row.submissionId ?? row.id ?? "unknown",
+      };
+    })
+    .filter((entry): entry is Omit<LeaderboardEntry, "rank"> & { rank: number } => entry !== null)
+    .sort((a, b) => b.score - a.score)
+    .map((entry, index) => ({ ...entry, rank: index + 1 }));
 }
 
 type Props = { params: Promise<{ challengeId: string }> };
@@ -52,6 +88,7 @@ export default async function LeaderboardPage({ params }: Props) {
   }
 
   const getRankDisplay = (rank: number) => {
+    if (!Number.isFinite(rank) || rank < 1) return "—";
     if (rank === 1) return "1st";
     if (rank === 2) return "2nd";
     if (rank === 3) return "3rd";
