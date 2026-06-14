@@ -1,13 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode
+} from "react";
 import { HeroScene } from "./hero-scene.js";
 import "./landing.css";
 
 const PRELOADER_WORDS = ["COMPETE", "CREATE", "SCORE", "SHOWCASE"];
 const PRELOADER_MS = 1600;
 const HALFTONE_DOTS = 36;
+const VISITED_KEY = "csl-booted";
+
+/* Run before paint on the client (avoids a boot flash for return visits),
+   while falling back to a no-op on the server. */
+const useIsoLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 const MENU_LINKS = [
   { index: "01", label: "Compete", href: "/learner" },
@@ -115,6 +127,7 @@ const STATS = [
 export function LandingPage() {
   const [progress, setProgress] = useState(0);
   const [ready, setReady] = useState(false);
+  const [skipBoot, setSkipBoot] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const progressBarRef = useRef<HTMLDivElement | null>(null);
 
@@ -124,13 +137,38 @@ export function LandingPage() {
     return () => document.documentElement.classList.remove("csl-dark");
   }, []);
 
-  /* Boot counter */
-  useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  /* Boot counter — runs only on the very first visit */
+  useIsoLayoutEffect(() => {
+    let visited = false;
+    try {
+      visited = window.localStorage.getItem(VISITED_KEY) === "1";
+    } catch {
+      /* storage blocked — treat as a fresh visit */
+    }
+    const markVisited = () => {
+      try {
+        window.localStorage.setItem(VISITED_KEY, "1");
+      } catch {
+        /* ignore */
+      }
+    };
+
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    if (visited) {
+      setSkipBoot(true);
       setProgress(100);
       setReady(true);
       return;
     }
+
+    if (reduced) {
+      setProgress(100);
+      setReady(true);
+      markVisited();
+      return;
+    }
+
     let rafId = 0;
     const start = performance.now();
     const tick = (now: number) => {
@@ -140,6 +178,7 @@ export function LandingPage() {
       if (t < 1) {
         rafId = requestAnimationFrame(tick);
       } else {
+        markVisited();
         window.setTimeout(() => setReady(true), 220);
       }
     };
@@ -200,8 +239,11 @@ export function LandingPage() {
 
   return (
     <div className={`lp${ready ? " ready" : ""}`}>
-      {/* ── Boot sheet ─────────────────────────────── */}
-      <div className={`lp-boot${ready ? " done" : ""}`} aria-hidden={ready}>
+      {/* ── Boot sheet (first visit only) ──────────── */}
+      <div
+        className={`lp-boot${ready ? " done" : ""}${skipBoot ? " skip" : ""}`}
+        aria-hidden={ready}
+      >
         <span className="lp-cross lp-cross--tl" />
         <span className="lp-cross lp-cross--tr" />
         <span className="lp-cross lp-cross--bl" />
@@ -244,17 +286,17 @@ export function LandingPage() {
       <div className="lp-halftone" aria-hidden="true" />
       <HeroScene />
 
-      <div className="lp-frame" aria-hidden="true">
-        <span className="lp-cross lp-cross--tl" />
-        <span className="lp-cross lp-cross--tr" />
-        <span className="lp-cross lp-cross--bl" />
-        <span className="lp-cross lp-cross--br" />
-        <span className="lp-frame-coord lp-frame-coord--l">
-          40°49.281′N · 73°55.764′W
+      <div className="lp-hud" aria-hidden="true">
+        <span className="lp-hud-corner lp-hud-corner--tl" />
+        <span className="lp-hud-corner lp-hud-corner--tr" />
+        <span className="lp-hud-corner lp-hud-corner--bl" />
+        <span className="lp-hud-corner lp-hud-corner--br" />
+        <span className="lp-hud-tag lp-hud-tag--tl">
+          <i className="lp-hud-led" />P1 · Season 01
         </span>
-        <span className="lp-frame-coord lp-frame-coord--r">
-          CSL · SEASON 01 · FIG.01
-        </span>
+        <span className="lp-hud-tag lp-hud-tag--tr">Sprint 72:00:00</span>
+        <span className="lp-hud-tag lp-hud-tag--bl">40°49.281′N · 73°55.764′W</span>
+        <span className="lp-hud-tag lp-hud-tag--br">CSL · FIG.01</span>
       </div>
 
       <div className="lp-progress" aria-hidden="true">
@@ -347,13 +389,20 @@ export function LandingPage() {
                 real briefs, get scored in public, and build a portfolio that
                 proves it.
               </p>
-              <div className="lp-hero-ctas">
-                <Link href="/learner" className="lp-btn">
-                  Enter the league
-                </Link>
-                <a href="#compete" className="lp-btn ghost">
-                  How it works
-                </a>
+              <div className="lp-hero-cta-stack">
+                <div className="lp-hero-ctas">
+                  <Link href="/learner" className="lp-btn">
+                    <span className="lp-btn-glyph" aria-hidden="true">▶</span>
+                    Enter the league
+                  </Link>
+                  <a href="#compete" className="lp-btn ghost">
+                    How it works
+                  </a>
+                </div>
+                <p className="lp-press" aria-hidden="true">
+                  <span className="lp-press-blink">●</span> Insert coin — Season 01
+                  now enrolling
+                </p>
               </div>
             </div>
           </div>

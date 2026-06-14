@@ -5,14 +5,16 @@ import { useEffect, useRef } from "react";
 /**
  * Full-viewport three.js backdrop for the landing page.
  *
- * A slow, mechanical assembly of interlocking chevron blocks — the
- * Foreigner "Agent Provocateur" geometry in the primary triad, framed
- * with bone edge linework and floating over a halftone dot field for the
- * Nike "Obsess The Creative" technical feel. The cluster rotates as you
- * scroll and parallaxes with the cursor.
+ * A nostalgia-futuristic isometric stage: an orthographic (parallel-
+ * projection) camera looks down onto an endlessly scrolling neon grid
+ * floor — the classic retro-game vanishing field — with flat-shaded
+ * "flat 3D" blocks rising off it: the Foreigner "Agent Provocateur"
+ * arrows and cube in the primary triad, edged in bone vector linework.
  *
- * three.js is imported lazily inside the effect so it never touches the
- * server bundle and only loads on the client.
+ * Orthographic projection (no perspective foreshortening) is what makes
+ * it read instantly as an isometric video-game scene.
+ *
+ * three.js is imported lazily so it never touches the server bundle.
  */
 export function HeroScene() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -48,144 +50,155 @@ export function HeroScene() {
       renderer.setClearColor(0x000000, 0);
 
       const scene = new THREE.Scene();
-      scene.fog = new THREE.FogExp2(0x0a0a0b, 0.05);
+      scene.fog = new THREE.FogExp2(0x0a0a0b, 0.028);
 
-      const camera = new THREE.PerspectiveCamera(
-        52,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        140
+      /* ── Isometric orthographic camera ─────────────── */
+      const FRUSTUM = 9.5;
+      let aspect = window.innerWidth / window.innerHeight;
+      const camera = new THREE.OrthographicCamera(
+        -FRUSTUM * aspect,
+        FRUSTUM * aspect,
+        FRUSTUM,
+        -FRUSTUM,
+        -100,
+        200
       );
-      camera.position.set(0, 0, 12);
+      const isoDir = new THREE.Vector3(1, 0.82, 1).normalize();
+      camera.position.copy(isoDir).multiplyScalar(48);
+      const lookTarget = new THREE.Vector3(0, 0.4, 0);
+      camera.lookAt(lookTarget);
+
+      /* ── Lights — flat-shaded iso block shading ────── */
+      scene.add(new THREE.AmbientLight(0xffffff, 0.62));
+      const key = new THREE.DirectionalLight(0xffffff, 1.15);
+      key.position.set(6, 12, 4);
+      scene.add(key);
+      const fill = new THREE.DirectionalLight(0x6f7bff, 0.35);
+      fill.position.set(-8, 4, -6);
+      scene.add(fill);
+
+      const world = new THREE.Group();
+      scene.add(world);
 
       const RED = new THREE.Color("#ff3b2f");
       const BLUE = new THREE.Color("#2f6bff");
       const YELLOW = new THREE.Color("#ffd11a");
       const BONE = new THREE.Color("#f4f3ef");
 
-      /* ── Chevron geometry ──────────────────────────── */
-      const shape = new THREE.Shape();
-      shape.moveTo(-0.62, 0.5);
-      shape.lineTo(0.02, 0.5);
-      shape.lineTo(0.62, 0);
-      shape.lineTo(0.02, -0.5);
-      shape.lineTo(-0.62, -0.5);
-      shape.lineTo(-0.12, 0);
-      shape.closePath();
+      /* ── Scrolling neon grid floor ─────────────────── */
+      const CELL = 2.2;
+      const HALF = 28; // grid extends ±(HALF*CELL); fog hides the far edge
+      const lineCoords: number[] = [];
+      for (let i = -HALF; i <= HALF; i++) {
+        const d = i * CELL;
+        const span = HALF * CELL;
+        lineCoords.push(-span, 0, d, span, 0, d); // parallel to X
+        lineCoords.push(d, 0, -span, d, 0, span); // parallel to Z
+      }
+      const gridGeometry = new THREE.BufferGeometry();
+      gridGeometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute(lineCoords, 3)
+      );
+      const gridMaterial = new THREE.LineBasicMaterial({
+        color: BONE,
+        transparent: true,
+        opacity: 0.16
+      });
+      const grid = new THREE.LineSegments(gridGeometry, gridMaterial);
+      grid.position.y = -2.2;
+      world.add(grid);
 
-      const chevronGeometry = new THREE.ExtrudeGeometry(shape, {
-        depth: 0.22,
+      /* ── Flat-3D blocks (Foreigner) ────────────────── */
+      const arrowShape = new THREE.Shape();
+      arrowShape.moveTo(-0.62, 0.5);
+      arrowShape.lineTo(0.02, 0.5);
+      arrowShape.lineTo(0.62, 0);
+      arrowShape.lineTo(0.02, -0.5);
+      arrowShape.lineTo(-0.62, -0.5);
+      arrowShape.lineTo(-0.12, 0);
+      arrowShape.closePath();
+      const arrowGeometry = new THREE.ExtrudeGeometry(arrowShape, {
+        depth: 1,
         bevelEnabled: false
       });
-      chevronGeometry.center();
-      const edgeGeometry = new THREE.EdgesGeometry(chevronGeometry);
+      arrowGeometry.center();
+      arrowGeometry.rotateX(-Math.PI / 2); // lay flat: footprint on XZ, height on Y
+      const arrowEdges = new THREE.EdgesGeometry(arrowGeometry);
 
-      type ChevronSpec = {
+      const boxGeometry = new THREE.BoxGeometry(1, 1, 1);
+      const boxEdges = new THREE.EdgesGeometry(boxGeometry);
+
+      type Kind = "arrow" | "box";
+      type BlockSpec = {
+        kind: Kind;
         color: InstanceType<typeof THREE.Color>;
-        pos: [number, number, number];
-        scale: number;
-        rotZ: number;
-        opacity: number;
-        spin: number;
-        drift: number;
-        outline: boolean;
+        gx: number;
+        gz: number;
+        foot: number;
+        height: number;
+        rotY: number;
+        bob: number;
+        phase: number;
       };
 
-      const specs: ChevronSpec[] = [
-        { color: BONE, pos: [0, 0.1, 0], scale: 3.4, rotZ: 0, opacity: 0.08, spin: 0.04, drift: 0.35, outline: true },
-        { color: BLUE, pos: [-3.6, 1.5, -1.5], scale: 2.1, rotZ: 0.05, opacity: 0.85, spin: 0.05, drift: 0.5, outline: false },
-        { color: RED, pos: [-0.4, -1.1, 0.6], scale: 2.7, rotZ: -0.03, opacity: 0.9, spin: -0.04, drift: 0.4, outline: false },
-        { color: YELLOW, pos: [3.4, 1.0, -0.8], scale: 1.9, rotZ: 0.08, opacity: 0.9, spin: 0.06, drift: 0.55, outline: false },
-        { color: BONE, pos: [4.9, -1.8, -3], scale: 1.3, rotZ: -0.1, opacity: 0.16, spin: 0.09, drift: 0.7, outline: true },
-        { color: BONE, pos: [-4.8, -1.6, -2.4], scale: 1.1, rotZ: 0.12, opacity: 0.16, spin: -0.08, drift: 0.65, outline: true }
+      const specs: BlockSpec[] = [
+        { kind: "box", color: BLUE, gx: -3.1, gz: 1.6, foot: 1.7, height: 1.7, rotY: 0, bob: 0.18, phase: 0 },
+        { kind: "arrow", color: RED, gx: -0.6, gz: 0.2, foot: 3.2, height: 1.3, rotY: -Math.PI / 8, bob: 0.26, phase: 1.1 },
+        { kind: "arrow", color: YELLOW, gx: 2.7, gz: -1.2, foot: 2.4, height: 1.1, rotY: -Math.PI / 8, bob: 0.3, phase: 2.2 },
+        { kind: "arrow", color: BONE, gx: 4.6, gz: 2.4, foot: 1.4, height: 0.7, rotY: Math.PI / 6, bob: 0.34, phase: 3.0 },
+        { kind: "arrow", color: BONE, gx: -4.4, gz: -2.2, foot: 1.2, height: 0.6, rotY: Math.PI / 5, bob: 0.4, phase: 4.1 }
       ];
 
-      const group = new THREE.Group();
-      scene.add(group);
-
       const disposables: Array<{ dispose: () => void }> = [];
-      const animated: Array<{
+      const blocks: Array<{
         obj: InstanceType<typeof THREE.Object3D>;
         baseY: number;
-        spin: number;
-        drift: number;
+        bob: number;
         phase: number;
       }> = [];
 
-      specs.forEach((spec, i) => {
-        const node = new THREE.Group();
-        node.position.set(...spec.pos);
-        node.scale.setScalar(spec.scale);
-        node.rotation.z = spec.rotZ;
+      specs.forEach((spec) => {
+        const isBone = spec.color === BONE;
+        const geo = spec.kind === "box" ? boxGeometry : arrowGeometry;
+        const edges = spec.kind === "box" ? boxEdges : arrowEdges;
 
-        if (spec.outline) {
+        const node = new THREE.Group();
+        node.position.set(spec.gx * CELL, 0, spec.gz * CELL);
+        node.rotation.y = spec.rotY;
+        node.scale.set(spec.foot, spec.height, spec.foot);
+
+        if (isBone) {
+          // Distant wireframe ghosts — pure vector outline.
           const lineMat = new THREE.LineBasicMaterial({
-            color: spec.color,
+            color: BONE,
             transparent: true,
-            opacity: spec.opacity * 4
+            opacity: 0.4
           });
-          const line = new THREE.LineSegments(edgeGeometry, lineMat);
-          node.add(line);
+          node.add(new THREE.LineSegments(edges, lineMat));
           disposables.push(lineMat);
         } else {
-          const faceMat = new THREE.MeshBasicMaterial({
+          const faceMat = new THREE.MeshStandardMaterial({
             color: spec.color,
-            transparent: true,
-            opacity: spec.opacity,
-            side: THREE.DoubleSide
+            roughness: 1,
+            metalness: 0,
+            flatShading: true
           });
-          const mesh = new THREE.Mesh(chevronGeometry, faceMat);
-          node.add(mesh);
+          node.add(new THREE.Mesh(geo, faceMat));
           const edgeMat = new THREE.LineBasicMaterial({
             color: BONE,
             transparent: true,
-            opacity: 0.25
+            opacity: 0.55
           });
-          node.add(new THREE.LineSegments(edgeGeometry, edgeMat));
+          node.add(new THREE.LineSegments(edges, edgeMat));
           disposables.push(faceMat, edgeMat);
         }
 
-        group.add(node);
-        animated.push({
-          obj: node,
-          baseY: spec.pos[1],
-          spin: spec.spin,
-          drift: spec.drift,
-          phase: i * 1.5
-        });
+        const baseY = spec.height * 0.5 + 0.05;
+        node.position.y = baseY;
+        world.add(node);
+        blocks.push({ obj: node, baseY, bob: spec.bob, phase: spec.phase });
       });
-
-      /* ── Halftone dot field ────────────────────────── */
-      const COLS = 46;
-      const ROWS = 26;
-      const GAP = 0.7;
-      const fieldCount = COLS * ROWS;
-      const fieldPositions = new Float32Array(fieldCount * 3);
-      let p = 0;
-      for (let x = 0; x < COLS; x++) {
-        for (let y = 0; y < ROWS; y++) {
-          fieldPositions[p++] = (x - (COLS - 1) / 2) * GAP;
-          fieldPositions[p++] = (y - (ROWS - 1) / 2) * GAP;
-          fieldPositions[p++] = 0;
-        }
-      }
-      const fieldGeometry = new THREE.BufferGeometry();
-      fieldGeometry.setAttribute(
-        "position",
-        new THREE.BufferAttribute(fieldPositions, 3)
-      );
-      const fieldMaterial = new THREE.PointsMaterial({
-        color: BONE,
-        size: 0.035,
-        transparent: true,
-        opacity: 0.32,
-        depthWrite: false,
-        sizeAttenuation: true
-      });
-      const field = new THREE.Points(fieldGeometry, fieldMaterial);
-      field.position.z = -7;
-      scene.add(field);
-      const fieldBaseZ = fieldPositions.slice();
 
       /* ── State & handlers ──────────────────────────── */
       const mouse = { x: 0, y: 0 };
@@ -200,9 +213,13 @@ export function HeroScene() {
       const resize = () => {
         const w = window.innerWidth;
         const h = window.innerHeight;
+        aspect = w / h;
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.setSize(w, h, false);
-        camera.aspect = w / h;
+        camera.left = -FRUSTUM * aspect;
+        camera.right = FRUSTUM * aspect;
+        camera.top = FRUSTUM;
+        camera.bottom = -FRUSTUM;
         camera.updateProjectionMatrix();
         if (prefersReduced) renderer.render(scene, camera);
       };
@@ -216,50 +233,34 @@ export function HeroScene() {
       window.addEventListener("resize", resize);
 
       if (prefersReduced) {
-        group.rotation.set(-0.15, -0.35, 0);
         renderer.render(scene, camera);
       } else {
         window.addEventListener("pointermove", onPointerMove, { passive: true });
 
         const clock = new THREE.Clock();
-        const fieldAttr = fieldGeometry.getAttribute("position") as InstanceType<
-          typeof THREE.BufferAttribute
-        >;
-
         const animate = () => {
           rafId = requestAnimationFrame(animate);
           const t = clock.getElapsedTime();
           const prog = scrollProgress();
 
-          smoothed.x += (mouse.x - smoothed.x) * 0.045;
-          smoothed.y += (mouse.y - smoothed.y) * 0.045;
+          smoothed.x += (mouse.x - smoothed.x) * 0.05;
+          smoothed.y += (mouse.y - smoothed.y) * 0.05;
           smoothed.scroll += (prog - smoothed.scroll) * 0.06;
 
-          for (const a of animated) {
-            a.obj.rotation.z += a.spin * 0.01;
-            a.obj.rotation.y = Math.sin(t * 0.3 + a.phase) * 0.5;
-            a.obj.position.y =
-              a.baseY + Math.sin(t * 0.45 + a.phase) * a.drift;
+          // Endless approach: scroll the floor toward the camera, wrapped by
+          // one cell so the lattice looks infinite.
+          grid.position.z = (t * 1.1) % CELL;
+
+          for (const b of blocks) {
+            b.obj.position.y = b.baseY + Math.sin(t * 0.7 + b.phase) * b.bob;
+            b.obj.rotation.y += 0.0015;
           }
 
-          group.rotation.x = -0.12 + smoothed.y * 0.18 + smoothed.scroll * 0.5;
-          group.rotation.y = smoothed.x * 0.4 - smoothed.scroll * 0.8;
-          group.position.y = smoothed.scroll * 1.6;
-
-          // Halftone field: a slow travelling wave on Z.
-          for (let i = 0; i < fieldCount; i++) {
-            const bx = fieldBaseZ[i * 3];
-            const by = fieldBaseZ[i * 3 + 1];
-            fieldAttr.array[i * 3 + 2] =
-              Math.sin(t * 0.5 + bx * 0.3 + by * 0.25) * 0.5;
-          }
-          fieldAttr.needsUpdate = true;
-          field.rotation.z = t * 0.01;
-
-          camera.position.x = smoothed.x * 0.8;
-          camera.position.y = -smoothed.y * 0.5;
-          camera.position.z = 12 - smoothed.scroll * 2.2;
-          camera.lookAt(0, group.position.y * 0.4, 0);
+          // Gentle parallax + a slow scroll-driven turn; kept small so the
+          // isometric read never breaks.
+          world.rotation.y = smoothed.x * 0.22 + smoothed.scroll * 0.5;
+          world.rotation.x = smoothed.y * 0.08;
+          world.position.y = -smoothed.scroll * 3.2;
 
           renderer.render(scene, camera);
         };
@@ -270,10 +271,12 @@ export function HeroScene() {
         cancelAnimationFrame(rafId);
         window.removeEventListener("resize", resize);
         window.removeEventListener("pointermove", onPointerMove);
-        chevronGeometry.dispose();
-        edgeGeometry.dispose();
-        fieldGeometry.dispose();
-        fieldMaterial.dispose();
+        gridGeometry.dispose();
+        gridMaterial.dispose();
+        arrowGeometry.dispose();
+        arrowEdges.dispose();
+        boxGeometry.dispose();
+        boxEdges.dispose();
         disposables.forEach((d) => d.dispose());
         renderer.dispose();
       };

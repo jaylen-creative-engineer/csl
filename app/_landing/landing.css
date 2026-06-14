@@ -114,6 +114,11 @@
   pointer-events: none;
 }
 
+/* Return visits: vanish instantly, no slide */
+.lp-boot.skip {
+  transition: none;
+}
+
 .lp-boot-row {
   display: flex;
   align-items: flex-start;
@@ -208,9 +213,9 @@
   color: var(--csl-yellow);
 }
 
-/* ── Persistent blueprint frame ─────────────────────── */
+/* ── Game HUD overlay ───────────────────────────────── */
 
-.lp-frame {
+.lp-hud {
   position: fixed;
   inset: 0;
   z-index: 3;
@@ -219,39 +224,75 @@
   transition: opacity 1s var(--csl-ease) 0.6s;
 }
 
-.lp.ready .lp-frame {
-  opacity: 1;
-}
+.lp.ready .lp-hud { opacity: 1; }
 
-.lp-frame .lp-cross::before,
-.lp-frame .lp-cross::after {
-  background: var(--csl-line);
-}
-
-.lp-frame-coord {
+.lp-hud-corner {
   position: absolute;
-  top: 50%;
+  width: 22px;
+  height: 22px;
+}
+
+.lp-hud-corner--tl {
+  top: clamp(0.9rem, 2.4vw, 1.7rem);
+  left: clamp(0.9rem, 2.4vw, 1.7rem);
+  border-top: 2px solid var(--csl-line);
+  border-left: 2px solid var(--csl-line);
+}
+
+.lp-hud-corner--tr {
+  top: clamp(0.9rem, 2.4vw, 1.7rem);
+  right: clamp(0.9rem, 2.4vw, 1.7rem);
+  border-top: 2px solid var(--csl-line);
+  border-right: 2px solid var(--csl-line);
+}
+
+.lp-hud-corner--bl {
+  bottom: clamp(0.9rem, 2.4vw, 1.7rem);
+  left: clamp(0.9rem, 2.4vw, 1.7rem);
+  border-bottom: 2px solid var(--csl-line);
+  border-left: 2px solid var(--csl-line);
+}
+
+.lp-hud-corner--br {
+  bottom: clamp(0.9rem, 2.4vw, 1.7rem);
+  right: clamp(0.9rem, 2.4vw, 1.7rem);
+  border-bottom: 2px solid var(--csl-line);
+  border-right: 2px solid var(--csl-line);
+}
+
+.lp-hud-tag {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-family: var(--font-mono), ui-monospace, monospace;
   font-size: 0.6rem;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
   color: var(--csl-faint);
   white-space: nowrap;
-  writing-mode: vertical-rl;
 }
 
-.lp-frame-coord--l {
-  left: clamp(0.6rem, 2vw, 1.3rem);
-  transform: translateY(-50%) rotate(180deg);
+.lp-hud-tag--tl { top: clamp(1.2rem, 2.7vw, 2.05rem); left: clamp(2.6rem, 4.5vw, 3.6rem); }
+.lp-hud-tag--tr { top: clamp(1.2rem, 2.7vw, 2.05rem); right: clamp(2.6rem, 4.5vw, 3.6rem); }
+.lp-hud-tag--bl { bottom: clamp(1.2rem, 2.7vw, 2.05rem); left: clamp(2.6rem, 4.5vw, 3.6rem); }
+.lp-hud-tag--br { bottom: clamp(1.2rem, 2.7vw, 2.05rem); right: clamp(2.6rem, 4.5vw, 3.6rem); }
+
+.lp-hud-led {
+  width: 6px;
+  height: 6px;
+  background: var(--csl-yellow);
+  box-shadow: 0 0 8px var(--csl-yellow);
+  animation: lp-led 1.4s steps(1, end) infinite;
 }
 
-.lp-frame-coord--r {
-  right: clamp(0.6rem, 2vw, 1.3rem);
-  transform: translateY(-50%);
+@keyframes lp-led {
+  0%, 60% { opacity: 1; }
+  61%, 100% { opacity: 0.25; }
 }
 
-@media (max-width: 920px) {
-  .lp-frame-coord { display: none; }
+@media (max-width: 720px) {
+  .lp-hud-tag { display: none; }
 }
 
 /* ── Scroll progress (rainbow signature) ────────────── */
@@ -575,6 +616,40 @@
 
 .lp-btn.ghost:hover { border-color: var(--csl-ink); }
 
+.lp-btn-glyph {
+  margin-right: 0.6rem;
+  font-size: 0.8em;
+  line-height: 1;
+}
+
+.lp-hero-cta-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lp-press {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--csl-muted);
+}
+
+.lp-press-blink {
+  color: var(--csl-yellow);
+  animation: lp-blink 1.1s steps(1, end) infinite;
+}
+
+@keyframes lp-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
 .lp-arrow-link {
   display: inline-block;
   margin-top: clamp(1.6rem, 3vw, 2.4rem);
@@ -814,19 +889,34 @@
 
 /* ── Foreigner chevrons ─────────────────────────────── */
 
-.lp-chevrons { display: flex; align-items: center; }
+.lp-chevrons { display: flex; align-items: center; padding-bottom: 10px; }
 
 .lp-chevron {
+  position: relative;
   width: clamp(38px, 5.5vw, 64px);
   height: clamp(54px, 8vw, 92px);
   margin-left: -8px;
   clip-path: polygon(0 0, 52% 0, 100% 50%, 52% 100%, 0 100%, 48% 50%);
 }
 
+/* Flat-3D isometric extruded side */
+.lp-chevron::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translate(-7px, 9px);
+  clip-path: inherit;
+  filter: brightness(0.5);
+  z-index: -1;
+}
+
 .lp-chevron:first-child { margin-left: 0; }
 .lp-chevron--blue { background: var(--csl-blue); }
+.lp-chevron--blue::before { background: var(--csl-blue); }
 .lp-chevron--red { background: var(--csl-red); }
+.lp-chevron--red::before { background: var(--csl-red); }
 .lp-chevron--yellow { background: var(--csl-yellow); }
+.lp-chevron--yellow::before { background: var(--csl-yellow); }
 
 [data-reveal].in .lp-chevron { animation: lp-chev 3.6s var(--csl-ease) infinite; }
 [data-reveal].in .lp-chevron--red { animation-delay: 0.18s; }
