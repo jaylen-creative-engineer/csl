@@ -43,13 +43,20 @@
   z-index: 2;
 }
 
-/* ── Preloader ──────────────────────────────────────── */
+/* ── Blueprint welcome / boot sequence ──────────────── */
 
 .lp-preloader {
   position: fixed;
   inset: 0;
   z-index: 100;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(1.4rem, 4vw, 3rem) clamp(1.2rem, 5vw, 3.5rem);
   background: var(--csl-bg);
+  background-image:
+    linear-gradient(var(--csl-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--csl-line) 1px, transparent 1px);
+  background-size: clamp(48px, 8vw, 96px) clamp(48px, 8vw, 96px);
   transition: transform 0.9s var(--csl-ease), visibility 0s 0.9s;
 }
 
@@ -59,32 +66,93 @@
   pointer-events: none;
 }
 
-.lp-preloader-brand {
-  position: absolute;
-  top: clamp(1.2rem, 3vw, 2rem);
-  left: clamp(1.2rem, 4vw, 3rem);
-  font-size: 0.72rem;
-  letter-spacing: 0.22em;
+.lp-pre-grid {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lp-pre-stamp,
+.lp-pre-coords {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--csl-muted);
 }
 
-.lp-preloader-word {
-  position: absolute;
-  top: clamp(1.2rem, 3vw, 2rem);
-  right: clamp(1.2rem, 4vw, 3rem);
+.lp-pre-coords {
+  text-align: right;
+  color: var(--csl-faint);
+}
+
+.lp-pre-stamp strong {
+  color: var(--csl-ink);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+}
+
+.lp-pre-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.4rem, 4vh, 2.4rem);
+}
+
+.lp-pre-word {
   font-family: var(--font-serif), Georgia, serif;
   font-style: italic;
-  font-size: clamp(1.1rem, 2.4vw, 1.6rem);
-  color: var(--csl-accent);
+  font-size: clamp(2.4rem, 9vw, 6rem);
+  line-height: 1;
+  color: var(--csl-ink);
+}
+
+.lp-pre-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(6px, 1vw, 11px);
+  max-width: min(80vw, 540px);
+}
+
+.lp-pre-dots i {
+  width: clamp(6px, 1vw, 9px);
+  height: clamp(6px, 1vw, 9px);
+  border-radius: 50%;
+  border: 1px solid var(--csl-faint);
+  background: transparent;
+  transition: background 0.2s linear, border-color 0.2s linear,
+    box-shadow 0.2s linear;
+}
+
+.lp-pre-dots i.on {
+  background: var(--csl-accent);
+  border-color: var(--csl-accent);
+  box-shadow: 0 0 10px rgba(216, 255, 61, 0.55);
+}
+
+.lp-pre-meter {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.lp-pre-dim {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  color: var(--csl-faint);
 }
 
 .lp-preloader-count {
-  position: absolute;
-  bottom: clamp(0.6rem, 2vw, 1.4rem);
-  left: clamp(1.2rem, 4vw, 3rem);
   font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(5rem, 18vw, 14rem);
+  font-size: clamp(3.4rem, 14vw, 11rem);
   line-height: 1;
   letter-spacing: -0.03em;
   color: var(--csl-ink);
@@ -93,8 +161,119 @@
 
 .lp-preloader-count i {
   font-style: normal;
-  font-size: 0.35em;
-  color: var(--csl-muted);
+  font-size: 0.3em;
+  color: var(--csl-accent);
+}
+
+/* ── Registration crosshairs (Nike OTC blueprint) ───── */
+
+.lp-cross {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  pointer-events: none;
+}
+
+.lp-cross::before,
+.lp-cross::after {
+  content: "";
+  position: absolute;
+  background: var(--csl-faint);
+}
+
+.lp-cross::before {
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  transform: translateY(-50%);
+}
+
+.lp-cross::after {
+  left: 50%;
+  top: 0;
+  height: 100%;
+  width: 1px;
+  transform: translateX(-50%);
+}
+
+.lp-cross--tl { top: clamp(1.2rem, 3vw, 2.2rem); left: clamp(1.2rem, 3vw, 2.2rem); }
+.lp-cross--tr { top: clamp(1.2rem, 3vw, 2.2rem); right: clamp(1.2rem, 3vw, 2.2rem); }
+.lp-cross--bl { bottom: clamp(1.2rem, 3vw, 2.2rem); left: clamp(1.2rem, 3vw, 2.2rem); }
+.lp-cross--br { bottom: clamp(1.2rem, 3vw, 2.2rem); right: clamp(1.2rem, 3vw, 2.2rem); }
+
+/* ── Persistent blueprint frame ─────────────────────── */
+
+.lp-frame {
+  position: fixed;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s var(--csl-ease) 0.6s;
+}
+
+.lp.ready .lp-frame {
+  opacity: 1;
+}
+
+.lp-frame .lp-cross::before,
+.lp-frame .lp-cross::after {
+  background: var(--csl-line);
+}
+
+.lp-frame-coord {
+  position: absolute;
+  top: 50%;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--csl-faint);
+  white-space: nowrap;
+}
+
+.lp-frame-coord--l {
+  left: clamp(0.7rem, 2vw, 1.4rem);
+  transform: translateY(-50%) rotate(180deg);
+  writing-mode: vertical-rl;
+}
+
+.lp-frame-coord--r {
+  right: clamp(0.7rem, 2vw, 1.4rem);
+  transform: translateY(-50%);
+  writing-mode: vertical-rl;
+}
+
+@media (max-width: 900px) {
+  .lp-frame-coord {
+    display: none;
+  }
+}
+
+/* ── Halftone texture overlay (Nike OTC dot field) ──── */
+
+.lp-halftone {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image: radial-gradient(
+    var(--csl-faint) 0.7px,
+    transparent 0.7px
+  );
+  background-size: 13px 13px;
+  mask-image: radial-gradient(
+    ellipse 75% 60% at 50% 40%,
+    transparent 35%,
+    #000 100%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 75% 60% at 50% 40%,
+    transparent 35%,
+    #000 100%
+  );
 }
 
 /* ── Scroll progress ────────────────────────────────── */
@@ -110,9 +289,44 @@
 
 .lp-progress-bar {
   height: 100%;
-  background: var(--csl-accent);
+  background: var(--csl-rainbow);
+  background-size: 200% 100%;
   transform: scaleX(0);
   transform-origin: 0 50%;
+}
+
+/* ── Gradient + stroke type treatments ──────────────── */
+
+.lp-grad,
+.lp-rainbow-text {
+  background-image: var(--csl-rainbow);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: lp-hue 9s linear infinite;
+}
+
+.lp em.lp-grad {
+  font-style: italic;
+  color: transparent;
+}
+
+@keyframes lp-hue {
+  to { background-position: 200% 0; }
+}
+
+.lp-stroke {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--csl-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-grad,
+  .lp-rainbow-text {
+    animation: none;
+  }
 }
 
 /* ── Navigation ─────────────────────────────────────── */
@@ -510,6 +724,144 @@
   100% { transform: scaleY(0); transform-origin: bottom; }
 }
 
+/* ── Technical annotations ──────────────────────────── */
+
+.lp-annot {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--csl-faint);
+}
+
+.lp-annot--hero-top {
+  position: absolute;
+  top: clamp(6rem, 16vh, 9rem);
+  right: clamp(1.2rem, 5vw, 4rem);
+}
+
+.lp-annot--hero-side {
+  position: absolute;
+  left: clamp(1.2rem, 5vw, 4rem);
+  bottom: clamp(5rem, 12vh, 8rem);
+  color: var(--csl-muted);
+}
+
+@media (max-width: 900px) {
+  .lp-annot--hero-side {
+    display: none;
+  }
+}
+
+/* ── Manifesto (Ventura editorial statement) ────────── */
+
+.lp-manifesto {
+  position: relative;
+  padding: clamp(7rem, 20vh, 12rem) clamp(1.2rem, 5vw, 4rem);
+  border-top: 1px solid var(--csl-line);
+}
+
+.lp-manifesto-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: clamp(1.8rem, 5vh, 3rem);
+}
+
+.lp-manifesto-title {
+  margin: 0;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: clamp(2.2rem, 8.5vw, 7.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.02em;
+}
+
+.lp-manifesto-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2.5rem;
+  margin-top: clamp(2.2rem, 6vh, 3.6rem);
+}
+
+.lp-manifesto-body {
+  margin: 0;
+  max-width: 40ch;
+  font-size: clamp(0.95rem, 1.4vw, 1.1rem);
+  line-height: 1.7;
+  color: var(--csl-muted);
+}
+
+/* ── Foreigner geometric chevrons ───────────────────── */
+
+.lp-chevrons {
+  display: flex;
+  align-items: center;
+}
+
+.lp-chevron {
+  width: clamp(34px, 5vw, 58px);
+  height: clamp(48px, 7vw, 82px);
+  margin-left: -6px;
+  clip-path: polygon(0 0, 52% 0, 100% 50%, 52% 100%, 0 100%, 48% 50%);
+  transform: skewX(0deg);
+  transition: transform 0.5s var(--csl-ease);
+}
+
+.lp-chevron:first-child {
+  margin-left: 0;
+}
+
+.lp-chevron--blue { background: var(--csl-blue); }
+.lp-chevron--red { background: var(--csl-red); }
+.lp-chevron--yellow { background: var(--csl-yellow); }
+
+[data-reveal].in .lp-chevron {
+  animation: lp-chev 3.6s var(--csl-ease) infinite;
+}
+
+[data-reveal].in .lp-chevron--red { animation-delay: 0.18s; }
+[data-reveal].in .lp-chevron--yellow { animation-delay: 0.36s; }
+
+@keyframes lp-chev {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(8px); }
+}
+
+/* ── Technical stamp marquee (Nike OTC) ─────────────── */
+
+.lp-stamps {
+  overflow: hidden;
+  border-top: 1px solid var(--csl-line);
+  padding: clamp(0.9rem, 2.2vh, 1.4rem) 0;
+}
+
+.lp-stamps-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.5rem;
+  padding-right: 2.5rem;
+  white-space: nowrap;
+  animation: lp-stamps-scroll 32s linear infinite;
+}
+
+.lp-stamps-row i {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-style: normal;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--csl-faint);
+}
+
+@keyframes lp-stamps-scroll {
+  to { transform: translateX(-100%); }
+}
+
 /* ── Chapters ───────────────────────────────────────── */
 
 .lp-chapter {
@@ -572,7 +924,16 @@
 .lp-stat {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 0.7rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--csl-line);
+}
+
+.lp-stat-index {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  color: var(--csl-accent);
 }
 
 .lp-stat-value {

@@ -155,6 +155,51 @@ export function HeroScene() {
       const stars = new THREE.Points(starGeometry, starMaterial);
       scene.add(stars);
 
+      /* ── Geometric chevron shards (Foreigner) ──────── */
+      // A flat arrow/chevron profile extruded into a thin solid —
+      // the album's interlocking red/blue/yellow blocks, set adrift.
+      const chevronShape = new THREE.Shape();
+      chevronShape.moveTo(-0.62, 0.5);
+      chevronShape.lineTo(0.02, 0.5);
+      chevronShape.lineTo(0.62, 0);
+      chevronShape.lineTo(0.02, -0.5);
+      chevronShape.lineTo(-0.62, -0.5);
+      chevronShape.lineTo(-0.12, 0);
+      chevronShape.closePath();
+
+      const chevronGeometry = new THREE.ExtrudeGeometry(chevronShape, {
+        depth: 0.16,
+        bevelEnabled: false
+      });
+      chevronGeometry.center();
+
+      const shardSpecs: Array<{
+        color: string;
+        pos: [number, number, number];
+        scale: number;
+        spin: number;
+      }> = [
+        { color: "#2f6bff", pos: [-7.4, 2.6, -3], scale: 1.5, spin: 0.18 },
+        { color: "#ff3b30", pos: [7.2, -1.4, -1.5], scale: 1.95, spin: -0.14 },
+        { color: "#ffc62b", pos: [5.1, 3.4, -6], scale: 1.15, spin: 0.22 }
+      ];
+
+      const shards = shardSpecs.map((spec) => {
+        const material = new THREE.MeshBasicMaterial({
+          color: new THREE.Color(spec.color),
+          transparent: true,
+          opacity: 0.62,
+          side: THREE.DoubleSide
+        });
+        const mesh = new THREE.Mesh(chevronGeometry, material);
+        mesh.position.set(...spec.pos);
+        mesh.scale.setScalar(spec.scale);
+        mesh.userData.spin = spec.spin;
+        mesh.userData.baseY = spec.pos[1];
+        scene.add(mesh);
+        return mesh;
+      });
+
       /* ── State & handlers ──────────────────────────── */
       const mouse = { x: 0, y: 0 };
       const smoothed = { x: 0, y: 0, scroll: 0 };
@@ -208,6 +253,14 @@ export function HeroScene() {
           track.rotation.z = -t * 0.02;
           stars.rotation.y = t * 0.008;
 
+          for (let i = 0; i < shards.length; i++) {
+            const shard = shards[i];
+            shard.rotation.z = t * shard.userData.spin;
+            shard.rotation.x = Math.sin(t * 0.25 + i) * 0.4;
+            shard.position.y =
+              shard.userData.baseY + Math.sin(t * 0.45 + i * 1.7) * 0.5;
+          }
+
           group.rotation.x = 1.05 - smoothed.scroll * 0.95;
           group.rotation.z = smoothed.scroll * 0.4;
           group.position.y = Math.sin(t * 0.4) * 0.12;
@@ -232,6 +285,10 @@ export function HeroScene() {
         trackMaterial.dispose();
         starGeometry.dispose();
         starMaterial.dispose();
+        chevronGeometry.dispose();
+        shards.forEach((shard) => {
+          (shard.material as InstanceType<typeof THREE.MeshBasicMaterial>).dispose();
+        });
         renderer.dispose();
       };
     })();
