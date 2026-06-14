@@ -131,12 +131,6 @@ export function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const progressBarRef = useRef<HTMLDivElement | null>(null);
 
-  /* Dark document chrome while the landing is mounted */
-  useEffect(() => {
-    document.documentElement.classList.add("csl-dark");
-    return () => document.documentElement.classList.remove("csl-dark");
-  }, []);
-
   /* Boot counter — runs only on the very first visit */
   useIsoLayoutEffect(() => {
     let visited = false;
