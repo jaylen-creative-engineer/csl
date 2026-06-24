@@ -21,7 +21,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html
       lang="en"
-      className={`${sans.variable} ${mono.variable}`}
+      className={`${sans.variable} ${mono.variable} csl-dark`}
       style={{
         ["--font-sans" as string]: "var(--font-geist-sans)",
         ["--font-mono" as string]: "var(--font-geist-mono)",
