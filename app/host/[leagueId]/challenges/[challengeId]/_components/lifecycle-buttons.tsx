@@ -30,43 +30,29 @@ export function LifecycleButtons({ challengeId, status }: Props) {
 
   return (
     <div>
-      <div className="flex flex-wrap gap-3">
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
         {status === "draft" && (
-          <button
-            onClick={() => transition("open")}
-            disabled={loading}
-            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--success)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            Open for Submissions
+          <button type="button" onClick={() => transition("open")} disabled={loading} className="app-btn sm">
+            Open for submissions
           </button>
         )}
         {status === "open" && (
-          <button
-            onClick={() => transition("judging")}
-            disabled={loading}
-            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            Move to Judging
+          <button type="button" onClick={() => transition("judging")} disabled={loading} className="app-btn sm">
+            Move to judging
           </button>
         )}
         {status === "judging" && (
-          <button
-            onClick={() => transition("complete")}
-            disabled={loading}
-            className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--foreground)] bg-[var(--border)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50"
-          >
-            Mark Complete
+          <button type="button" onClick={() => transition("complete")} disabled={loading} className="app-btn ghost sm">
+            Mark complete
           </button>
         )}
         {status === "complete" && (
-          <span className="text-sm text-[var(--muted-foreground)] italic">
+          <span className="app-muted" style={{ fontSize: 13, fontStyle: "italic" }}>
             This challenge is complete.
           </span>
         )}
       </div>
-      {error && (
-        <p className="text-sm text-[var(--destructive)] mt-3">{error}</p>
-      )}
+      {error && <p className="app-error" style={{ marginTop: 12 }}>{error}</p>}
     </div>
   );
 }

@@ -42,92 +42,57 @@ type Props = { params: Promise<{ challengeId: string; submissionId: string }> };
 
 export default async function JudgeSubmissionPage({ params }: Props) {
   const { challengeId, submissionId } = await params;
-
   const [challenge, submissions] = await Promise.all([
     getChallenge(challengeId),
     getSubmissions(challengeId),
   ]);
-
   const submission = submissions.find((s) => s.id === submissionId) ?? null;
 
   if (!challenge || !submission) {
     return (
-      <main className="min-h-screen px-6 py-12">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-[var(--destructive)]">Submission or challenge not found.</p>
-          <Link href={`/judge/${challengeId}`} className="text-[var(--accent)] hover:underline mt-4 inline-block">
-            Back to Challenge
-          </Link>
-        </div>
-      </main>
+      <>
+        <p className="app-error">Submission or challenge not found.</p>
+        <Link href={`/judge/${challengeId}`} className="app-back">← Challenge</Link>
+      </>
     );
   }
 
   const criteria = challenge.scoringCriteria ?? [];
 
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="max-w-2xl mx-auto">
-        {/* Back Link */}
-        <Link 
-          href={`/judge/${challengeId}`}
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Back to {challenge.title}
-        </Link>
+    <>
+      <Link href={`/judge/${challengeId}`} className="app-back">← {challenge.title}</Link>
 
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-            Score Submission
-          </h1>
-          <div className="flex flex-wrap items-center gap-4 mt-4 text-sm text-[var(--muted-foreground)]">
-            <span>
-              Submission: <code className="px-2 py-0.5 bg-[var(--secondary)] text-[var(--foreground)] font-mono text-xs">{submissionId.slice(0, 16)}...</code>
-            </span>
-            <span>
-              Participant: <code className="px-2 py-0.5 bg-[var(--secondary)] text-[var(--foreground)] font-mono text-xs">{submission.participantId.slice(0, 16)}...</code>
-            </span>
-          </div>
-        </header>
-
-        {/* Artifact */}
-        {submission.artifact?.url && (
-          <section className="p-6 bg-[var(--secondary)] mb-8">
-            <h2 className="text-sm font-semibold text-[var(--foreground)] uppercase tracking-wide mb-4">
-              Artifact
-            </h2>
-            {submission.artifact.description && (
-              <p className="text-sm text-[var(--muted-foreground)] mb-4">
-                {submission.artifact.description}
-              </p>
-            )}
-            <div className="flex items-center gap-4">
-              <a
-                href={submission.artifact.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-5 py-2.5 text-sm font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
-              >
-                View Artifact
-              </a>
-              {submission.artifact.mimeType && (
-                <span className="text-xs text-[var(--muted-foreground)]">
-                  {submission.artifact.mimeType}
-                </span>
-              )}
-            </div>
-          </section>
-        )}
-
-        {/* Scoring Form */}
-        <section>
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">Scoring Form</h2>
-          <div className="p-8 bg-[var(--secondary)]">
-            <ScoreForm submissionId={submissionId} challengeId={challengeId} criteria={criteria} />
-          </div>
-        </section>
+      <div className="app-page-head">
+        <div>
+          <p className="app-kicker">Score submission</p>
+          <h1 className="app-title">Scoring <em>form.</em></h1>
+          <p className="app-muted" style={{ marginTop: 14, fontFamily: "var(--font-mono)", fontSize: 12 }}>
+            {submissionId.slice(0, 16)}… · participant {submission.participantId.slice(0, 16)}…
+          </p>
+        </div>
       </div>
-    </main>
+
+      {submission.artifact?.url && (
+        <div className="app-panel" style={{ marginBottom: 32 }}>
+          <p className="app-section-label">Artifact</p>
+          {submission.artifact.description && (
+            <p className="app-muted" style={{ marginBottom: 16 }}>{submission.artifact.description}</p>
+          )}
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <a href={submission.artifact.url} target="_blank" rel="noopener noreferrer" className="app-btn sm">
+              View artifact
+            </a>
+            {submission.artifact.mimeType && (
+              <span className="app-chip">{submission.artifact.mimeType}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="app-panel">
+        <ScoreForm submissionId={submissionId} challengeId={challengeId} criteria={criteria} />
+      </div>
+    </>
   );
 }

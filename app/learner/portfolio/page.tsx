@@ -72,27 +72,18 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
 
   if (!participantId) {
     return (
-      <main className="min-h-screen px-6 py-12">
-        <div className="max-w-4xl mx-auto">
-          <Link 
-            href="/learner" 
-            className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-          >
-            <span className="mr-2">←</span> Discovery
-          </Link>
-          
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase mb-8">
-            My Portfolio
-          </h1>
-          
-          <div className="p-8 bg-[var(--secondary)]">
-            <p className="font-medium text-[var(--foreground)] mb-4">
-              Enter your participant ID to view your portfolio.
-            </p>
-            <PortfolioIdForm />
+      <>
+        <div className="app-page-head">
+          <div>
+            <p className="app-kicker">Proof of skill · FIG.05</p>
+            <h1 className="app-title">The <em>record.</em></h1>
           </div>
         </div>
-      </main>
+        <div className="app-panel">
+          <p className="app-label">Enter your participant ID to view your showcase.</p>
+          <PortfolioIdForm />
+        </div>
+      </>
     );
   }
 
@@ -100,169 +91,116 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
 
   if (!portfolio) {
     return (
-      <main className="min-h-screen px-6 py-12">
-        <div className="max-w-4xl mx-auto">
-          <Link 
-            href="/learner" 
-            className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-          >
-            <span className="mr-2">←</span> Discovery
-          </Link>
-          
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase mb-8">
-            My Portfolio
-          </h1>
-          
-          <p className="text-[var(--destructive)] mb-6">
-            Portfolio not found for participant ID: {participantId}
-          </p>
-          <PortfolioIdForm />
-        </div>
-      </main>
+      <>
+        <Link href="/learner/portfolio" className="app-back">← Showcase</Link>
+        <p className="app-error">Portfolio not found for participant ID: {participantId}</p>
+        <PortfolioIdForm />
+      </>
     );
   }
 
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        <Link 
-          href="/learner" 
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Discovery
-        </Link>
-
-        {/* Header */}
-        <header className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-            {portfolio.handle}&apos;s Portfolio
-          </h1>
-          <div className="flex flex-wrap items-center gap-4 mt-4">
-            <span className="text-sm text-[var(--muted-foreground)]">
-              Discipline: <span className="text-[var(--foreground)]">{portfolio.discipline}</span>
-            </span>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              Score: <span className="font-semibold text-[var(--foreground)]">{portfolio.aggregateScore.toFixed(1)}</span>
-            </span>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              Entries: <span className="text-[var(--foreground)]">{portfolio.entries.length}</span>
-            </span>
-          </div>
-        </header>
-
-        {/* Skill Signals */}
-        {portfolio.skillSignals.length > 0 && (
-          <section className="mb-12">
-            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">Skill Signals</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {portfolio.skillSignals.map((signal, i) => (
-                <div key={i} className="p-4 bg-[var(--secondary)]">
-                  <div className="text-sm font-medium text-[var(--foreground)]">{signal.domain}</div>
-                  <div className="text-2xl font-bold text-[var(--foreground)] mt-1">
-                    {signal.averageScore.toFixed(1)}
-                  </div>
-                  <div className="text-xs text-[var(--muted-foreground)]">
-                    {signal.sampleCount} sample{signal.sampleCount !== 1 ? "s" : ""}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Submissions */}
-        <section>
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-            Submissions ({portfolio.entries.length})
-          </h2>
-          
-          {portfolio.entries.length === 0 ? (
-            <div className="p-8 bg-[var(--secondary)]">
-              <p className="text-[var(--muted-foreground)]">No scored submissions yet.</p>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {portfolio.entries.map((entry, i) => {
-                const scores = entry.submission.scores ?? [];
-                const latestScore = scores[scores.length - 1];
-                return (
-                  <div key={entry.submission.id ?? i} className="p-6 bg-[var(--secondary)]">
-                    <div className="flex flex-wrap justify-between items-start gap-4">
-                      <div>
-                        <h3 className="font-semibold text-[var(--foreground)]">{entry.challengeTitle}</h3>
-                        <p className="text-xs text-[var(--muted-foreground)] mt-1">
-                          Submitted: {new Date(entry.submission.submittedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                      {entry.score !== undefined && (
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-[var(--foreground)]">
-                            {entry.score.toFixed(1)}
-                          </div>
-                          <div className="text-xs text-[var(--muted-foreground)]">score</div>
-                        </div>
-                      )}
-                    </div>
-
-                    {entry.submission.artifact?.url && (
-                      <a
-                        href={entry.submission.artifact.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block mt-4 text-sm text-[var(--accent)] hover:underline"
-                      >
-                        View Artifact →
-                      </a>
-                    )}
-
-                    {latestScore && latestScore.criteriaScores.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-[var(--border-soft)]">
-                        <div className="text-xs font-medium text-[var(--muted-foreground)] mb-2 uppercase tracking-wide">
-                          Criterion Breakdown
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {latestScore.criteriaScores.map((cs, j) => (
-                            <span
-                              key={j}
-                              className="inline-flex px-3 py-1 text-xs font-medium bg-[var(--background)] text-[var(--foreground)] rounded-full"
-                            >
-                              {cs.criteriaName}: {cs.score}
-                            </span>
-                          ))}
-                        </div>
-                        {latestScore.rationale && (
-                          <p className="text-sm text-[var(--muted-foreground)] mt-3 italic">
-                            &ldquo;{latestScore.rationale}&rdquo;
-                          </p>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </section>
+    <>
+      <div className="app-page-head">
+        <div>
+          <p className="app-kicker">Proof of skill · FIG.05</p>
+          <h1 className="app-title">The <em>record.</em></h1>
+          <p className="app-muted" style={{ marginTop: 14 }}>
+            @{portfolio.handle} · {portfolio.discipline} · {portfolio.entries.length} scored entries
+          </p>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <span className="app-section-label" style={{ marginBottom: 6, fontSize: 10 }}>Aggregate</span>
+          <span className="app-score-xl">{portfolio.aggregateScore.toFixed(1)}</span>
+        </div>
       </div>
-    </main>
+
+      {portfolio.skillSignals.length > 0 && (
+        <>
+          <p className="app-section-label">Skill signals</p>
+          <div className="app-signal-grid">
+            {portfolio.skillSignals.map((signal, i) => (
+              <div key={i} className="app-signal">
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(242,241,237,0.78)" }}>{signal.domain}</span>
+                  <span style={{ fontSize: 20 }}>{signal.averageScore.toFixed(1)}</span>
+                </div>
+                <div className="app-progress">
+                  <i style={{ width: `${Math.min(signal.averageScore, 100)}%` }} />
+                </div>
+                <span style={{ display: "block", marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(242,241,237,0.36)" }}>
+                  {signal.sampleCount} sample{signal.sampleCount !== 1 ? "s" : ""}
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <p className="app-section-label">Scored entries</p>
+      {portfolio.entries.length === 0 ? (
+        <div className="app-empty"><p>No scored submissions yet.</p></div>
+      ) : (
+        portfolio.entries.map((entry, i) => {
+          const scores = entry.submission.scores ?? [];
+          const latestScore = scores[scores.length - 1];
+          return (
+            <div key={entry.submission.id ?? i} className="app-entry-card">
+              <div className="app-entry-thumb">
+                <span>FIG.{String(i + 1).padStart(2, "0")}<br />artifact</span>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+                  <div>
+                    <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>{entry.challengeTitle}</h3>
+                    <p style={{ margin: "5px 0 0", fontSize: 12, color: "rgba(242,241,237,0.45)" }}>
+                      {new Date(entry.submission.submittedAt).toLocaleDateString()}
+                    </p>
+                  </div>
+                  {entry.score !== undefined && (
+                    <span className="app-score-lg">{entry.score.toFixed(1)}</span>
+                  )}
+                </div>
+
+                {entry.submission.artifact?.url && (
+                  <a href={entry.submission.artifact.url} target="_blank" rel="noopener noreferrer" className="app-btn ghost sm" style={{ marginTop: 12 }}>
+                    View artifact →
+                  </a>
+                )}
+
+                {latestScore && latestScore.criteriaScores.length > 0 && (
+                  <div className="app-chip-row">
+                    {latestScore.criteriaScores.map((cs, j) => (
+                      <span key={j} className="app-chip">{cs.criteriaName}: {cs.score}</span>
+                    ))}
+                  </div>
+                )}
+
+                {latestScore?.rationale && (
+                  <p className="app-text soft" style={{ marginTop: 14, fontSize: 14 }}>
+                    &ldquo;{latestScore.rationale}&rdquo;
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })
+      )}
+    </>
   );
 }
 
 function PortfolioIdForm() {
   return (
-    <form method="GET" action="/learner/portfolio" className="flex flex-wrap gap-3">
+    <form method="GET" action="/learner/portfolio" style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 16 }}>
       <input
         name="id"
         required
         placeholder="Your participant UUID"
-        className="flex-1 min-w-[200px] px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
+        className="app-input"
+        style={{ flex: 1, minWidth: 220 }}
       />
-      <button
-        type="submit"
-        className="inline-flex items-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity"
-      >
-        View Portfolio
-      </button>
+      <button type="submit" className="app-btn">View showcase →</button>
     </form>
   );
 }

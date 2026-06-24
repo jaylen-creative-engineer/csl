@@ -65,100 +65,71 @@ export function ScoreForm({ submissionId, challengeId, criteria }: Props) {
 
   if (success) {
     return (
-      <div className="flex items-center gap-3 p-4 bg-[var(--success)] text-[var(--primary-foreground)]">
-        <span className="font-medium">Score submitted successfully! Redirecting...</span>
-      </div>
+      <p style={{ margin: 0, fontWeight: 600, color: "var(--app-accent)" }}>
+        Score submitted. Redirecting…
+      </p>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-6">
-      <div>
-        <label 
-          htmlFor="judge-id" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          Your Judge ID
-        </label>
+    <form onSubmit={handleSubmit}>
+      <div className="app-field">
+        <label htmlFor="judge-id" className="app-label">Your judge ID</label>
         <input
           id="judge-id"
           value={judgeId}
           onChange={(e) => setJudgeId(e.target.value)}
           required
           placeholder="Your participant UUID"
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
+          className="app-input"
         />
       </div>
 
       {criteria.length > 0 ? (
-        <div>
-          <p className="text-sm font-semibold text-[var(--foreground)] mb-4">
-            Criterion Scores (0-100)
-          </p>
-          <div className="grid gap-4">
-            {criteria.map((c) => (
-              <div key={c.name} className="p-4 bg-[var(--background)]">
-                <label 
-                  htmlFor={`score-${c.name}`}
-                  className="block text-sm font-medium text-[var(--foreground)] mb-1"
-                >
-                  {c.name} <span className="text-[var(--muted-foreground)]">(weight: {c.weight})</span>
-                </label>
-                {c.description && (
-                  <p className="text-xs text-[var(--muted-foreground)] mb-3">{c.description}</p>
-                )}
-                <div className="flex items-center gap-4">
-                  <input
-                    id={`score-${c.name}`}
-                    type="range"
-                    min={0}
-                    max={100}
-                    value={scores[c.name] ?? 50}
-                    onChange={(e) => updateScore(c.name, Number(e.target.value))}
-                    className="flex-1 h-2 bg-[var(--border)] appearance-none cursor-pointer accent-[var(--primary)]"
-                  />
-                  <span className="min-w-[3rem] text-right font-bold text-[var(--foreground)]">
-                    {scores[c.name] ?? 50}
-                  </span>
-                </div>
+        <div style={{ marginBottom: 20 }}>
+          <p className="app-section-label">Criterion scores (0–100)</p>
+          {criteria.map((c) => (
+            <div key={c.name} className="app-criterion">
+              <div className="app-criterion-head">
+                <span className="app-criterion-name">
+                  {c.name} <span className="app-muted" style={{ fontSize: 12 }}>(weight {c.weight})</span>
+                </span>
+                <span className="app-criterion-weight">{scores[c.name] ?? 50}</span>
               </div>
-            ))}
-          </div>
+              {c.description && <p className="app-muted" style={{ fontSize: 12, marginBottom: 8 }}>{c.description}</p>}
+              <input
+                id={`score-${c.name}`}
+                type="range"
+                min={0}
+                max={100}
+                value={scores[c.name] ?? 50}
+                onChange={(e) => updateScore(c.name, Number(e.target.value))}
+                style={{ width: "100%", accentColor: "var(--app-accent)" }}
+              />
+            </div>
+          ))}
         </div>
       ) : (
-        <div className="p-4 bg-[var(--background)] text-sm text-[var(--muted-foreground)]">
-          No scoring criteria defined for this challenge. You can still provide a rationale.
-        </div>
+        <p className="app-muted" style={{ marginBottom: 20 }}>No scoring criteria defined. You can still provide a rationale.</p>
       )}
 
-      <div>
-        <label 
-          htmlFor="rationale" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          Rationale
-        </label>
+      <div className="app-field">
+        <label htmlFor="rationale" className="app-label">Rationale</label>
         <textarea
           id="rationale"
           value={rationale}
           onChange={(e) => setRationale(e.target.value)}
           required
           rows={4}
-          placeholder="Explain your scoring decision..."
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors resize-y"
+          placeholder="Explain your scoring decision…"
+          className="app-textarea"
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-[var(--destructive)]">{error}</p>
-      )}
+      {error && <p className="app-error">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? "Submitting..." : "Submit Score"}
+      <button type="submit" disabled={loading} className="app-btn">
+        {loading ? "Submitting…" : "Submit score →"}
       </button>
     </form>
   );

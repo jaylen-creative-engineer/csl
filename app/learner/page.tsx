@@ -1,4 +1,10 @@
 import Link from "next/link";
+import {
+  formatDeadlineLong,
+  formatDeadlineShort,
+  sprintColor,
+  statusTagClass,
+} from "../_components/app-shell/app-utils";
 
 interface League {
   id: string;
@@ -7,154 +13,157 @@ interface League {
   challengeIds: string[];
 }
 
+interface Challenge {
+  id: string;
+  title: string;
+  status: string;
+  deadline: string;
+  leagueId: string;
+  prompt?: string;
+}
+
 async function getLeagues(): Promise<League[]> {
   const baseUrl = process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000";
   const res = await fetch(`${baseUrl}/api/v1/leagues`, { cache: "no-store" }).catch(() => null);
   if (!res || !res.ok) return [];
-  const data = await res.json() as { ok?: boolean; data?: League[] } | League[];
+  const data = (await res.json()) as { ok?: boolean; data?: League[] } | League[];
   if (Array.isArray(data)) return data;
   return (data as { data?: League[] }).data ?? [];
 }
 
-function statusTone(status: string): string {
-  if (status === "active") return "blue";
-  if (status === "closed") return "red";
-  return "yellow";
+async function getChallenge(id: string): Promise<Challenge | null> {
+  const baseUrl = process.env.NEXT_PUBLIC_URL ?? "http://localhost:3000";
+  const res = await fetch(`${baseUrl}/api/v1/challenges/${id}`, { cache: "no-store" }).catch(() => null);
+  if (!res || !res.ok) return null;
+  const data = (await res.json()) as { data?: Challenge };
+  return data.data ?? null;
 }
+
+type SprintRow = Challenge & { leagueName: string };
 
 export default async function LearnerDiscoveryPage() {
   const leagues = await getLeagues();
-  const activeLeagues = leagues.filter((league) => league.status === "active").length;
-  const challengeCount = leagues.reduce(
-    (total, league) => total + (league.challengeIds?.length ?? 0),
-    0
-  );
+  const challengeIds = leagues.flatMap((l) => l.challengeIds ?? []);
+  const challenges = (
+    await Promise.all(challengeIds.map((id) => getChallenge(id)))
+  ).filter((c): c is Challenge => c !== null);
+
+  const leagueById = new Map(leagues.map((l) => [l.id, l.name]));
+  const sprints: SprintRow[] = challenges.map((c) => ({
+    ...c,
+    leagueName: leagueById.get(c.leagueId) ?? "League",
+  }));
+
+  const openSprints = sprints.filter((s) => s.status === "open");
+  const featured = openSprints[0] ?? sprints[0];
+  const activeCount = sprints.filter((s) => s.status === "open" || s.status === "judging").length;
 
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="csl-page">
-        <div className="csl-shell csl-shell--with-side">
-          <aside className="csl-rail" aria-label="Learner context">
-            <span className="csl-rail__eyebrow">Learner // Discovery</span>
-            <div className="csl-rail__title">Pick your next rep.</div>
-            <p className="csl-rail__copy">
-              Find live creative sprints, enter with a brief, and turn scored submissions into a public record.
-            </p>
-            <nav className="csl-rail__nav" aria-label="Learner actions">
-              <Link href="/learner/portfolio">Portfolio <span>↗</span></Link>
-              <span>Leagues <strong>{leagues.length}</strong></span>
-              <span>Open field <strong>{activeLeagues}</strong></span>
-            </nav>
-            <div className="csl-rail__glyph" aria-hidden="true" />
-          </aside>
+    <>
+      <div className="app-page-head">
+        <div>
+          <p className="app-kicker">Season 01 · Week 03</p>
+          <h1 className="app-title">
+            Welcome back, <em>maker.</em>
+          </h1>
+        </div>
+        <span className="app-fig">
+          FIG.01 — The Field
+          <br />
+          {activeCount} sprints active
+        </span>
+      </div>
 
-          <div className="csl-main-stack">
-            <header>
-              <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-                Discover Leagues
-              </h1>
-              <p className="mt-3 text-[var(--muted-foreground)]">
-                Browse active leagues and join a challenge sprint.
-              </p>
-            </header>
-
-            <div className="csl-kpi-strip" aria-label="Learner discovery metrics">
-              <div className="csl-kpi csl-kpi--blue">
-                <div className="csl-kpi__label">Active leagues</div>
-                <div className="csl-kpi__value">{activeLeagues}</div>
-                <div className="csl-kpi__note">ready to enter</div>
-              </div>
-              <div className="csl-kpi csl-kpi--yellow">
-                <div className="csl-kpi__label">Sprints</div>
-                <div className="csl-kpi__value">{challengeCount}</div>
-                <div className="csl-kpi__note">briefs listed</div>
-              </div>
-              <div className="csl-kpi csl-kpi--red">
-                <div className="csl-kpi__label">Portfolio</div>
-                <div className="csl-kpi__value">∞</div>
-                <div className="csl-kpi__note">compounds over time</div>
-              </div>
-              <div className="csl-kpi csl-kpi--yellow">
-                <div className="csl-kpi__label">Next move</div>
-                <div className="csl-kpi__value">01</div>
-                <div className="csl-kpi__note">choose a league</div>
-              </div>
-            </div>
-
-            <section>
-              <div className="csl-section-row">
-                <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-                  League field
-                </h2>
-                <span className="csl-mini">FIG. 03 // ENTRY BOARD</span>
-              </div>
-
-              {leagues.length === 0 ? (
-                <div className="csl-panel csl-panel--hero">
-                  <div className="csl-panel__title">No leagues are live.</div>
-                  <p className="csl-panel__copy">
-                    Check back soon or ask a host for the next sprint window.
-                  </p>
-                </div>
-              ) : (
-                <div className="csl-card-grid">
-                  {leagues.map((league) => {
-                    const tone = statusTone(league.status);
-                    return (
-                      <Link
-                        key={league.id}
-                        href={`/learner/${league.id}`}
-                        className="csl-card"
-                      >
-                        <span className={`csl-card__block csl-card__block--${tone}`} aria-hidden="true" />
-                        <div className="csl-card__top">
-                          <div>
-                            <h2 className="csl-card__title">{league.name}</h2>
-                            <p className="csl-card__meta">{league.id}</p>
-                          </div>
-                          <span className={`csl-pill csl-pill--${league.status}`}>{league.status}</span>
-                        </div>
-                        <div className="csl-card__stats">
-                          <div className="csl-card__stat">
-                            <strong>{league.challengeIds?.length ?? 0}</strong>
-                            <span>challenges</span>
-                          </div>
-                          <div className="csl-card__stat">
-                            <strong>{league.status === "active" ? "PLAY" : "WAIT"}</strong>
-                            <span>entry state</span>
-                          </div>
-                        </div>
-                        <div className="csl-card__footer">
-                          <span className="csl-mini">Public scored reps</span>
-                          <span className="csl-arrow">Enter →</span>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
-          </div>
-
-          <aside className="csl-side" aria-label="Learner prompts">
-            <div>
-              <div className="csl-side__title">Field notes</div>
-              <p className="csl-rail__copy">Use the dashboard as a scouting board. Every scored public submission can feed your portfolio.</p>
-            </div>
-            <div className="csl-side__item">
-              <strong>Start with live leagues</strong>
-              <span>Active leagues are marked blue and ready for enrollment.</span>
-            </div>
-            <div className="csl-side__item">
-              <strong>Track your record</strong>
-              <span>Open your portfolio after submitting to see scored signals compound.</span>
-            </div>
-            <Link href="/learner/portfolio" className="csl-action csl-action--ghost">
-              View portfolio
-            </Link>
-          </aside>
+      <div className="app-stat-grid">
+        <div className="app-stat">
+          <span className="app-stat-idx">01</span>
+          <span className="app-stat-value">{leagues.length}</span>
+          <span className="app-stat-label">Leagues in season</span>
+        </div>
+        <div className="app-stat">
+          <span className="app-stat-idx">02</span>
+          <span className="app-stat-value">{openSprints.length}</span>
+          <span className="app-stat-label">Open sprints</span>
+        </div>
+        <div className="app-stat">
+          <span className="app-stat-idx">03</span>
+          <span className="app-stat-value">{sprints.length}</span>
+          <span className="app-stat-label">Total challenges</span>
+        </div>
+        <div className="app-stat">
+          <span className="app-stat-idx">04</span>
+          <span className="app-stat-value">{activeCount}</span>
+          <span className="app-stat-label">In play</span>
         </div>
       </div>
-    </main>
+
+      {featured && (
+        <>
+          <p className="app-section-label">Featured sprint</p>
+          <div className="app-panel featured" style={{ marginBottom: 36 }}>
+            <span className="app-panel-fig" style={{ top: 16, right: 18, fontSize: 10 }}>
+              FIG.02 — Sprint
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
+              <span className="app-tag purple">Motion</span>
+              <span className="app-tag open">Open</span>
+            </div>
+            <h2 style={{ margin: 0, maxWidth: "24ch", fontWeight: 600, fontSize: 30, lineHeight: 1.06, letterSpacing: "-0.015em" }}>
+              {featured.title}
+            </h2>
+            {featured.prompt && (
+              <p className="app-muted" style={{ margin: "16px 0 0", maxWidth: "62ch", fontSize: 14, lineHeight: 1.7 }}>
+                {featured.prompt.slice(0, 180)}
+                {featured.prompt.length > 180 ? "…" : ""}
+              </p>
+            )}
+
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 28, marginTop: 24, paddingTop: 22, borderTop: "1px solid rgba(242,241,237,0.1)" }}>
+              <div>
+                <span className="app-section-label" style={{ marginBottom: 5, fontSize: 10 }}>Closes in</span>
+                <span style={{ fontSize: 22, color: "var(--app-accent)" }}>{formatDeadlineLong(featured.deadline)}</span>
+              </div>
+              <div>
+                <span className="app-section-label" style={{ marginBottom: 5, fontSize: 10 }}>League</span>
+                <span style={{ fontSize: 22 }}>{featured.leagueName}</span>
+              </div>
+              <Link href={`/learner/challenges/${featured.id}`} className="app-btn" style={{ marginLeft: "auto" }}>
+                Open submission →
+              </Link>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
+        <p className="app-section-label" style={{ margin: 0 }}>Your sprints</p>
+        <span style={{ fontSize: 12, color: "rgba(242,241,237,0.4)" }}>{sprints.length} tracked</span>
+      </div>
+
+      {sprints.length === 0 ? (
+        <div className="app-empty">
+          <p>
+            <strong>No leagues available right now.</strong> Check back soon or contact a league host to get started.
+          </p>
+          <Link href="/enter" className="app-btn" style={{ marginTop: 20 }}>
+            Set up your season →
+          </Link>
+        </div>
+      ) : (
+        <div className="app-list">
+          {sprints.map((s, i) => (
+            <Link key={s.id} href={`/learner/challenges/${s.id}`} className="app-list-row">
+              <span className="app-list-dot" style={{ background: sprintColor(i) }} />
+              <span className="app-list-body">
+                <span className="app-list-title">{s.title}</span>
+                <span className="app-list-sub">{s.leagueName}</span>
+              </span>
+              <span className={statusTagClass(s.status)}>{s.status}</span>
+              <span className="app-list-deadline">{formatDeadlineShort(s.deadline)}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

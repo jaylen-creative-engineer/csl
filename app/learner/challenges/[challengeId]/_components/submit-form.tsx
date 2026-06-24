@@ -51,106 +51,82 @@ export function SubmitForm({ challengeId }: Props) {
 
   if (success) {
     return (
-      <div className="flex items-center gap-3 p-4 bg-[var(--success)] text-[var(--primary-foreground)]">
-        <span className="font-medium">Submission received! Good luck.</span>
+      <div className="app-panel" style={{ borderColor: "rgba(216,255,61,0.35)", background: "rgba(216,255,61,0.08)" }}>
+        <p style={{ margin: 0, fontWeight: 600, color: "var(--app-accent)" }}>Submission received. Good luck.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-6">
-      <div>
-        <label 
-          htmlFor="participant-id" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          Your Participant ID
-        </label>
+    <form onSubmit={handleSubmit}>
+      <div className="app-dropzone">
+        <p>[ paste artifact URL below — file upload coming soon ]</p>
+        <small>URL to your work · video, image, or live link</small>
+      </div>
+
+      <div style={{ display: "flex", gap: 14, marginTop: 16, flexWrap: "wrap" }}>
+        <div className="app-field" style={{ flex: 1, minWidth: 200, margin: 0 }}>
+          <input
+            id="artifact-url"
+            type="url"
+            value={artifactUrl}
+            onChange={(e) => setArtifactUrl(e.target.value)}
+            required
+            placeholder="Artifact URL"
+            className="app-input"
+          />
+        </div>
+        <div className="app-field" style={{ flex: 1, minWidth: 200, margin: 0 }}>
+          <input
+            id="description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="One-line description"
+            className="app-input"
+          />
+        </div>
+      </div>
+
+      <div className="app-field" style={{ marginTop: 16 }}>
+        <label htmlFor="participant-id" className="app-label">Your participant ID</label>
         <input
           id="participant-id"
           value={participantId}
           onChange={(e) => setParticipantId(e.target.value)}
           required
           placeholder="Your participant UUID"
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
+          className="app-input"
         />
       </div>
 
-      <div>
-        <label 
-          htmlFor="artifact-url" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          Artifact URL
-        </label>
-        <input
-          id="artifact-url"
-          type="url"
-          value={artifactUrl}
-          onChange={(e) => setArtifactUrl(e.target.value)}
-          required
-          placeholder="https://..."
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
-        />
-      </div>
-
-      <div>
-        <label 
-          htmlFor="mime-type" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          MIME Type (optional)
-        </label>
+      <div className="app-field">
+        <label htmlFor="mime-type" className="app-label">MIME type (optional)</label>
         <input
           id="mime-type"
           value={mimeType}
           onChange={(e) => setMimeType(e.target.value)}
-          placeholder="e.g. application/pdf, image/png"
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
+          placeholder="e.g. video/mp4"
+          className="app-input"
         />
       </div>
 
-      <div>
-        <label 
-          htmlFor="description" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          Description (optional)
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(242,241,237,0.1)" }}>
+        <label htmlFor="is-public" style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "rgba(242,241,237,0.56)", cursor: "pointer" }}>
+          <input
+            id="is-public"
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => setIsPublic(e.target.checked)}
+            style={{ accentColor: "var(--app-accent)" }}
+          />
+          Submit publicly
         </label>
-        <textarea
-          id="description"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          rows={3}
-          placeholder="Brief description of your submission..."
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors resize-y"
-        />
+        <button type="submit" disabled={loading} className="app-btn">
+          {loading ? "Submitting…" : "Submit entry →"}
+        </button>
       </div>
 
-      <div className="flex items-center gap-3">
-        <input
-          id="is-public"
-          type="checkbox"
-          checked={isPublic}
-          onChange={(e) => setIsPublic(e.target.checked)}
-          className="w-5 h-5 accent-[var(--primary)]"
-        />
-        <label htmlFor="is-public" className="text-sm text-[var(--muted-foreground)]">
-          Make submission public (visible in leaderboard)
-        </label>
-      </div>
-
-      {error && (
-        <p className="text-sm text-[var(--destructive)]">{error}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? "Submitting..." : "Submit Entry"}
-      </button>
+      {error && <p className="app-error" style={{ marginTop: 12 }}>{error}</p>}
     </form>
   );
 }

@@ -37,55 +37,36 @@ export function CreateLeagueForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-6 max-w-md">
-      <div>
-        <label 
-          htmlFor="league-name" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          League Name
-        </label>
+    <form onSubmit={handleSubmit} style={{ maxWidth: 480 }}>
+      <div className="app-field">
+        <label htmlFor="league-name" className="app-label">League name</label>
         <input
           id="league-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
           required
           placeholder="e.g. Spring Design Cohort"
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
+          className="app-input"
         />
       </div>
-      
-      <div>
-        <label 
-          htmlFor="host-id" 
-          className="block text-sm font-medium text-[var(--foreground)] mb-2"
-        >
-          Host ID
-        </label>
+
+      <div className="app-field">
+        <label htmlFor="host-id" className="app-label">Host ID</label>
         <input
           id="host-id"
           value={hostId}
           onChange={(e) => setHostId(e.target.value)}
           required
           placeholder="Your host UUID"
-          className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
+          className="app-input"
         />
       </div>
 
-      {error && (
-        <p className="text-sm text-[var(--destructive)]">{error}</p>
-      )}
-      
-      {success && (
-        <p className="text-sm text-[var(--success)]">League created!</p>
-      )}
+      {error && <p className="app-error">{error}</p>}
+      {success && <p style={{ color: "var(--app-accent)", fontSize: 13 }}>League created.</p>}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-      >
-        {loading ? "Creating..." : "Create League"}
+      <button type="submit" disabled={loading} className="app-btn" style={{ marginTop: 8 }}>
+        {loading ? "Creating…" : "Create league →"}
       </button>
     </form>
   );
