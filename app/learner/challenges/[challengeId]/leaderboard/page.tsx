@@ -40,88 +40,48 @@ export default async function LeaderboardPage({ params }: Props) {
 
   if (!challenge) {
     return (
-      <main className="min-h-screen px-6 py-12">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-[var(--destructive)]">Challenge not found.</p>
-          <Link href="/learner" className="text-[var(--accent)] hover:underline mt-4 inline-block">
-            Back to Discovery
-          </Link>
-        </div>
-      </main>
+      <>
+        <p className="app-error">Challenge not found.</p>
+        <Link href="/learner" className="app-back">← Dashboard</Link>
+      </>
     );
   }
 
-  const getRankDisplay = (rank: number) => {
-    if (rank === 1) return "1st";
-    if (rank === 2) return "2nd";
-    if (rank === 3) return "3rd";
-    return `${rank}th`;
-  };
-
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Link */}
-        <Link 
-          href={`/learner/challenges/${challengeId}`}
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Back to Challenge
-        </Link>
+    <>
+      <Link href={`/learner/challenges/${challengeId}`} className="app-back">
+        ← Sprint
+      </Link>
 
-        {/* Header */}
-        <header className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-            Leaderboard
-          </h1>
-          <p className="mt-3 text-[var(--muted-foreground)]">
-            {challenge.title}
-          </p>
-        </header>
-
-        {leaderboard.length === 0 ? (
-          <div className="p-8 bg-[var(--secondary)] text-center">
-            <p className="font-medium text-[var(--foreground)]">No scores yet.</p>
-            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-              Rankings will appear once submissions have been scored.
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b-2 border-[var(--border)]">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Rank</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Participant</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Score</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Submission</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((entry, i) => (
-                  <tr
-                    key={entry.submissionId ?? i}
-                    className={`border-b border-[var(--border-soft)] ${entry.rank === 1 ? "bg-[var(--secondary)]" : ""}`}
-                  >
-                    <td className={`py-4 px-4 ${entry.rank <= 3 ? "font-bold" : ""}`}>
-                      {getRankDisplay(entry.rank)}
-                    </td>
-                    <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
-                      {entry.participantId?.slice(0, 16)}...
-                    </td>
-                    <td className="py-4 px-4 font-semibold text-[var(--foreground)]">
-                      {typeof entry.score === "number" ? entry.score.toFixed(1) : "—"}
-                    </td>
-                    <td className="py-4 px-4 font-mono text-xs text-[var(--muted-foreground)]">
-                      {entry.submissionId?.slice(0, 12)}...
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+      <div className="app-page-head">
+        <div>
+          <p className="app-kicker">Signals · FIG.04</p>
+          <h1 className="app-title">Leaderboard</h1>
+          <p className="app-muted" style={{ marginTop: 14 }}>{challenge.title}</p>
+        </div>
       </div>
-    </main>
+
+      {leaderboard.length === 0 ? (
+        <div className="app-empty">
+          <p><strong>No scores yet.</strong> Rankings appear once submissions are scored.</p>
+        </div>
+      ) : (
+        <div className="app-panel-rail">
+          {leaderboard.map((entry, i) => (
+            <div key={entry.submissionId ?? i} className="app-lb-row">
+              <span className={`app-lb-rank${entry.rank <= 3 ? " top" : ""}`}>
+                {String(entry.rank).padStart(2, "0")}
+              </span>
+              <span className={`app-lb-name${entry.rank === 1 ? " you" : ""}`}>
+                {entry.participantId?.slice(0, 16)}…
+              </span>
+              <span className={`app-lb-score${entry.rank <= 3 ? " top" : ""}`}>
+                {typeof entry.score === "number" ? entry.score.toFixed(1) : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </>
   );
 }

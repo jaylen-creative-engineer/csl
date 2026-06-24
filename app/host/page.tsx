@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CreateLeagueForm } from "./_components/create-league-form";
+import { statusTagClass } from "../_components/app-shell/app-utils";
 
 interface League {
   id: string;
@@ -22,71 +23,42 @@ export default async function HostDashboardPage() {
   const leagues = await getLeagues();
 
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <header className="mb-12">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-            Host Dashboard
-          </h1>
-          <p className="mt-3 text-[var(--muted-foreground)]">
-            Manage your leagues, create challenges, and advance the sprint lifecycle.
+    <>
+      <div className="app-page-head">
+        <div>
+          <p className="app-kicker">League operations</p>
+          <h1 className="app-title">Host <em>dashboard.</em></h1>
+          <p className="app-muted" style={{ marginTop: 14, maxWidth: "42ch" }}>
+            Manage leagues, create challenges, and advance the sprint lifecycle.
           </p>
-        </header>
-
-        {/* Your Leagues Section */}
-        <section className="mb-16">
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-            Your Leagues
-          </h2>
-          
-          {leagues.length === 0 ? (
-            <div className="p-8 bg-[var(--secondary)]">
-              <p className="text-[var(--muted-foreground)]">No leagues yet. Create one below.</p>
-            </div>
-          ) : (
-            <div className="grid gap-3">
-              {leagues.map((league) => (
-                <Link
-                  key={league.id}
-                  href={`/host/${league.id}`}
-                  className="block p-6 bg-[var(--secondary)] hover:bg-[var(--border-soft)] transition-colors group"
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-[var(--foreground)] group-hover:underline">
-                        {league.name}
-                      </h3>
-                      <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-                        {league.challengeIds?.length ?? 0} challenges
-                      </p>
-                    </div>
-                    <span className={`
-                      inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-wide
-                      ${league.status === "active" 
-                        ? "bg-[var(--success)] text-[var(--primary-foreground)]" 
-                        : "bg-[var(--border)] text-[var(--foreground)]"
-                      }
-                    `}>
-                      {league.status}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Create League Section */}
-        <section>
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-            Create a League
-          </h2>
-          <div className="p-8 bg-[var(--secondary)]">
-            <CreateLeagueForm />
-          </div>
-        </section>
+        </div>
+        <span className="app-fig">FIG.H1 — Host<br />{leagues.length} leagues</span>
       </div>
-    </main>
+
+      <p className="app-section-label">Your leagues</p>
+      {leagues.length === 0 ? (
+        <div className="app-empty" style={{ marginBottom: 36 }}>
+          <p>No leagues yet. Create one below.</p>
+        </div>
+      ) : (
+        <div className="app-list" style={{ marginBottom: 36 }}>
+          {leagues.map((league) => (
+            <Link key={league.id} href={`/host/${league.id}`} className="app-list-row">
+              <span className="app-list-dot" style={{ background: "#8f7bff" }} />
+              <span className="app-list-body">
+                <span className="app-list-title">{league.name}</span>
+                <span className="app-list-sub">{league.challengeIds?.length ?? 0} challenges</span>
+              </span>
+              <span className={statusTagClass(league.status)}>{league.status}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      <p className="app-section-label">Create a league</p>
+      <div className="app-panel">
+        <CreateLeagueForm />
+      </div>
+    </>
   );
 }

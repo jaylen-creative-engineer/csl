@@ -55,6 +55,8 @@ html {
 body {
   margin: 0;
   font-family: var(--font-sans, system-ui), system-ui, sans-serif;
+  background: #07070a;
+  color: #f2f1ed;
 }
 
 img,

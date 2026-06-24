@@ -74,116 +74,36 @@ export default function NewChallengePage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="max-w-2xl mx-auto">
-        {/* Back Link */}
-        <Link 
-          href={`/host/${leagueId}`}
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Back to League
-        </Link>
+    <>
+      <Link href={`/host/${leagueId}`} className="app-back">← League</Link>
+      <h1 className="app-title" style={{ marginBottom: 32 }}>New challenge</h1>
 
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase mb-8">
-          New Challenge
-        </h1>
-
-        <div className="p-8 bg-[var(--secondary)]">
-          <form onSubmit={handleSubmit} className="grid gap-6">
-            <div>
-              <label 
-                htmlFor="title" 
-                className="block text-sm font-medium text-[var(--foreground)] mb-2"
-              >
-                Title
-              </label>
-              <input
-                id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                placeholder="e.g. Brand Identity Sprint"
-                className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
-              />
-            </div>
-
-            <div>
-              <label 
-                htmlFor="prompt" 
-                className="block text-sm font-medium text-[var(--foreground)] mb-2"
-              >
-                Brief / Prompt
-              </label>
-              <textarea
-                id="prompt"
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                required
-                rows={5}
-                placeholder="Describe the challenge prompt for participants..."
-                className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors resize-y"
-              />
-            </div>
-
-            <div>
-              <label 
-                htmlFor="deadline" 
-                className="block text-sm font-medium text-[var(--foreground)] mb-2"
-              >
-                Deadline
-              </label>
-              <input
-                id="deadline"
-                type="date"
-                value={deadline}
-                onChange={(e) => setDeadline(e.target.value)}
-                required
-                className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors"
-              />
-            </div>
-
-            <div>
-              <label 
-                htmlFor="criteria" 
-                className="block text-sm font-medium text-[var(--foreground)] mb-2"
-              >
-                Scoring Criteria (JSON)
-              </label>
-              <textarea
-                id="criteria"
-                value={criteriaJson}
-                onChange={(e) => setCriteriaJson(e.target.value)}
-                rows={6}
-                placeholder='[{"name":"Quality","weight":1,"description":"..."}]'
-                className="w-full px-4 py-3 bg-[var(--background)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted-foreground)] focus:outline-none focus:border-[var(--foreground)] transition-colors resize-y font-mono text-sm"
-              />
-              <p className="text-xs text-[var(--muted-foreground)] mt-2">
-                Array of {"{ name, weight, description }"} objects. Leave empty to skip.
-              </p>
-            </div>
-
-            {error && (
-              <p className="text-sm text-[var(--destructive)]">{error}</p>
-            )}
-
-            <div className="flex flex-wrap gap-3 pt-2">
-              <button
-                type="submit"
-                disabled={loading}
-                className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--primary-foreground)] bg-[var(--primary)] rounded-full hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Creating..." : "Create Challenge"}
-              </button>
-              <Link
-                href={`/host/${leagueId}`}
-                className="inline-flex items-center justify-center px-6 py-3 text-base font-medium text-[var(--foreground)] bg-[var(--background)] rounded-full hover:bg-[var(--border-soft)] transition-colors"
-              >
-                Cancel
-              </Link>
-            </div>
-          </form>
-        </div>
+      <div className="app-panel" style={{ maxWidth: 640 }}>
+        <form onSubmit={handleSubmit}>
+          <div className="app-field">
+            <label htmlFor="title" className="app-label">Title</label>
+            <input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required placeholder="e.g. Brand Identity Sprint" className="app-input" />
+          </div>
+          <div className="app-field">
+            <label htmlFor="prompt" className="app-label">Brief / prompt</label>
+            <textarea id="prompt" value={prompt} onChange={(e) => setPrompt(e.target.value)} required rows={5} placeholder="Describe the challenge prompt…" className="app-textarea" />
+          </div>
+          <div className="app-field">
+            <label htmlFor="deadline" className="app-label">Deadline</label>
+            <input id="deadline" type="date" value={deadline} onChange={(e) => setDeadline(e.target.value)} required className="app-input" />
+          </div>
+          <div className="app-field">
+            <label htmlFor="criteria" className="app-label">Scoring criteria (JSON)</label>
+            <textarea id="criteria" value={criteriaJson} onChange={(e) => setCriteriaJson(e.target.value)} rows={6} className="app-textarea" style={{ fontFamily: "var(--font-mono)", fontSize: 12 }} />
+            <p className="app-muted" style={{ marginTop: 8, fontSize: 12 }}>Array of {"{ name, weight, description }"} objects.</p>
+          </div>
+          {error && <p className="app-error">{error}</p>}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 8 }}>
+            <button type="submit" disabled={loading} className="app-btn">{loading ? "Creating…" : "Create challenge →"}</button>
+            <Link href={`/host/${leagueId}`} className="app-btn ghost">Cancel</Link>
+          </div>
+        </form>
       </div>
-    </main>
+    </>
   );
 }

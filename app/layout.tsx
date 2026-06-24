@@ -1,28 +1,11 @@
-import type { Metadata, Viewport } from "next";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Fraunces, Space_Grotesk, Space_Mono } from "next/font/google";
+import { GeistSans, GeistMono } from "geist/font";
 import { NavGate } from "./_components/nav-gate.js";
 import "./globals.css";
 
-const serif = Fraunces({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  variable: "--font-serif",
-  display: "swap"
-});
-
-const sans = Space_Grotesk({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap"
-});
-
-const mono = Space_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-mono",
-  display: "swap"
-});
+const sans = GeistSans;
+const mono = GeistMono;
 
 export const metadata: Metadata = {
   title: "Creative Sports League — Where creative work becomes sport",
@@ -36,10 +19,17 @@ type RootLayoutProps = {
 
 export default function RootLayout({ children }: RootLayoutProps) {
   return (
-    <html lang="en" className={`${serif.variable} ${sans.variable} ${mono.variable}`}>
+    <html
+      lang="en"
+      className={`${sans.variable} ${mono.variable}`}
+      style={{
+        ["--font-sans" as string]: "var(--font-geist-sans)",
+        ["--font-mono" as string]: "var(--font-geist-mono)",
+        ["--font-serif" as string]: "var(--font-geist-sans)",
+      }}
+    >
       <body>
-        <NavGate />
-        {children}
+        <NavGate>{children}</NavGate>
       </body>
     </html>
   );

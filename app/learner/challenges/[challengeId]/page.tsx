@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SubmitForm } from "./_components/submit-form";
+import { formatDeadlineLong, statusTagClass } from "../../../_components/app-shell/app-utils";
 
 interface ScoringCriterion {
   name: string;
@@ -33,117 +34,78 @@ export default async function LearnerChallengePage({ params }: Props) {
 
   if (!challenge) {
     return (
-      <main className="min-h-screen px-6 py-12">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-[var(--destructive)]">Challenge not found.</p>
-          <Link href="/learner" className="text-[var(--accent)] hover:underline mt-4 inline-block">
-            Back to Discovery
-          </Link>
-        </div>
-      </main>
+      <>
+        <p className="app-error">Challenge not found.</p>
+        <Link href="/learner" className="app-back">
+          ← Dashboard
+        </Link>
+      </>
     );
   }
 
   const isOpen = challenge.status === "open";
+  const totalWeight = challenge.scoringCriteria?.reduce((s, c) => s + c.weight, 0) ?? 100;
 
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Link */}
-        <Link 
-          href={`/learner/${challenge.leagueId}`} 
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Back to League
-        </Link>
+    <>
+      <Link href={`/learner/${challenge.leagueId}`} className="app-back">
+        ← League
+      </Link>
 
-        {/* Header */}
-        <header className="mb-8">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-              {challenge.title}
-            </h1>
-            <Link
-              href={`/learner/challenges/${challengeId}/leaderboard`}
-              className="inline-flex items-center px-4 py-2 text-sm font-medium text-[var(--foreground)] bg-[var(--secondary)] rounded-full hover:bg-[var(--border-soft)] transition-colors"
-            >
-              View Leaderboard
-            </Link>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-4 mt-4">
-            <span className={`
-              inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-wide
-              ${challenge.status === "open" 
-                ? "bg-[var(--success)] text-[var(--primary-foreground)]" 
-                : "bg-[var(--border)] text-[var(--foreground)]"
-              }
-            `}>
-              {challenge.status}
-            </span>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              Deadline: {new Date(challenge.deadline).toLocaleDateString()}
-            </span>
-          </div>
-        </header>
-
-        {/* Challenge Brief */}
-        <section className="p-8 bg-[var(--secondary)] mb-8">
-          <h2 className="text-sm font-semibold text-[var(--foreground)] uppercase tracking-wide mb-4">
-            Challenge Brief
-          </h2>
-          <p className="text-[var(--foreground)] leading-relaxed">
-            {challenge.prompt}
-          </p>
-        </section>
-
-        {/* Scoring Criteria */}
-        {challenge.scoringCriteria && challenge.scoringCriteria.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">
-              Scoring Criteria
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-[var(--border)]">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Criterion</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Weight</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {challenge.scoringCriteria.map((c, i) => (
-                    <tr key={i} className="border-b border-[var(--border-soft)]">
-                      <td className="py-4 px-4 text-[var(--foreground)]">{c.name}</td>
-                      <td className="py-4 px-4 text-[var(--foreground)]">{c.weight}</td>
-                      <td className="py-4 px-4 text-[var(--muted-foreground)]">{c.description ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {/* Submission Section */}
-        <section>
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-            Submit Your Entry
-          </h2>
-          {isOpen ? (
-            <div className="p-8 bg-[var(--secondary)]">
-              <SubmitForm challengeId={challengeId} />
-            </div>
-          ) : (
-            <div className="p-8 bg-[var(--secondary)]">
-              <p className="text-[var(--muted-foreground)]">
-                This challenge is not currently accepting submissions.
-              </p>
-            </div>
-          )}
-        </section>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
+        <span className="app-tag purple">Sprint</span>
+        <span className={isOpen ? "app-tag open" : statusTagClass(challenge.status)}>{challenge.status}</span>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "rgba(242,241,237,0.4)" }}>
+          FIG.03 — Sprint
+        </span>
       </div>
-    </main>
+
+      <h1 className="app-title" style={{ maxWidth: "20ch" }}>{challenge.title}</h1>
+      <p className="app-muted" style={{ margin: "14px 0 0", fontSize: 13 }}>
+        League {challenge.leagueId.slice(0, 8)}… · Closes {formatDeadlineLong(challenge.deadline)}
+      </p>
+
+      <div className="app-panel" style={{ marginTop: 32 }}>
+        <p className="app-section-label accent">The brief</p>
+        <p className="app-text">{challenge.prompt}</p>
+      </div>
+
+      {challenge.scoringCriteria && challenge.scoringCriteria.length > 0 && (
+        <>
+          <p className="app-section-label" style={{ marginTop: 34 }}>Scoring criteria</p>
+          {challenge.scoringCriteria.map((c, i) => (
+            <div key={i} className="app-criterion">
+              <div className="app-criterion-head">
+                <span className="app-criterion-name">{c.name}</span>
+                <span className="app-criterion-weight">{c.weight}%</span>
+              </div>
+              <div className="app-progress">
+                <i style={{ width: `${(c.weight / totalWeight) * 100}%` }} />
+              </div>
+              {c.description && (
+                <p className="app-muted" style={{ marginTop: 8, fontSize: 13 }}>{c.description}</p>
+              )}
+            </div>
+          ))}
+        </>
+      )}
+
+      <p className="app-section-label" style={{ marginTop: 34 }}>Submit your entry</p>
+      {isOpen ? (
+        <div className="app-panel">
+          <SubmitForm challengeId={challengeId} />
+        </div>
+      ) : (
+        <div className="app-empty">
+          <p>This challenge is not currently accepting submissions.</p>
+        </div>
+      )}
+
+      <div style={{ marginTop: 24 }}>
+        <Link href={`/learner/challenges/${challengeId}/leaderboard`} className="app-btn ghost">
+          View leaderboard
+        </Link>
+      </div>
+    </>
   );
 }

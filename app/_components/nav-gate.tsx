@@ -1,14 +1,24 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Nav } from "./nav.js";
+import { AppShell } from "./app-shell/app-shell.js";
+
+const STANDALONE_ROUTES = new Set(["/"]);
+
+type NavGateProps = {
+  children: ReactNode;
+};
 
 /**
- * The landing page ("/") ships its own designed navigation,
- * so the utility nav is hidden there and shown everywhere else.
+ * Landing ships its own navigation; in-app routes use the editorial shell.
  */
-export function NavGate() {
+export function NavGate({ children }: NavGateProps) {
   const pathname = usePathname();
-  if (pathname === "/") return null;
-  return <Nav />;
+
+  if (STANDALONE_ROUTES.has(pathname) || pathname.startsWith("/enter")) {
+    return <>{children}</>;
+  }
+
+  return <AppShell>{children}</AppShell>;
 }

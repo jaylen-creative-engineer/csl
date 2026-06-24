@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LifecycleButtons } from "./_components/lifecycle-buttons";
+import { statusTagClass } from "../../../../_components/app-shell/app-utils";
 
 interface ScoringCriterion {
   name: string;
@@ -49,161 +50,97 @@ export default async function ChallengeSprintPage({ params }: Props) {
 
   if (!challenge) {
     return (
-      <main className="min-h-screen px-6 py-12">
-        <div className="max-w-4xl mx-auto">
-          <p className="text-[var(--destructive)]">Challenge not found.</p>
-          <Link href={`/host/${leagueId}`} className="text-[var(--accent)] hover:underline mt-4 inline-block">
-            Back to League
-          </Link>
-        </div>
-      </main>
+      <>
+        <p className="app-error">Challenge not found.</p>
+        <Link href={`/host/${leagueId}`} className="app-back">← League</Link>
+      </>
     );
   }
 
   const submissions = await getSubmissions(challengeId);
 
-  const getStatusStyles = (status: string) => {
-    switch (status) {
-      case "open": return "bg-[var(--success)] text-[var(--primary-foreground)]";
-      case "judging": return "bg-[var(--secondary)] text-[var(--foreground)]";
-      case "complete": return "bg-[var(--border)] text-[var(--foreground)]";
-      default: return "bg-[var(--secondary)] text-[var(--foreground)]";
-    }
-  };
-
   return (
-    <main className="min-h-screen px-6 py-12">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Link */}
-        <Link 
-          href={`/host/${leagueId}`}
-          className="inline-flex items-center text-sm text-[var(--muted-foreground)] hover:text-[var(--foreground)] mb-8"
-        >
-          <span className="mr-2">←</span> Back to League
-        </Link>
+    <>
+      <Link href={`/host/${leagueId}`} className="app-back">← League</Link>
 
-        {/* Header */}
-        <header className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[var(--foreground)] uppercase">
-            {challenge.title}
-          </h1>
-          <div className="flex flex-wrap items-center gap-4 mt-4">
-            <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full uppercase tracking-wide ${getStatusStyles(challenge.status)}`}>
-              {challenge.status}
-            </span>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              Deadline: {new Date(challenge.deadline).toLocaleDateString()}
-            </span>
-            <span className="text-sm text-[var(--muted-foreground)]">
-              Submissions: <span className="text-[var(--foreground)] font-medium">{submissions.length}</span>
+      <div className="app-page-head">
+        <div>
+          <p className="app-kicker">Sprint admin</p>
+          <h1 className="app-title">{challenge.title}</h1>
+          <div style={{ display: "flex", gap: 12, marginTop: 14, alignItems: "center", flexWrap: "wrap" }}>
+            <span className={statusTagClass(challenge.status)}>{challenge.status}</span>
+            <span className="app-muted" style={{ fontSize: 13 }}>
+              Deadline {new Date(challenge.deadline).toLocaleDateString()} · {submissions.length} submissions
             </span>
           </div>
-        </header>
-
-        {/* Challenge Brief */}
-        <section className="p-8 bg-[var(--secondary)] mb-8">
-          <h2 className="text-sm font-semibold text-[var(--foreground)] uppercase tracking-wide mb-4">
-            Challenge Brief
-          </h2>
-          <p className="text-[var(--foreground)] leading-relaxed">
-            {challenge.prompt}
-          </p>
-        </section>
-
-        {/* Scoring Criteria */}
-        {challenge.scoringCriteria && challenge.scoringCriteria.length > 0 && (
-          <section className="mb-8">
-            <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">
-              Scoring Criteria
-            </h2>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-[var(--border)]">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Criterion</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Weight</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {challenge.scoringCriteria.map((c, i) => (
-                    <tr key={i} className="border-b border-[var(--border-soft)]">
-                      <td className="py-4 px-4 text-[var(--foreground)]">{c.name}</td>
-                      <td className="py-4 px-4 text-[var(--foreground)]">{c.weight}</td>
-                      <td className="py-4 px-4 text-[var(--muted-foreground)]">{c.description ?? "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
-        {/* Lifecycle */}
-        <section className="mb-8">
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-4">Lifecycle</h2>
-          <div className="p-6 bg-[var(--secondary)]">
-            <LifecycleButtons challengeId={challengeId} status={challenge.status} />
-          </div>
-        </section>
-
-        {/* Submissions */}
-        <section>
-          <h2 className="text-xl font-semibold text-[var(--foreground)] mb-6">
-            Submissions ({submissions.length})
-          </h2>
-          
-          {submissions.length === 0 ? (
-            <div className="p-8 bg-[var(--secondary)]">
-              <p className="text-[var(--muted-foreground)]">No submissions yet.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-[var(--border)]">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">ID</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Participant</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Status</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Submitted</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-[var(--foreground)]">Artifact</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {submissions.map((s) => (
-                    <tr key={s.id} className="border-b border-[var(--border-soft)]">
-                      <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
-                        {s.id.slice(0, 8)}...
-                      </td>
-                      <td className="py-4 px-4 font-mono text-sm text-[var(--muted-foreground)]">
-                        {s.participantId.slice(0, 8)}...
-                      </td>
-                      <td className="py-4 px-4 text-[var(--foreground)]">{s.status}</td>
-                      <td className="py-4 px-4 text-[var(--foreground)]">
-                        {new Date(s.createdAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-4 px-4">
-                        {s.artifact?.url ? (
-                          <a 
-                            href={s.artifact.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="text-[var(--accent)] hover:underline"
-                          >
-                            View
-                          </a>
-                        ) : (
-                          <span className="text-[var(--muted-foreground)]">—</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+        </div>
       </div>
-    </main>
+
+      <div className="app-panel" style={{ marginBottom: 32 }}>
+        <p className="app-section-label accent">The brief</p>
+        <p className="app-text">{challenge.prompt}</p>
+      </div>
+
+      {challenge.scoringCriteria && challenge.scoringCriteria.length > 0 && (
+        <>
+          <p className="app-section-label">Scoring criteria</p>
+          <table className="app-table" style={{ marginBottom: 32 }}>
+            <thead>
+              <tr>
+                <th>Criterion</th>
+                <th>Weight</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {challenge.scoringCriteria.map((c, i) => (
+                <tr key={i}>
+                  <td>{c.name}</td>
+                  <td>{c.weight}</td>
+                  <td className="app-muted">{c.description ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+
+      <p className="app-section-label">Lifecycle</p>
+      <div className="app-panel" style={{ marginBottom: 32 }}>
+        <LifecycleButtons challengeId={challengeId} status={challenge.status} />
+      </div>
+
+      <p className="app-section-label">Submissions ({submissions.length})</p>
+      {submissions.length === 0 ? (
+        <div className="app-empty"><p>No submissions yet.</p></div>
+      ) : (
+        <table className="app-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Participant</th>
+              <th>Status</th>
+              <th>Submitted</th>
+              <th>Artifact</th>
+            </tr>
+          </thead>
+          <tbody>
+            {submissions.map((s) => (
+              <tr key={s.id}>
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.id.slice(0, 8)}…</td>
+                <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.participantId.slice(0, 8)}…</td>
+                <td>{s.status}</td>
+                <td>{new Date(s.createdAt).toLocaleDateString()}</td>
+                <td>
+                  {s.artifact?.url ? (
+                    <a href={s.artifact.url} target="_blank" rel="noopener noreferrer">View</a>
+                  ) : "—"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </>
   );
 }
