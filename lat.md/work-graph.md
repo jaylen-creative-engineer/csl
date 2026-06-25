@@ -66,6 +66,23 @@ Core services: [[src/league-model/league-model.service.ts#LeagueModelService]], 
 | Audit log | Scoring and enrollment changes |
 | Metrics / tracing | Operational confidence at scale |
 
+### Phase 5 — Coordination network
+
+**Goal:** multi-phase project coordination across specialized player types — with structured handoffs, bounties, and a headless channel. Full spec: [[lat.md/coordination-network#Coordination network]].
+
+**Depends on:** Phase 2 (hardened APIs) + Phase 4 (auth + RBAC).
+
+| Work item | Notes |
+|-----------|--------|
+| Project + Phase schema and services | New top-level entities; build phases reuse Challenge sprint model |
+| Player type model | Extends `Participant` disciplines: builder, product, amplifier, delivery, analyst, synthesizer |
+| Handoff protocol | Stable-state gate + `Handoff` record with deliverables and notes |
+| Bounty allocation model | `BountyAllocation` per phase; released on accepted handoff |
+| Opportunity discovery surface | Open phases with bounties surfaced as browsable + matchable opportunities |
+| Headless channel (SMS / webhook) | Twilio SMS + webhook; stateless command protocol (ACCEPT, STATUS, FLAG) |
+| Coordination Dashboard (host) | Cross-project phase status, handoff queue, bounty spend — enterprise POV |
+| AI match scoring | Fit score per participant × opportunity using Showcase signals |
+
 ## Work themes
 
 Cross-cutting capabilities after foundations ship; optional ordering within a theme.
@@ -134,6 +151,43 @@ Engineering work to support the community-level Creative Sports League network (
 | Invitation and onboarding flows | Community growth without gatekeeping |
 | Reputation portability | Skill signals belong to the participant, not the platform |
 
+### Theme — Multi-phase coordination
+
+Engineering work for the coordination network — Project, Phase, Handoff, and player type model ([[lat.md/coordination-network#Coordination network]]). Depends on Phase 4 auth.
+
+| Work item | Enables |
+|-----------|---------|
+| `Project` and `Phase` schema + migrations | Durable multi-phase project state |
+| `ProjectService` and `PhaseService` | Lifecycle management, stable-state gate |
+| Player type extension to `Participant` | Role-aware assignment and matching |
+| `Handoff` entity and service | Context transfer between phases; stable-state enforcement |
+| Phase-scoped challenge reuse | Build phases delegate to existing sprint model |
+| Coordination Dashboard UI | Host/PM view across all active projects and handoffs |
+
+### Theme — Bounty and opportunity marketplace
+
+Monetary incentives and open opportunity discovery ([[lat.md/coordination-network#Coordination network#Bounty system]]).
+
+| Work item | Enables |
+|-----------|---------|
+| `BountyAllocation` schema and service | Funds held and released against phase delivery |
+| Opportunity discovery surface | Open phases surfaced as browsable + matchable opportunities |
+| AI match scoring | Participant × opportunity fit using Showcase signals |
+| Bounty release on handoff acceptance | Pay-on-delivery proof |
+| Earnings history on participant profile | Credential and income record for skilled individuals |
+
+### Theme — Headless channel
+
+Text and webhook-based participation without a UI ([[lat.md/coordination-network#Coordination network#Headless channel]]).
+
+| Work item | Enables |
+|-----------|---------|
+| `Channel` entity (SMS / webhook / API) | Multi-surface notification and interaction |
+| Twilio SMS integration | Inbound + outbound text-based participation |
+| Stateless command parser | ACCEPT, STATUS, FLAG, PASS, HELP over SMS |
+| Webhook push for opportunity matching | Slack, email, or custom endpoint delivery |
+| Headless portfolio accrual | Work done via SMS still produces portfolio artifacts |
+
 ### Theme — Rollout and announcement
 
 Non-engineering work that intersects with product readiness ([[lat.md/rollout-strategy#Rollout strategy#Announcement timeline]]).
@@ -145,6 +199,14 @@ Non-engineering work that intersects with product readiness ([[lat.md/rollout-st
 | Q3 soft announcement content | Awareness and anticipation |
 | Q4 launch content and landing page | Public availability of both modes |
 | Early adopter outreach (community anchors) | Seed network density before sponsors |
+
+## Backlog — supply-gated features
+
+Features that are designed, assessed, and ready to build — but intentionally held until the prerequisite platform condition is met. Do not schedule engineering work on these until the gate condition is confirmed.
+
+| Feature | Gate condition | Spec | Notes |
+|---------|---------------|------|-------|
+| Coordination network (Phase 5) | Credible talent supply established — portfolio-bearing participants visible on the platform with demonstrated skills across player types | [[lat.md/coordination-network#Coordination network]] | Full assessment in [[lat.md/coordination-network-assessment#Coordination network — feasibility, value, and GTM assessment]]. Activate by identifying 3–5 pilot orgs as design partners once supply gate is met; run first projects manually before self-serve. Defer bounty payment rails until volume justifies compliance investment. |
 
 ## Known domain gaps (tracked)
 
