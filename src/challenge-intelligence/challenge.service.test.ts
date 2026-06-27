@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { randomUUID } from "node:crypto";
-import { ChallengeService } from "./challenge.service.js";
+import { ChallengeService, aggregateScore } from "./challenge.service.js";
 import { ChallengeStatus } from "./types.js";
 import { LeagueModelService } from "../league-model/league-model.service.js";
 import { createTestSupabaseClient } from "../test/supabase-test.js";
@@ -9,6 +9,39 @@ import { hasSupabaseTestEnv } from "../test/supabase-env.js";
 function deadline(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 3_600_000).toISOString();
 }
+
+describe("aggregateScore", () => {
+  it("returns the mean score across judges", () => {
+    const scoredAt = "2026-06-27T10:00:00.000Z";
+
+    expect(
+      aggregateScore([
+        {
+          id: "score:1",
+          submissionId: "submission:1",
+          judgeId: "judge:1",
+          criteriaScores: [],
+          totalScore: 100,
+          rationale: "Excellent",
+          scoredAt,
+        },
+        {
+          id: "score:2",
+          submissionId: "submission:1",
+          judgeId: "judge:2",
+          criteriaScores: [],
+          totalScore: 50,
+          rationale: "Needs polish",
+          scoredAt,
+        },
+      ])
+    ).toBe(75);
+  });
+
+  it("returns zero for unscored submissions", () => {
+    expect(aggregateScore([])).toBe(0);
+  });
+});
 
 describe.skipIf(!hasSupabaseTestEnv())("ChallengeService", () => {
   let service: ChallengeService;
