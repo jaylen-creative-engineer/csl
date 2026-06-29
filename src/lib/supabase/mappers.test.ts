@@ -144,6 +144,6 @@ describe("Supabase scalar mappers", () => {
   });
 
   it("falls back to the leading date-shaped text for invalid deadlines", () => {
-    expect(deadlineToDb("not-a-date")).toBe("not-a-da");
+    expect(deadlineToDb("not-a-date-value")).toBe("not-a-date");
   });
 });
