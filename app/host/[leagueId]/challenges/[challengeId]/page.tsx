@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { LifecycleButtons } from "./_components/lifecycle-buttons";
-import { statusTagClass } from "../../../../_components/app-shell/app-utils";
+import { formatSubmissionDate, statusTagClass } from "../../../../_components/app-shell/app-utils";
 
 interface ScoringCriterion {
   name: string;
@@ -22,7 +22,8 @@ interface Submission {
   id: string;
   participantId: string;
   status: string;
-  createdAt: string;
+  submittedAt?: string;
+  createdAt?: string;
   artifact?: { url: string };
 }
 
@@ -130,7 +131,7 @@ export default async function ChallengeSprintPage({ params }: Props) {
                 <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.id.slice(0, 8)}…</td>
                 <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.participantId.slice(0, 8)}…</td>
                 <td>{s.status}</td>
-                <td>{new Date(s.createdAt).toLocaleDateString()}</td>
+                <td>{formatSubmissionDate(s)}</td>
                 <td>
                   {s.artifact?.url ? (
                     <a href={s.artifact.url} target="_blank" rel="noopener noreferrer">View</a>
