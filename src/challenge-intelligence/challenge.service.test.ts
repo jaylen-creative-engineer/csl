@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { randomUUID } from "node:crypto";
-import { ChallengeService } from "./challenge.service.js";
-import { ChallengeStatus } from "./types.js";
+import { aggregateScore, ChallengeService } from "./challenge.service.js";
+import { ChallengeStatus, type Score } from "./types.js";
 import { LeagueModelService } from "../league-model/league-model.service.js";
 import { createTestSupabaseClient } from "../test/supabase-test.js";
 import { hasSupabaseTestEnv } from "../test/supabase-env.js";
@@ -9,6 +9,40 @@ import { hasSupabaseTestEnv } from "../test/supabase-env.js";
 function deadline(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 3_600_000).toISOString();
 }
+
+function score(totalScore: number, judgeId = `judge:${totalScore}`): Score {
+  return {
+    id: `score:${judgeId}:${totalScore}`,
+    submissionId: "submission:test",
+    judgeId,
+    criteriaScores: [{ criteriaName: "Overall", score: totalScore }],
+    totalScore,
+    rationale: "Test score",
+    scoredAt: "2026-01-01T00:00:00.000Z",
+  };
+}
+
+describe("aggregateScore", () => {
+  it("returns zero when no judges have scored", () => {
+    expect(aggregateScore([])).toBe(0);
+  });
+
+  it("uses the single judge total when only one score exists", () => {
+    expect(aggregateScore([score(80)])).toBe(80);
+  });
+
+  it("averages totals across multiple judges", () => {
+    expect(aggregateScore([score(70), score(90), score(80)])).toBe(80);
+    expect(aggregateScore([score(30), score(50)])).toBe(40);
+  });
+
+  it("does not depend on judge insertion order", () => {
+    const firstOrder = aggregateScore([score(70, "judge:1"), score(90, "judge:2")]);
+    const secondOrder = aggregateScore([score(90, "judge:2"), score(70, "judge:1")]);
+
+    expect(firstOrder).toBe(secondOrder);
+  });
+});
 
 describe.skipIf(!hasSupabaseTestEnv())("ChallengeService", () => {
   let service: ChallengeService;
@@ -296,6 +330,132 @@ describe.skipIf(!hasSupabaseTestEnv())("ChallengeService", () => {
       const leaderboard = await service.getLeaderboard(challenge.id);
       expect(leaderboard).toHaveLength(1);
       expect(leaderboard[0]?.participantId).toBe(p1.id);
+    });
+
+    it("ranks submissions by the mean of multiple judge scores", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
+        title: "Multi-judge Test",
+        prompt: "Prompt",
+        deadline: deadline(24),
+      });
+      await service.openChallenge(challenge.id);
+
+      const p1 = await leagueModel.createParticipant({
+        handle: `multi-a-${suffix}`,
+        discipline: "design" as any,
+      });
+      const p2 = await leagueModel.createParticipant({
+        handle: `multi-b-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      const s1 = await service.submitEntry(challenge.id, p1.id, {
+        artifact: { url: "https://p1.design/multi" },
+      });
+      const s2 = await service.submitEntry(challenge.id, p2.id, {
+        artifact: { url: "https://p2.design/multi" },
+      });
+
+      await service.closeForJudging(challenge.id);
+
+      await service.scoreSubmission(s1.id, {
+        judgeId: "judge:1",
+        criteriaScores: [{ criteriaName: "Overall", score: 70 }],
+        rationale: "Solid",
+      });
+      await service.scoreSubmission(s1.id, {
+        judgeId: "judge:2",
+        criteriaScores: [{ criteriaName: "Overall", score: 90 }],
+        rationale: "Excellent",
+      });
+      await service.scoreSubmission(s2.id, {
+        judgeId: "judge:1",
+        criteriaScores: [{ criteriaName: "Overall", score: 75 }],
+        rationale: "Good",
+      });
+
+      const leaderboard = await service.getLeaderboard(challenge.id);
+
+      expect(leaderboard).toHaveLength(2);
+      expect(leaderboard[0]?.id).toBe(s1.id);
+      expect(leaderboard[0]?.scores).toHaveLength(2);
+      expect(aggregateScore(leaderboard[0]?.scores ?? [])).toBe(80);
+      expect(leaderboard[1]?.id).toBe(s2.id);
+    });
+  });
+
+  describe("withdrawSubmission", () => {
+    it("only allows withdrawal while the challenge is open", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
+        title: "Withdrawal Guard",
+        prompt: "Prompt",
+        deadline: deadline(24),
+      });
+
+      await expect(
+        service.withdrawSubmission(challenge.id, "submission:missing")
+      ).rejects.toThrow('Challenge is "draft", expected "open"');
+
+      await service.openChallenge(challenge.id);
+      const participant = await leagueModel.createParticipant({
+        handle: `withdraw-guard-${suffix}`,
+        discipline: "design" as any,
+      });
+      const submission = await service.submitEntry(challenge.id, participant.id, {
+        artifact: { url: "https://participant.design/withdraw-guard" },
+      });
+      await service.closeForJudging(challenge.id);
+
+      await expect(
+        service.withdrawSubmission(challenge.id, submission.id)
+      ).rejects.toThrow('Challenge is "judging", expected "open"');
+    });
+
+    it("rejects missing submissions and filters withdrawn entries from public lists", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
+        title: "Withdrawal Filtering",
+        prompt: "Prompt",
+        deadline: deadline(24),
+      });
+      await service.openChallenge(challenge.id);
+
+      await expect(
+        service.withdrawSubmission(challenge.id, "submission:missing")
+      ).rejects.toThrow("Submission not found");
+
+      const p1 = await leagueModel.createParticipant({
+        handle: `withdrawn-${suffix}`,
+        discipline: "design" as any,
+      });
+      const p2 = await leagueModel.createParticipant({
+        handle: `active-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      const withdrawn = await service.submitEntry(challenge.id, p1.id, {
+        artifact: { url: "https://p1.design/withdrawn" },
+      });
+      const active = await service.submitEntry(challenge.id, p2.id, {
+        artifact: { url: "https://p2.design/active" },
+      });
+
+      await service.withdrawSubmission(challenge.id, withdrawn.id);
+
+      const openSubmissions = await service.getSubmissionsForChallenge(challenge.id);
+      expect(openSubmissions.map((s) => s.id)).toEqual([active.id]);
+
+      await service.closeForJudging(challenge.id);
+      await service.scoreSubmission(active.id, {
+        judgeId: "judge:1",
+        criteriaScores: [{ criteriaName: "Overall", score: 88 }],
+        rationale: "Strong remaining entry",
+      });
+
+      const leaderboard = await service.getLeaderboard(challenge.id);
+      expect(leaderboard.map((s) => s.id)).toEqual([active.id]);
     });
   });
 
