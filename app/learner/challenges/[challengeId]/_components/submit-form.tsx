@@ -110,8 +110,8 @@ export function SubmitForm({ challengeId }: Props) {
         />
       </div>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(242,241,237,0.1)" }}>
-        <label htmlFor="is-public" style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "rgba(242,241,237,0.56)", cursor: "pointer" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(244,243,239,0.1)" }}>
+        <label htmlFor="is-public" style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "rgba(244,243,239,0.56)", cursor: "pointer" }}>
           <input
             id="is-public"
             type="checkbox"

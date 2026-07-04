@@ -101,7 +101,7 @@ export default async function LearnerLeagueDetailPage({ params }: Props) {
             {otherChallenges.map((c) => (
               <div key={c.id} className="app-list-row" style={{ cursor: "default" }}>
                 <span className="app-list-body">
-                  <span className="app-list-title" style={{ color: "rgba(242,241,237,0.55)" }}>{c.title}</span>
+                  <span className="app-list-title" style={{ color: "rgba(244,243,239,0.55)" }}>{c.title}</span>
                 </span>
                 <span className={statusTagClass(c.status)}>{c.status}</span>
               </div>

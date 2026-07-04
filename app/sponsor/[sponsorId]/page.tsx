@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { DataTable, type DataTableRow } from "../../_components/dashboard/data-table";
+import { EmptyState } from "../../_components/dashboard/empty-state";
 
 interface Submission {
   id: string;
@@ -73,50 +75,76 @@ export default async function SponsorDashboardPage({ params }: Props) {
 
       {summary && (
         <>
-          <div className="app-stat-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)" }}>
-            <div className="app-stat">
-              <span className="app-stat-idx">01</span>
-              <span className="app-stat-value">{summary.challenges}</span>
-              <span className="app-stat-label">Challenges attached</span>
-            </div>
-            <div className="app-stat">
-              <span className="app-stat-idx">02</span>
-              <span className="app-stat-value">{summary.topSubmissions.length}</span>
-              <span className="app-stat-label">Top submissions</span>
-            </div>
-          </div>
+          {(() => {
+            const scores = summary.topSubmissions
+              .map((s) => s.scores?.[0]?.totalScore)
+              .filter((n): n is number => n !== undefined);
+            const bestScore = scores.length ? Math.max(...scores) : null;
+            const avgScore = scores.length
+              ? scores.reduce((a, b) => a + b, 0) / scores.length
+              : null;
+            return (
+              <div className="app-stat-grid">
+                <div className="app-stat">
+                  <span className="app-stat-idx">01</span>
+                  <span className="app-stat-value">{summary.challenges}</span>
+                  <span className="app-stat-label">Challenges attached</span>
+                </div>
+                <div className="app-stat">
+                  <span className="app-stat-idx">02</span>
+                  <span className="app-stat-value">{summary.topSubmissions.length}</span>
+                  <span className="app-stat-label">Top submissions</span>
+                </div>
+                <div className="app-stat">
+                  <span className="app-stat-idx">03</span>
+                  <span className="app-stat-value">
+                    {bestScore !== null ? bestScore.toFixed(1) : "—"}
+                  </span>
+                  <span className="app-stat-label">Best score</span>
+                </div>
+                <div className="app-stat">
+                  <span className="app-stat-idx">04</span>
+                  <span className="app-stat-value">
+                    {avgScore !== null ? avgScore.toFixed(1) : "—"}
+                  </span>
+                  <span className="app-stat-label">Average top score</span>
+                </div>
+              </div>
+            );
+          })()}
 
           <p className="app-section-label">Top submissions by challenge</p>
           {summary.topSubmissions.length === 0 ? (
-            <div className="app-empty"><p>No scored submissions yet across your challenges.</p></div>
+            <EmptyState
+              fig="FIG.S2 — Signals"
+              title="No scored submissions yet"
+              body="Once judges score work against your attached challenges, the top submissions and their outcome signals will surface here."
+              ctaHref={`/sponsor/${sponsorId}/attach`}
+              ctaLabel="Attach a brief →"
+            />
           ) : (
-            <table className="app-table">
-              <thead>
-                <tr>
-                  <th>Submission</th>
-                  <th>Challenge</th>
-                  <th>Participant</th>
-                  <th>Top score</th>
-                  <th>Submitted</th>
-                </tr>
-              </thead>
-              <tbody>
-                {summary.topSubmissions.map((s) => {
-                  const topScore = s.scores?.[0]?.totalScore;
-                  return (
-                    <tr key={s.id}>
-                      <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.id.slice(0, 10)}…</td>
-                      <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.challengeId.slice(0, 10)}…</td>
-                      <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.participantId.slice(0, 10)}…</td>
-                      <td style={{ color: "var(--app-accent)", fontWeight: 600 }}>
-                        {topScore !== undefined ? topScore.toFixed(1) : "—"}
-                      </td>
-                      <td>{new Date(s.submittedAt).toLocaleDateString()}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+            <DataTable
+              columns={[
+                { key: "shortId", label: "Submission", kind: "primary", subKey: "challengeShort" },
+                { key: "participantShort", label: "Participant", kind: "mono" },
+                { key: "topScore", label: "Top score", kind: "score", numeric: true, width: "120px" },
+                { key: "submittedAt", label: "Submitted", kind: "date", numeric: true, width: "120px" },
+              ]}
+              rows={summary.topSubmissions.map(
+                (s): DataTableRow => ({
+                  id: s.id,
+                  shortId: `${s.id.slice(0, 10)}…`,
+                  challengeShort: `Challenge ${s.challengeId.slice(0, 10)}…`,
+                  participantShort: `${s.participantId.slice(0, 10)}…`,
+                  topScore: s.scores?.[0]?.totalScore ?? null,
+                  submittedAt: s.submittedAt,
+                }),
+              )}
+              searchKeys={["shortId", "challengeShort", "participantShort"]}
+              searchPlaceholder="Search submissions"
+              countLabel="submissions"
+              initialSort={{ key: "topScore", dir: "desc" }}
+            />
           )}
         </>
       )}

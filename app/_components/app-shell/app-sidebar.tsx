@@ -102,16 +102,11 @@ export function AppSidebar({ handle, discipline }: AppSidebarProps) {
 
   return (
     <aside className="app-sidebar">
-      <Link href="/learner" className="app-brand">
-        <span className="app-brand-mark">
-          <i />
+      <Link href="/learner" className="app-brand" aria-label="Creative Sports League home">
+        <span className="app-brand-name">
+          CSL<sup>®</sup>
         </span>
-        <span className="app-brand-text">
-          <span className="app-brand-name">
-            CSL<sup>®</sup>
-          </span>
-          <span className="app-brand-tag">Creative Sports League</span>
-        </span>
+        <span className="app-brand-tag">Creative Sports League</span>
       </Link>
 
       <nav className="app-nav">

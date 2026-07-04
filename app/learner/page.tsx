@@ -1,10 +1,7 @@
 import Link from "next/link";
-import {
-  formatDeadlineLong,
-  formatDeadlineShort,
-  sprintColor,
-  statusTagClass,
-} from "../_components/app-shell/app-utils";
+import { formatDeadlineLong, sprintColor } from "../_components/app-shell/app-utils";
+import { DataTable, type DataTableRow } from "../_components/dashboard/data-table";
+import { EmptyState } from "../_components/dashboard/empty-state";
 
 interface League {
   id: string;
@@ -118,7 +115,7 @@ export default async function LearnerDiscoveryPage() {
               </p>
             )}
 
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 28, marginTop: 24, paddingTop: 22, borderTop: "1px solid rgba(242,241,237,0.1)" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 28, marginTop: 24, paddingTop: 22, borderTop: "1px solid rgba(244,243,239,0.1)" }}>
               <div>
                 <span className="app-section-label" style={{ marginBottom: 5, fontSize: 10 }}>Closes in</span>
                 <span style={{ fontSize: 22, color: "var(--app-accent)" }}>{formatDeadlineLong(featured.deadline)}</span>
@@ -135,34 +132,40 @@ export default async function LearnerDiscoveryPage() {
         </>
       )}
 
-      <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", marginBottom: 14 }}>
-        <p className="app-section-label" style={{ margin: 0 }}>Your sprints</p>
-        <span style={{ fontSize: 12, color: "rgba(242,241,237,0.4)" }}>{sprints.length} tracked</span>
-      </div>
+      <p className="app-section-label">Your sprints</p>
 
       {sprints.length === 0 ? (
-        <div className="app-empty">
-          <p>
-            <strong>No leagues available right now.</strong> Check back soon or contact a league host to get started.
-          </p>
-          <Link href="/enter" className="app-btn" style={{ marginTop: 20 }}>
-            Set up your season →
-          </Link>
-        </div>
+        <EmptyState
+          fig="FIG.03 — The Field"
+          title="No leagues in play yet"
+          body="Once a host opens a league for the season, its sprints will land here — deadlines, statuses, and standings included. Set up your season to get on the field."
+          ctaHref="/enter"
+          ctaLabel="Set up your season →"
+        />
       ) : (
-        <div className="app-list">
-          {sprints.map((s, i) => (
-            <Link key={s.id} href={`/learner/challenges/${s.id}`} className="app-list-row">
-              <span className="app-list-dot" style={{ background: sprintColor(i) }} />
-              <span className="app-list-body">
-                <span className="app-list-title">{s.title}</span>
-                <span className="app-list-sub">{s.leagueName}</span>
-              </span>
-              <span className={statusTagClass(s.status)}>{s.status}</span>
-              <span className="app-list-deadline">{formatDeadlineShort(s.deadline)}</span>
-            </Link>
-          ))}
-        </div>
+        <DataTable
+          columns={[
+            { key: "title", label: "Sprint", kind: "primary", subKey: "leagueName", dotColorKey: "dot" },
+            { key: "status", label: "Status", kind: "status", width: "130px" },
+            { key: "deadline", label: "Closes", kind: "deadline", numeric: true, width: "110px" },
+          ]}
+          rows={sprints.map(
+            (s, i): DataTableRow => ({
+              id: s.id,
+              href: `/learner/challenges/${s.id}`,
+              title: s.title,
+              leagueName: s.leagueName,
+              status: s.status,
+              deadline: s.deadline,
+              dot: sprintColor(i),
+            }),
+          )}
+          searchKeys={["title", "leagueName"]}
+          searchPlaceholder="Search sprints or leagues"
+          filterKey="status"
+          countLabel="sprints"
+          initialSort={{ key: "deadline", dir: "asc" }}
+        />
       )}
     </>
   );

@@ -35,12 +35,12 @@ export function IntakePage() {
 
       <header className="app-intake-header">
         <span style={{ fontWeight: 700, fontSize: 20, letterSpacing: "0.03em" }}>
-          CSL<sup style={{ fontSize: "0.55em", verticalAlign: "super", color: "#d8ff3d" }}>®</sup>
+          CSL<sup style={{ fontSize: "0.55em", verticalAlign: "super", color: "#ffd11a" }}>®</sup>
         </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(242,241,237,0.4)" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(244,243,239,0.4)" }}>
           FIG.00 — Intake · Season 01
         </span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(242,241,237,0.32)" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(244,243,239,0.32)" }}>
           40°49.281′N · 73°55.764′W
         </span>
       </header>
@@ -65,19 +65,19 @@ export function IntakePage() {
             <div style={{ marginTop: 40 }}>
               <div className="app-step">
                 <span className="app-step-idx">01</span>
-                <span style={{ fontSize: 13, color: "rgba(242,241,237,0.78)" }}>Choose your role</span>
+                <span style={{ fontSize: 13, color: "rgba(244,243,239,0.78)" }}>Choose your role</span>
                 <span className="app-step-line" />
               </div>
               <div className="app-step">
                 <span className="app-step-idx">02</span>
-                <span style={{ fontSize: 13, color: "rgba(242,241,237,0.78)" }}>Declare skill intent</span>
+                <span style={{ fontSize: 13, color: "rgba(244,243,239,0.78)" }}>Declare skill intent</span>
                 <span className="app-step-line" />
               </div>
             </div>
           </div>
 
           <div className="app-intake-card">
-            <span style={{ position: "absolute", top: 14, right: 16, fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "rgba(242,241,237,0.3)" }}>
+            <span style={{ position: "absolute", top: 14, right: 16, fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "rgba(244,243,239,0.3)" }}>
               INTAKE / 02
             </span>
 

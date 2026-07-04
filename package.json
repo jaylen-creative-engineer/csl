@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Creative Sports League — structured challenge sprints for emerging creatives",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lat:check": "lat check",

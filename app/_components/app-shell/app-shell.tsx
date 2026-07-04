@@ -69,7 +69,7 @@ export function AppShell({ children }: AppShellProps) {
         <header className="app-topbar">
           <span className="app-crumb">CSL / {crumb}</span>
           <div className="app-search" aria-hidden>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(242,241,237,0.4)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(244,243,239,0.4)" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="7" />
               <path d="m21 21-4.3-4.3" />
             </svg>

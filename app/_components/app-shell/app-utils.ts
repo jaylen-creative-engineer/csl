@@ -4,7 +4,12 @@ export function statusTagClass(status: string): string {
     case "active":
       return "app-tag status open";
     case "judging":
+    case "draft":
       return "app-tag status judging";
+    case "closed":
+    case "complete":
+    case "completed":
+      return "app-tag status closed";
     default:
       return "app-tag status default";
   }
@@ -32,8 +37,9 @@ export function formatDeadlineLong(deadline: string): string {
   return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
 }
 
-const SPRINT_COLORS = ["#d8ff3d", "#8f7bff", "#ff6b6b", "#32ade6", "#ffc62b"];
+/* Foreigner triad from the landing system, plus bone ink */
+const SPRINT_COLORS = ["#ffd11a", "#2f6bff", "#ff3b2f", "#f4f3ef"];
 
 export function sprintColor(index: number): string {
-  return SPRINT_COLORS[index % SPRINT_COLORS.length] ?? "#d8ff3d";
+  return SPRINT_COLORS[index % SPRINT_COLORS.length] ?? "#ffd11a";
 }

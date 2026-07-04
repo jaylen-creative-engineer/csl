@@ -1,9 +1,6 @@
-import Link from "next/link";
-import {
-  formatDeadlineShort,
-  sprintColor,
-  statusTagClass,
-} from "../../_components/app-shell/app-utils.js";
+import { sprintColor } from "../../_components/app-shell/app-utils.js";
+import { DataTable, type DataTableRow } from "../../_components/dashboard/data-table";
+import { EmptyState } from "../../_components/dashboard/empty-state";
 
 interface League {
   id: string;
@@ -53,6 +50,10 @@ export default async function LearnerSprintsPage() {
   }));
 
   const openSprints = sprints.filter((s) => s.status === "open");
+  const judgingSprints = sprints.filter((s) => s.status === "judging");
+  const closedSprints = sprints.filter(
+    (s) => s.status !== "open" && s.status !== "judging",
+  );
 
   return (
     <>
@@ -73,29 +74,62 @@ export default async function LearnerSprintsPage() {
         </span>
       </div>
 
+      <div className="app-stat-grid">
+        <div className="app-stat">
+          <span className="app-stat-idx">01</span>
+          <span className="app-stat-value">{openSprints.length}</span>
+          <span className="app-stat-label">Open for entry</span>
+        </div>
+        <div className="app-stat">
+          <span className="app-stat-idx">02</span>
+          <span className="app-stat-value">{judgingSprints.length}</span>
+          <span className="app-stat-label">In judging</span>
+        </div>
+        <div className="app-stat">
+          <span className="app-stat-idx">03</span>
+          <span className="app-stat-value">{closedSprints.length}</span>
+          <span className="app-stat-label">Completed</span>
+        </div>
+        <div className="app-stat">
+          <span className="app-stat-idx">04</span>
+          <span className="app-stat-value">{leagues.length}</span>
+          <span className="app-stat-label">Leagues in season</span>
+        </div>
+      </div>
+
       {sprints.length === 0 ? (
-        <div className="app-empty">
-          <p>
-            <strong>No sprints available right now.</strong> Check back soon or enter via intake to get started.
-          </p>
-          <Link href="/enter" className="app-btn" style={{ marginTop: 20 }}>
-            Enter the league →
-          </Link>
-        </div>
+        <EmptyState
+          fig="FIG.02 — Sprint field"
+          title="No sprints on the board"
+          body="Sprints appear here the moment a host opens a challenge. Enter via intake to join the season and get matched to your first brief."
+          ctaHref="/enter"
+          ctaLabel="Enter the league →"
+        />
       ) : (
-        <div className="app-list">
-          {sprints.map((s, i) => (
-            <Link key={s.id} href={`/learner/challenges/${s.id}`} className="app-list-row">
-              <span className="app-list-dot" style={{ background: sprintColor(i) }} />
-              <span className="app-list-body">
-                <span className="app-list-title">{s.title}</span>
-                <span className="app-list-sub">{s.leagueName}</span>
-              </span>
-              <span className={statusTagClass(s.status)}>{s.status}</span>
-              <span className="app-list-deadline">{formatDeadlineShort(s.deadline)}</span>
-            </Link>
-          ))}
-        </div>
+        <DataTable
+          columns={[
+            { key: "title", label: "Sprint", kind: "primary", subKey: "leagueName", dotColorKey: "dot" },
+            { key: "leagueName", label: "League" },
+            { key: "status", label: "Status", kind: "status", width: "130px" },
+            { key: "deadline", label: "Closes", kind: "deadline", numeric: true, width: "110px" },
+          ]}
+          rows={sprints.map(
+            (s, i): DataTableRow => ({
+              id: s.id,
+              href: `/learner/challenges/${s.id}`,
+              title: s.title,
+              leagueName: s.leagueName,
+              status: s.status,
+              deadline: s.deadline,
+              dot: sprintColor(i),
+            }),
+          )}
+          searchKeys={["title", "leagueName"]}
+          searchPlaceholder="Search sprints or leagues"
+          filterKey="status"
+          countLabel="sprints"
+          initialSort={{ key: "deadline", dir: "asc" }}
+        />
       )}
     </>
   );

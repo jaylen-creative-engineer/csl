@@ -55,7 +55,7 @@ export default async function LearnerChallengePage({ params }: Props) {
       <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
         <span className="app-tag purple">Sprint</span>
         <span className={isOpen ? "app-tag open" : statusTagClass(challenge.status)}>{challenge.status}</span>
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "rgba(242,241,237,0.4)" }}>
+        <span style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.16em", color: "rgba(244,243,239,0.4)" }}>
           FIG.03 — Sprint
         </span>
       </div>

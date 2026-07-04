@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyState } from "../../_components/dashboard/empty-state";
 
 interface CriteriaScore {
   criteriaName: string;
@@ -75,13 +76,39 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
       <>
         <div className="app-page-head">
           <div>
-            <p className="app-kicker">Proof of skill · FIG.05</p>
+            <p className="app-kicker">Proof of skill</p>
             <h1 className="app-title">The <em>record.</em></h1>
+            <p className="app-muted" style={{ marginTop: 14, maxWidth: "46ch" }}>
+              Every scored sprint becomes a portfolio entry — criteria breakdowns, judge
+              rationale, and skill signals across your discipline.
+            </p>
           </div>
+          <span className="app-fig">FIG.05 — Showcase</span>
         </div>
-        <div className="app-panel">
-          <p className="app-label">Enter your participant ID to view your showcase.</p>
+
+        <div className="app-panel featured">
+          <span className="app-panel-fig">ACCESS</span>
+          <p className="app-section-label accent">View your showcase</p>
+          <p className="app-label">Enter your participant ID to pull up your record.</p>
           <PortfolioIdForm />
+        </div>
+
+        <div className="app-step-grid">
+          <div className="app-step-card">
+            <span className="app-step-card-idx">01 / COMPETE</span>
+            <strong>Enter sprints</strong>
+            <small>Submit against real briefs before the deadline closes.</small>
+          </div>
+          <div className="app-step-card">
+            <span className="app-step-card-idx">02 / GET SCORED</span>
+            <strong>Judged in public</strong>
+            <small>Multi-judge scoring against weighted criteria, with rationale.</small>
+          </div>
+          <div className="app-step-card">
+            <span className="app-step-card-idx">03 / PROVE IT</span>
+            <strong>Build the record</strong>
+            <small>Scores aggregate into skill signals that travel with you.</small>
+          </div>
         </div>
       </>
     );
@@ -93,8 +120,17 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
     return (
       <>
         <Link href="/learner/portfolio" className="app-back">← Showcase</Link>
-        <p className="app-error">Portfolio not found for participant ID: {participantId}</p>
-        <PortfolioIdForm />
+        <div className="app-empty-state" style={{ marginBottom: 24 }}>
+          <span className="app-empty-state-fig">FIG.05 — Showcase</span>
+          <h3>Portfolio not found</h3>
+          <p>
+            No record matches participant ID <code style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{participantId}</code>.
+            Double-check the ID and try again.
+          </p>
+        </div>
+        <div className="app-panel">
+          <PortfolioIdForm />
+        </div>
       </>
     );
   }
@@ -122,13 +158,13 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
             {portfolio.skillSignals.map((signal, i) => (
               <div key={i} className="app-signal">
                 <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
-                  <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(242,241,237,0.78)" }}>{signal.domain}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500, color: "rgba(244,243,239,0.78)" }}>{signal.domain}</span>
                   <span style={{ fontSize: 20 }}>{signal.averageScore.toFixed(1)}</span>
                 </div>
                 <div className="app-progress">
                   <i style={{ width: `${Math.min(signal.averageScore, 100)}%` }} />
                 </div>
-                <span style={{ display: "block", marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(242,241,237,0.36)" }}>
+                <span style={{ display: "block", marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 10, color: "rgba(244,243,239,0.36)" }}>
                   {signal.sampleCount} sample{signal.sampleCount !== 1 ? "s" : ""}
                 </span>
               </div>
@@ -139,7 +175,13 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
 
       <p className="app-section-label">Scored entries</p>
       {portfolio.entries.length === 0 ? (
-        <div className="app-empty"><p>No scored submissions yet.</p></div>
+        <EmptyState
+          fig="FIG.05 — Showcase"
+          title="No scored entries yet"
+          body="Submit to an open sprint and your scored work will appear here with full criteria breakdowns and judge rationale."
+          ctaHref="/learner/sprints"
+          ctaLabel="Find an open sprint →"
+        />
       ) : (
         portfolio.entries.map((entry, i) => {
           const scores = entry.submission.scores ?? [];
@@ -153,7 +195,7 @@ export default async function LearnerPortfolioPage({ searchParams }: Props) {
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
                   <div>
                     <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600 }}>{entry.challengeTitle}</h3>
-                    <p style={{ margin: "5px 0 0", fontSize: 12, color: "rgba(242,241,237,0.45)" }}>
+                    <p style={{ margin: "5px 0 0", fontSize: 12, color: "rgba(244,243,239,0.45)" }}>
                       {new Date(entry.submission.submittedAt).toLocaleDateString()}
                     </p>
                   </div>
