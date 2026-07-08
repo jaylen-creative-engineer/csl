@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { statusTagClass, formatDeadlineShort } from "../app-shell/app-utils.js";
+import { cellValue, collectFilterValues, getVisibleRows } from "./data-table-utils.js";
 
 /**
  * Serializable column spec so server components can pass config across
@@ -56,18 +57,6 @@ type DataTableProps = {
   emptyBody?: string;
 };
 
-function cellValue(row: DataTableRow, key: string): unknown {
-  return row[key];
-}
-
-function compare(a: unknown, b: unknown): number {
-  if (a == null && b == null) return 0;
-  if (a == null) return 1;
-  if (b == null) return -1;
-  if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
-}
-
 export function DataTable({
   columns,
   rows,
@@ -87,41 +76,11 @@ export function DataTable({
   );
 
   const filterValues = useMemo(() => {
-    if (!filterKey) return [];
-    const counts = new Map<string, number>();
-    for (const row of rows) {
-      const v = String(cellValue(row, filterKey) ?? "");
-      if (!v) continue;
-      counts.set(v, (counts.get(v) ?? 0) + 1);
-    }
-    return [...counts.entries()];
+    return collectFilterValues(rows, filterKey);
   }, [rows, filterKey]);
 
   const visible = useMemo(() => {
-    let out = rows;
-    if (filterKey && filter) {
-      out = out.filter((r) => String(cellValue(r, filterKey)) === filter);
-    }
-    if (query.trim() && searchKeys?.length) {
-      const q = query.trim().toLowerCase();
-      out = out.filter((r) =>
-        searchKeys.some((k) => String(cellValue(r, k) ?? "").toLowerCase().includes(q)),
-      );
-    }
-    if (sort) {
-      const col = columns.find((c) => c.key === sort.key);
-      const dirMul = sort.dir === "asc" ? 1 : -1;
-      out = [...out].sort((a, b) => {
-        let av = cellValue(a, sort.key);
-        let bv = cellValue(b, sort.key);
-        if (col?.kind === "deadline" || col?.kind === "date") {
-          av = new Date(String(av)).getTime();
-          bv = new Date(String(bv)).getTime();
-        }
-        return compare(av, bv) * dirMul;
-      });
-    }
-    return out;
+    return getVisibleRows({ rows, columns, query, filterKey, filter, searchKeys, sort });
   }, [rows, query, filter, sort, filterKey, searchKeys, columns]);
 
   function toggleSort(key: string) {
