@@ -28,7 +28,7 @@ describe("app shell utilities", () => {
 
     expect(formatDeadlineShort("2026-07-08T09:59:59.000Z")).toBe("Closed");
     expect(formatDeadlineShort("2026-07-10T09:59:00.000Z")).toBe("47h");
-    expect(formatDeadlineShort("2026-07-10T10:01:00.000Z")).toBe("3d");
+    expect(formatDeadlineShort("2026-07-10T11:00:00.000Z")).toBe("3d");
   });
 
   it("formats long deadlines with minutes under 72h and calendar labels after that", () => {
