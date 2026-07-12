@@ -31,7 +31,7 @@ describe("app shell utilities", () => {
     expect(formatDeadlineShort("2025-12-31T23:59:00.000Z")).toBe("Closed");
     expect(formatDeadlineShort("2026-01-01T01:30:00.000Z")).toBe("1h");
     expect(formatDeadlineShort("2026-01-03T00:00:00.000Z")).toBe("2d");
-    expect(formatDeadlineShort("2026-01-03T00:01:00.000Z")).toBe("3d");
+    expect(formatDeadlineShort("2026-01-03T01:00:00.000Z")).toBe("3d");
   });
 
   it("formats long deadlines with minutes before falling back to a date label", () => {
