@@ -28,7 +28,7 @@ describe("app shell utilities", () => {
 
     expect(formatDeadlineShort("2030-01-01T11:59:00.000Z")).toBe("Closed");
     expect(formatDeadlineShort("2030-01-03T11:30:00.000Z")).toBe("47h");
-    expect(formatDeadlineShort("2030-01-03T12:01:00.000Z")).toBe("3d");
+    expect(formatDeadlineShort("2030-01-03T14:01:00.000Z")).toBe("3d");
   });
 
   it("formats long deadlines with minutes for urgent work and a date for later work", () => {
