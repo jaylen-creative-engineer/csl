@@ -41,7 +41,7 @@ const rows: DataTableRow[] = [
   },
   {
     id: "sprint-empty-status",
-    title: "Archive",
+    title: "Sprint 99",
     leagueName: "Archive League",
     status: "",
     deadline: "2026-05-01T10:00:00.000Z",
