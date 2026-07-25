@@ -1,0 +1,106 @@
+export type ColumnKind =
+  | "primary"
+  | "status"
+  | "deadline"
+  | "score"
+  | "mono"
+  | "date"
+  | "text";
+
+export interface ColumnSpec {
+  key: string;
+  label: string;
+  kind?: ColumnKind;
+  subKey?: string;
+  dotColorKey?: string;
+  sortable?: boolean;
+  numeric?: boolean;
+  width?: string;
+}
+
+export interface DataTableRow {
+  id: string;
+  href?: string;
+  [key: string]: unknown;
+}
+
+export type SortState = { key: string; dir: "asc" | "desc" };
+
+export function cellValue(row: DataTableRow, key: string): unknown {
+  return row[key];
+}
+
+function compare(a: unknown, b: unknown): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b), undefined, { numeric: true, sensitivity: "base" });
+}
+
+export function getFilterValueCounts(
+  rows: DataTableRow[],
+  filterKey?: string,
+): Array<[string, number]> {
+  if (!filterKey) return [];
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const value = String(cellValue(row, filterKey) ?? "");
+    if (!value) continue;
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return [...counts.entries()];
+}
+
+export function getVisibleRows({
+  columns,
+  rows,
+  searchKeys,
+  filterKey,
+  filter,
+  query,
+  sort,
+}: {
+  columns: ColumnSpec[];
+  rows: DataTableRow[];
+  searchKeys?: string[];
+  filterKey?: string;
+  filter: string | null;
+  query: string;
+  sort: SortState | null;
+}): DataTableRow[] {
+  let visibleRows = rows;
+  if (filterKey && filter) {
+    visibleRows = visibleRows.filter((row) => String(cellValue(row, filterKey)) === filter);
+  }
+  if (query.trim() && searchKeys?.length) {
+    const normalizedQuery = query.trim().toLowerCase();
+    visibleRows = visibleRows.filter((row) =>
+      searchKeys.some((key) =>
+        String(cellValue(row, key) ?? "")
+          .toLowerCase()
+          .includes(normalizedQuery),
+      ),
+    );
+  }
+  if (sort) {
+    const column = columns.find((candidate) => candidate.key === sort.key);
+    const direction = sort.dir === "asc" ? 1 : -1;
+    visibleRows = [...visibleRows].sort((a, b) => {
+      let aValue = cellValue(a, sort.key);
+      let bValue = cellValue(b, sort.key);
+      if (column?.kind === "deadline" || column?.kind === "date") {
+        aValue = new Date(String(aValue)).getTime();
+        bValue = new Date(String(bValue)).getTime();
+      }
+      return compare(aValue, bValue) * direction;
+    });
+  }
+  return visibleRows;
+}
+
+export function nextSortState(previous: SortState | null, key: string): SortState {
+  return previous?.key === key
+    ? { key, dir: previous.dir === "asc" ? "desc" : "asc" }
+    : { key, dir: "asc" };
+}
