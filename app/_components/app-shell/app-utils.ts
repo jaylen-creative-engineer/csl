@@ -15,8 +15,15 @@ export function statusTagClass(status: string): string {
   }
 }
 
+function parseDate(value: string | undefined): Date | null {
+  if (!value) return null;
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date : null;
+}
+
 export function formatDeadlineShort(deadline: string): string {
-  const d = new Date(deadline);
+  const d = parseDate(deadline);
+  if (!d) return "Unknown";
   const now = new Date();
   const diffMs = d.getTime() - now.getTime();
   if (diffMs <= 0) return "Closed";
@@ -27,7 +34,8 @@ export function formatDeadlineShort(deadline: string): string {
 }
 
 export function formatDeadlineLong(deadline: string): string {
-  const d = new Date(deadline);
+  const d = parseDate(deadline);
+  if (!d) return "Unknown";
   const now = new Date();
   const diffMs = d.getTime() - now.getTime();
   if (diffMs <= 0) return "Closed";
@@ -42,4 +50,15 @@ const SPRINT_COLORS = ["#ffd11a", "#2f6bff", "#ff3b2f", "#f4f3ef"];
 
 export function sprintColor(index: number): string {
   return SPRINT_COLORS[index % SPRINT_COLORS.length] ?? "#ffd11a";
+}
+
+export function formatSubmissionDate(submission: {
+  submittedAt?: string;
+  createdAt?: string;
+}): string {
+  const submittedAt = parseDate(submission.submittedAt);
+  if (submittedAt) return submittedAt.toLocaleDateString();
+
+  const createdAt = parseDate(submission.createdAt);
+  return createdAt ? createdAt.toLocaleDateString() : "Unknown";
 }

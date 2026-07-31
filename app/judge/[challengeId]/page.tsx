@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { statusTagClass } from "../../_components/app-shell/app-utils";
+import { formatSubmissionDate, statusTagClass } from "../../_components/app-shell/app-utils";
 
 interface Challenge {
   id: string;
@@ -12,7 +12,8 @@ interface Submission {
   id: string;
   participantId: string;
   status: string;
-  createdAt: string;
+  submittedAt?: string;
+  createdAt?: string;
   artifact?: { url: string };
 }
 
@@ -87,7 +88,7 @@ export default async function JudgeChallengeSubmissionsPage({ params }: Props) {
                 <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.id.slice(0, 8)}…</td>
                 <td style={{ fontFamily: "var(--font-mono)", fontSize: 12 }}>{s.participantId.slice(0, 8)}…</td>
                 <td>{s.status}</td>
-                <td>{new Date(s.createdAt).toLocaleDateString()}</td>
+                <td>{formatSubmissionDate(s)}</td>
                 <td>
                   <Link href={`/judge/${challengeId}/submissions/${s.id}`} className="app-btn sm" style={{ display: "inline-flex" }}>
                     Score
