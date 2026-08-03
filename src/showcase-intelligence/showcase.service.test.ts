@@ -1,11 +1,91 @@
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import { randomUUID } from "node:crypto";
 import { LeagueModelService } from "../league-model/league-model.service.js";
 import { ChallengeService } from "../challenge-intelligence/challenge.service.js";
 import { ShowcaseService } from "./showcase.service.js";
-import { Discipline } from "../league-model/types.js";
+import {
+  ChallengeStatus,
+  type Challenge,
+  type Score,
+  type Submission,
+} from "../challenge-intelligence/types.js";
+import { Discipline, type Participant } from "../league-model/types.js";
 import { createTestSupabaseClient } from "../test/supabase-test.js";
 import { hasSupabaseTestEnv } from "../test/supabase-env.js";
+
+function participant(id: string, handle: string, discipline = Discipline.Design): Participant {
+  return {
+    id,
+    userId: null,
+    handle,
+    discipline,
+    leagueMemberships: [],
+    createdAt: "2026-01-01T00:00:00.000Z",
+  };
+}
+
+function challenge(id: string, title: string): Challenge {
+  return {
+    id,
+    leagueId: "league:unit",
+    title,
+    prompt: "Build the artifact",
+    deadline: "2026-02-01T00:00:00.000Z",
+    status: ChallengeStatus.Open,
+    scoringCriteria: [],
+    createdAt: "2026-01-01T00:00:00.000Z",
+  };
+}
+
+function score(id: string, totalScore: number): Score {
+  return {
+    id,
+    submissionId: "submission:unit",
+    judgeId: `judge:${id}`,
+    criteriaScores: [{ criteriaName: "Overall", score: totalScore }],
+    totalScore,
+    rationale: "Assessed",
+    scoredAt: "2026-01-01T00:00:00.000Z",
+  };
+}
+
+function submission(
+  overrides: Partial<Submission> &
+    Pick<Submission, "id" | "challengeId" | "participantId" | "submittedAt">
+): Submission {
+  return {
+    artifact: { url: `https://example.com/${overrides.id}` },
+    isPublic: true,
+    withdrawn: false,
+    scores: [],
+    ...overrides,
+  };
+}
+
+function setupShowcaseDoubles(input: {
+  participants: Participant[];
+  submissionsByParticipant: Record<string, Submission[]>;
+  challengesById?: Record<string, Challenge | undefined>;
+}) {
+  const leagueModel = {
+    listParticipants: vi.fn(async () => input.participants),
+  };
+  const challengeService = {
+    getSubmissionsForParticipant: vi.fn(
+      async (participantId: string) => input.submissionsByParticipant[participantId] ?? []
+    ),
+    getChallenge: vi.fn(async (challengeId: string) => input.challengesById?.[challengeId]),
+  };
+
+  return {
+    leagueModel,
+    challengeService,
+    showcaseService: new ShowcaseService(
+      leagueModel as unknown as LeagueModelService,
+      challengeService as unknown as ChallengeService
+    ),
+  };
+}
 
 function setupServices() {
   const client = createTestSupabaseClient();
@@ -18,6 +98,109 @@ function setupServices() {
 function deadline(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 3_600_000).toISOString();
 }
+
+describe("ShowcaseService getShowcaseFeed", () => {
+  it("returns newest public entries with score aggregation, title fallback, and next cursor", async () => {
+    const alex = participant("participant:alex", "alex", Discipline.Design);
+    const sam = participant("participant:sam", "sam", Discipline.Code);
+    const newest = submission({
+      id: "submission:newest",
+      challengeId: "challenge:known",
+      participantId: alex.id,
+      submittedAt: "2026-01-03T12:00:00.000Z",
+      scores: [score("a", 70), score("b", 90)],
+    });
+    const middle = submission({
+      id: "submission:middle",
+      challengeId: "challenge:missing",
+      participantId: sam.id,
+      submittedAt: "2026-01-02T12:00:00.000Z",
+    });
+    const older = submission({
+      id: "submission:older",
+      challengeId: "challenge:known",
+      participantId: sam.id,
+      submittedAt: "2026-01-01T12:00:00.000Z",
+      scores: [score("c", 65)],
+    });
+    const privateSubmission = submission({
+      id: "submission:private",
+      challengeId: "challenge:private",
+      participantId: alex.id,
+      submittedAt: "2026-01-04T12:00:00.000Z",
+      isPublic: false,
+    });
+    const { challengeService, showcaseService } = setupShowcaseDoubles({
+      participants: [alex, sam],
+      submissionsByParticipant: {
+        [alex.id]: [newest, privateSubmission],
+        [sam.id]: [older, middle],
+      },
+      challengesById: {
+        "challenge:known": challenge("challenge:known", "Known Sprint"),
+      },
+    });
+
+    const feed = await showcaseService.getShowcaseFeed("league:unit", { limit: 2 });
+
+    expect(feed.entries.map((entry) => entry.submission.id)).toEqual([
+      "submission:newest",
+      "submission:middle",
+    ]);
+    expect(feed.nextCursor).toBe(middle.submittedAt);
+    expect(feed.entries[0]).toMatchObject({
+      participantHandle: "alex",
+      discipline: Discipline.Design,
+      challengeTitle: "Known Sprint",
+      score: 80,
+    });
+    expect(feed.entries[1]).toMatchObject({
+      participantHandle: "sam",
+      discipline: Discipline.Code,
+      challengeTitle: "Unknown Challenge",
+      score: undefined,
+    });
+    expect(challengeService.getChallenge).not.toHaveBeenCalledWith(privateSubmission.challengeId);
+  });
+
+  it("uses the cursor as a strict submittedAt upper bound", async () => {
+    const alex = participant("participant:alex", "alex");
+    const cursor = "2026-01-02T12:00:00.000Z";
+    const { showcaseService } = setupShowcaseDoubles({
+      participants: [alex],
+      submissionsByParticipant: {
+        [alex.id]: [
+          submission({
+            id: "submission:newer",
+            challengeId: "challenge:known",
+            participantId: alex.id,
+            submittedAt: "2026-01-03T12:00:00.000Z",
+          }),
+          submission({
+            id: "submission:same-time",
+            challengeId: "challenge:known",
+            participantId: alex.id,
+            submittedAt: cursor,
+          }),
+          submission({
+            id: "submission:older",
+            challengeId: "challenge:known",
+            participantId: alex.id,
+            submittedAt: "2026-01-01T12:00:00.000Z",
+          }),
+        ],
+      },
+      challengesById: {
+        "challenge:known": challenge("challenge:known", "Known Sprint"),
+      },
+    });
+
+    const feed = await showcaseService.getShowcaseFeed("league:unit", { cursor, limit: 5 });
+
+    expect(feed.entries.map((entry) => entry.submission.id)).toEqual(["submission:older"]);
+    expect(feed.nextCursor).toBeNull();
+  });
+});
 
 describe.skipIf(!hasSupabaseTestEnv())("ShowcaseService", () => {
   let suffix: string;
