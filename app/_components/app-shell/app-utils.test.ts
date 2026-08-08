@@ -30,7 +30,7 @@ describe("app shell utility formatting", () => {
   it("formats short deadlines as closed, hours, or rounded-up days", () => {
     expect(formatDeadlineShort("2026-02-01T11:59:59.000Z")).toBe("Closed");
     expect(formatDeadlineShort("2026-02-02T11:30:00.000Z")).toBe("23h");
-    expect(formatDeadlineShort("2026-02-04T13:00:00.000Z")).toBe("3d");
+    expect(formatDeadlineShort("2026-02-04T11:00:00.000Z")).toBe("3d");
   });
 
   it("formats long deadlines with minutes for near-term dates", () => {
