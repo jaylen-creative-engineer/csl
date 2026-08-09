@@ -26,7 +26,7 @@ describe("aggregateScore", () => {
   });
 
   it("averages multiple judge total scores and preserves fractional results", () => {
-    expect(aggregateScore([score(80), score(80), score(100)])).toBeCloseTo(86.666, 3);
+    expect(aggregateScore([score(80), score(80), score(100)])).toBeCloseTo(260 / 3, 6);
   });
 
   it("uses totalScore only and is independent of score order", () => {
