@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { randomUUID } from "node:crypto";
-import { ChallengeService } from "./challenge.service.js";
+import { ChallengeService, aggregateScore } from "./challenge.service.js";
 import { ChallengeStatus } from "./types.js";
 import { LeagueModelService } from "../league-model/league-model.service.js";
 import { createTestSupabaseClient } from "../test/supabase-test.js";
@@ -9,6 +9,39 @@ import { hasSupabaseTestEnv } from "../test/supabase-env.js";
 function deadline(hoursFromNow: number): string {
   return new Date(Date.now() + hoursFromNow * 3_600_000).toISOString();
 }
+
+describe("aggregateScore", () => {
+  it("returns the mean score across judges", () => {
+    const scoredAt = "2026-06-27T10:00:00.000Z";
+
+    expect(
+      aggregateScore([
+        {
+          id: "score:1",
+          submissionId: "submission:1",
+          judgeId: "judge:1",
+          criteriaScores: [],
+          totalScore: 100,
+          rationale: "Excellent",
+          scoredAt,
+        },
+        {
+          id: "score:2",
+          submissionId: "submission:1",
+          judgeId: "judge:2",
+          criteriaScores: [],
+          totalScore: 50,
+          rationale: "Needs polish",
+          scoredAt,
+        },
+      ])
+    ).toBe(75);
+  });
+
+  it("returns zero for unscored submissions", () => {
+    expect(aggregateScore([])).toBe(0);
+  });
+});
 
 describe.skipIf(!hasSupabaseTestEnv())("ChallengeService", () => {
   let service: ChallengeService;
@@ -214,6 +247,64 @@ describe.skipIf(!hasSupabaseTestEnv())("ChallengeService", () => {
       expect(leaderboard).toHaveLength(2);
       expect(leaderboard[0]?.participantId).toBe(p2.id);
       expect(leaderboard[1]?.participantId).toBe(p1.id);
+    });
+
+    it("ranks submissions by the mean score across multiple judges", async () => {
+      const challenge = await service.createChallenge({
+        leagueId,
+        title: "Multi-judge Final",
+        prompt: "Prompt",
+        deadline: deadline(48),
+      });
+      await service.openChallenge(challenge.id);
+
+      const consistentlyStrong = await leagueModel.createParticipant({
+        handle: `steady-${suffix}`,
+        discipline: "design" as any,
+      });
+      const polarizing = await leagueModel.createParticipant({
+        handle: `swing-${suffix}`,
+        discipline: "design" as any,
+      });
+
+      const steadySubmission = await service.submitEntry(challenge.id, consistentlyStrong.id, {
+        artifact: { url: "https://steady.design/entry" },
+      });
+      const swingSubmission = await service.submitEntry(challenge.id, polarizing.id, {
+        artifact: { url: "https://swing.design/entry" },
+      });
+
+      await service.closeForJudging(challenge.id);
+
+      await service.scoreSubmission(steadySubmission.id, {
+        judgeId: "judge:1",
+        criteriaScores: [{ criteriaName: "Overall", score: 80 }],
+        rationale: "Strong execution",
+      });
+      await service.scoreSubmission(steadySubmission.id, {
+        judgeId: "judge:2",
+        criteriaScores: [{ criteriaName: "Overall", score: 80 }],
+        rationale: "Consistently strong",
+      });
+      await service.scoreSubmission(swingSubmission.id, {
+        judgeId: "judge:1",
+        criteriaScores: [{ criteriaName: "Overall", score: 100 }],
+        rationale: "Excellent first impression",
+      });
+      await service.scoreSubmission(swingSubmission.id, {
+        judgeId: "judge:2",
+        criteriaScores: [{ criteriaName: "Overall", score: 50 }],
+        rationale: "Weak follow-through",
+      });
+
+      const leaderboard = await service.getLeaderboard(challenge.id);
+
+      expect(leaderboard.map((submission) => submission.participantId)).toEqual([
+        consistentlyStrong.id,
+        polarizing.id,
+      ]);
+      expect(leaderboard[0]?.scores).toHaveLength(2);
+      expect(leaderboard[1]?.scores).toHaveLength(2);
     });
 
     it("produces a deterministic leaderboard for equal scores", async () => {
